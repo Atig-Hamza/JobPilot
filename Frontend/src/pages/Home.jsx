@@ -1,9 +1,393 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const Home = () => {
+// --- ICONS (Inline for zero dependencies) ---
+const Icons = {
+  ArrowRight: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>,
+  Compass: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>,
+  Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>,
+  Github: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>,
+  Code: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>,
+  Plus: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+};
+
+const JobPilot = () => {
+  const [scrolled, setScrolled] = useState(false);
+  const [activeNav, setActiveNav] = useState(null);
+  const [openAccordion, setOpenAccordion] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // --- ANIMATION VARIANTS ---
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 60 },
+    visible: { opacity: 1, y: 0, transition: { duration: 1, ease: [0.22, 1, 0.36, 1] } }
+  };
+
+  const staggerChildren = {
+    visible: { transition: { staggerChildren: 0.1 } }
+  };
+
   return (
-    <div>hello from home</div>
+    <div className="min-h-screen bg-[#FDFBF9] text-[#1A1A18] font-sans selection:bg-amber-200 selection:text-amber-900 overflow-x-hidden">
+      
+      {/* 1. NAVIGATION & MEGA MENU */}
+      <nav 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out px-6 md:px-12 py-6 border-b ${scrolled || activeNav ? 'bg-[#FDFBF9] border-stone-200' : 'bg-transparent border-transparent'}`}
+        onMouseLeave={() => setActiveNav(null)}
+      >
+        <div className="flex justify-between items-center max-w-[1800px] mx-auto relative z-50">
+          <div className="flex items-center gap-3 group cursor-pointer">
+            <div className="w-10 h-10 bg-[#1A1A18] text-[#FDFBF9] flex items-center justify-center rounded-sm transition-transform duration-500 group-hover:rotate-180">
+              <Icons.Compass />
+            </div>
+            <span className="font-serif font-bold text-2xl tracking-tighter">JobPilot</span>
+          </div>
+          
+          <div className="hidden md:flex items-center gap-12 text-sm font-bold tracking-widest uppercase">
+            {['Features', 'Mission', 'Pricing'].map((item) => (
+              <button 
+                key={item}
+                onMouseEnter={() => setActiveNav(item.toLowerCase())}
+                className={`py-4 border-b-2 transition-all ${activeNav === item.toLowerCase() ? 'border-amber-600 text-[#1A1A18]' : 'border-transparent text-stone-400 hover:text-[#1A1A18]'}`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+
+          <button className="hidden md:block px-8 py-3 bg-[#1A1A18] text-white text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-amber-600 transition-colors">
+            Get Access
+          </button>
+        </div>
+
+        {/* Mega Menu Content */}
+        <AnimatePresence>
+          {activeNav && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="absolute top-full left-0 w-full bg-[#FDFBF9] border-b border-stone-200 shadow-2xl overflow-hidden"
+            >
+              <div className="max-w-7xl mx-auto px-12 py-16 grid grid-cols-12 gap-12">
+                <div className="col-span-4">
+                  <h3 className="font-serif text-4xl mb-4 text-[#1A1A18]">
+                    {activeNav === 'features' ? 'The Engine' : activeNav === 'mission' ? 'Our Why' : 'Invest in You'}
+                  </h3>
+                  <p className="text-stone-500 leading-relaxed">
+                    Explore the deep technology and human-centric design that powers the JobPilot experience.
+                  </p>
+                </div>
+                <div className="col-span-8 grid grid-cols-2 gap-8">
+                  <div className="group cursor-pointer p-4 hover:bg-stone-100 rounded-sm transition-colors">
+                    <h4 className="font-bold mb-1 flex items-center gap-2">Semantic Search <Icons.ArrowRight /></h4>
+                    <p className="text-sm text-stone-500">Matching intent, not just keywords.</p>
+                  </div>
+                  <div className="group cursor-pointer p-4 hover:bg-stone-100 rounded-sm transition-colors">
+                    <h4 className="font-bold mb-1 flex items-center gap-2">Privacy Shield <Icons.ArrowRight /></h4>
+                    <p className="text-sm text-stone-500">Hide from current employers automatically.</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
+
+      {/* 2. HERO / WELCOME */}
+      <section className="relative pt-64 pb-32 px-6 md:px-12 max-w-[1800px] mx-auto min-h-[90vh] flex flex-col justify-center">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerChildren}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-end"
+        >
+          <div className="lg:col-span-9">
+            <motion.h1 variants={fadeInUp} className="font-serif text-[15vw] lg:text-[11rem] leading-[0.8] tracking-tighter text-[#1A1A18] mb-8">
+              Don’t Search.<br/>
+              <span className="italic text-stone-300">Navigate.</span>
+            </motion.h1>
+          </div>
+          
+          <div className="lg:col-span-3 lg:pb-8">
+            <motion.div variants={fadeInUp} className="space-y-8">
+              <p className="text-xl md:text-2xl leading-relaxed text-stone-600">
+                The intelligent co-pilot that understands your career narrative, not just your keywords.
+              </p>
+              <div className="flex items-center gap-6 group cursor-pointer">
+                <div className="h-16 w-16 bg-[#1A1A18] text-white rounded-full flex items-center justify-center transition-transform duration-500 group-hover:scale-110 group-hover:rotate-45">
+                  <Icons.ArrowRight />
+                </div>
+                <span className="text-sm uppercase tracking-widest font-bold border-b border-black pb-1">Start Engine</span>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* 3. HOW IT WORKS / FEATURES */}
+      <section className="py-40 px-6 md:px-12 bg-white border-t border-stone-100">
+        <div className="max-w-[1800px] mx-auto">
+          <div className="mb-32">
+            <span className="text-amber-600 font-mono text-sm tracking-widest mb-4 block">THE PROCESS</span>
+            <h2 className="font-serif text-6xl md:text-8xl text-[#1A1A18]">Precision over volume.</h2>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-stone-200 border border-stone-200">
+            {[
+              { title: "01. Signal Detection", desc: "We scan 50+ platforms, filtering out 98% of noise to find high-intent roles." },
+              { title: "02. Semantic Match", desc: "Our AI maps your soft skills and project history to the company's engineering culture." },
+              { title: "03. Direct Uplink", desc: "Skip the queue. We route your profile directly to the hiring manager's inbox." }
+            ].map((feature, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.2 }}
+                className="bg-white p-12 lg:p-16 min-h-[400px] flex flex-col justify-between hover:bg-stone-50 transition-colors duration-500"
+              >
+                <h3 className="font-serif text-4xl">{feature.title}</h3>
+                <p className="text-stone-500 text-lg leading-relaxed max-w-xs">{feature.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 4. ABOUT / STORY (Accordion) */}
+      <section className="py-40 bg-[#1A1A18] text-[#FDFBF9]">
+        <div className="px-6 md:px-12 max-w-6xl mx-auto">
+          <div className="mb-24">
+            <h2 className="font-serif text-5xl md:text-7xl mb-8">The Philosophy</h2>
+            <p className="text-stone-400 text-xl max-w-2xl">
+              Recruitment is broken. It lacks humanity. We are rebuilding it with empathy at the core.
+            </p>
+          </div>
+
+          <div className="border-t border-stone-800">
+            {[
+              { title: "Privacy First", text: "Your data is yours. We never sell your profile to recruiters without explicit consent. You remain anonymous until you decide otherwise." },
+              { title: "No Ghosting", text: "Our AI automates follow-ups and keeps you in the loop. We track response times and flag companies that don't respect your time." },
+              { title: "Calm Design", text: "No red badges. No urgency notifications. Just clarity when you need it. A tool designed to lower anxiety, not spike dopamine." }
+            ].map((item, i) => (
+              <div key={i} className="border-b border-stone-800">
+                <button 
+                  onClick={() => setOpenAccordion(openAccordion === i ? null : i)}
+                  className="w-full py-12 flex justify-between items-center text-left group"
+                >
+                  <span className="font-serif text-3xl md:text-5xl group-hover:text-amber-500 transition-colors">{item.title}</span>
+                  <div className={`transition-transform duration-500 ${openAccordion === i ? 'rotate-45 text-amber-500' : 'text-stone-600'}`}>
+                    <Icons.Plus />
+                  </div>
+                </button>
+                <motion.div 
+                  initial={false}
+                  animate={{ height: openAccordion === i ? 'auto' : 0, opacity: openAccordion === i ? 1 : 0 }}
+                  className="overflow-hidden"
+                >
+                  <p className="pb-12 text-stone-400 text-lg leading-relaxed max-w-3xl">
+                    {item.text}
+                  </p>
+                </motion.div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. PLANS / PRICING */}
+      <section className="py-40 px-6 md:px-12 bg-[#FDFBF9]">
+        <div className="max-w-[1600px] mx-auto">
+          <motion.div 
+             initial={{ opacity: 0, y: 20 }}
+             whileInView={{ opacity: 1, y: 0 }}
+             className="flex flex-col md:flex-row justify-between items-end mb-24"
+          >
+            <h2 className="font-serif text-7xl md:text-8xl text-[#1A1A18]">Flight Plans</h2>
+            <p className="text-stone-500 text-lg max-w-sm text-right">Cancel anytime. No hidden fees.<br/>Just results.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Free */}
+            <div className="p-12 border border-stone-200 bg-white flex flex-col justify-between min-h-[600px] hover:shadow-xl transition-shadow duration-500">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest text-stone-400">The Scout</span>
+                <h3 className="font-serif text-5xl mt-4 mb-8">Free</h3>
+                <ul className="space-y-6">
+                  {['Anonymous Profile', 'Basic Market Data', '10 Applications/mo'].map(item => (
+                    <li key={item} className="flex items-center gap-4 text-stone-600 font-medium">
+                      <Icons.Check /> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <button className="w-full py-5 border border-stone-300 text-sm font-bold uppercase hover:bg-[#1A1A18] hover:text-white transition-colors">Join Waitlist</button>
+            </div>
+
+            {/* Pro */}
+            <div className="p-12 bg-[#1A1A18] text-[#FDFBF9] flex flex-col justify-between min-h-[600px] relative overflow-hidden transform md:-translate-y-8 shadow-2xl">
+              <div className="absolute top-0 right-0 bg-amber-600 px-6 py-2 text-xs font-bold uppercase tracking-widest">Recommended</div>
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest text-stone-500">The Pilot</span>
+                <h3 className="font-serif text-5xl mt-4 mb-8">$29<span className="text-2xl text-stone-600">/mo</span></h3>
+                <ul className="space-y-6">
+                  {['Priority Listing', 'Full Salary Transparency', 'Unlimited Applications', 'AI Resume Tailoring'].map(item => (
+                    <li key={item} className="flex items-center gap-4 text-stone-300 font-medium">
+                      <Icons.Check /> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <button className="w-full py-5 bg-white text-[#1A1A18] text-sm font-bold uppercase hover:bg-amber-600 hover:text-white transition-colors">Select Plan</button>
+            </div>
+
+            {/* Enterprise */}
+            <div className="p-12 border border-stone-200 bg-white flex flex-col justify-between min-h-[600px] hover:shadow-xl transition-shadow duration-500">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest text-stone-400">The Fleet</span>
+                <h3 className="font-serif text-5xl mt-4 mb-8">Custom</h3>
+                <ul className="space-y-6">
+                  {['API Access', 'Dedicated Account Manager', 'Custom Integrations', 'White Labeling'].map(item => (
+                    <li key={item} className="flex items-center gap-4 text-stone-600 font-medium">
+                      <Icons.Check /> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <button className="w-full py-5 border border-stone-300 text-sm font-bold uppercase hover:bg-[#1A1A18] hover:text-white transition-colors">Contact Sales</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. DEVELOPER / TEAM (HAMZA ATIG) */}
+      <section className="py-40 bg-[#1A1A18] text-[#FDFBF9] overflow-hidden relative">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+            
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              <div className="flex items-center gap-4 mb-12">
+                <div className="h-[1px] w-24 bg-amber-600"></div>
+                <span className="text-xs font-mono text-amber-600 tracking-[0.2em]">THE ARCHITECT</span>
+              </div>
+              <h2 className="font-serif text-7xl md:text-9xl mb-12 leading-[0.9]">
+                One Mind.<br/>
+                Full Stack.
+              </h2>
+              <p className="text-stone-400 text-xl leading-relaxed max-w-lg mb-16">
+                JobPilot wasn't built by a committee. It was engineered by a single developer obsessed with craft, performance, and user empathy.
+              </p>
+              
+              <div className="flex flex-col gap-2 border-l border-stone-800 pl-8">
+                <h3 className="text-3xl font-bold tracking-wide">HAMZA ATIG</h3>
+                <span className="text-sm font-mono text-stone-500">FULL STACK ENGINEER</span>
+                
+                <div className="flex gap-8 mt-8">
+                  <a href="#" className="flex items-center gap-3 text-stone-400 hover:text-white transition-colors group">
+                    <div className="p-2 border border-stone-700 rounded-full group-hover:border-white transition-colors"><Icons.Github /></div>
+                    <span className="text-xs uppercase tracking-widest">Github</span>
+                  </a>
+                  <a href="#" className="flex items-center gap-3 text-stone-400 hover:text-white transition-colors group">
+                    <div className="p-2 border border-stone-700 rounded-full group-hover:border-white transition-colors"><Icons.Code /></div>
+                    <span className="text-xs uppercase tracking-widest">Portfolio</span>
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="relative"
+            >
+              <div className="aspect-[3/4] bg-[#222] relative rounded-sm overflow-hidden grayscale hover:grayscale-0 transition-all duration-1000">
+                {/* Placeholder for User Image - stylized */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
+                <div className="absolute inset-0 flex items-center justify-center bg-stone-900">
+                  <span className="font-serif italic text-[12rem] text-stone-800 opacity-20">HA</span>
+                </div>
+                
+                <div className="absolute bottom-12 left-12 z-20">
+                  <p className="text-white font-serif text-3xl italic">"Code is poetry."</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. CALL TO ACTION */}
+      <section className="py-40 px-6 md:px-12 bg-white border-t border-stone-200">
+        <div className="max-w-7xl mx-auto text-center">
+          <motion.h2 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="font-serif text-6xl md:text-9xl mb-12 text-[#1A1A18]"
+          >
+            Ready to fly?
+          </motion.h2>
+          <p className="text-xl text-stone-500 mb-16 max-w-2xl mx-auto">
+            Join the waitlist today. We are onboarding 100 new pilots every week. Secure your spot on the manifest.
+          </p>
+          
+          <div className="flex flex-col md:flex-row justify-center gap-0 max-w-xl mx-auto">
+            <input 
+              type="email" 
+              placeholder="Enter your email" 
+              className="bg-stone-50 border border-stone-300 border-r-0 py-6 px-8 outline-none focus:bg-white w-full text-lg placeholder:text-stone-400"
+            />
+            <button className="whitespace-nowrap px-12 py-6 bg-[#1A1A18] text-white font-bold tracking-widest uppercase hover:bg-amber-600 transition-colors">
+              Request Access
+            </button>
+          </div>
+          <p className="text-xs text-stone-400 mt-6 uppercase tracking-widest">No spam. Unsubscribe anytime.</p>
+        </div>
+      </section>
+
+      {/* 8. FOOTER */}
+      <footer className="bg-[#1A1A18] text-[#FDFBF9] pt-32 pb-12 px-6 md:px-12 border-t border-stone-800">
+        <div className="max-w-[1800px] mx-auto flex flex-col md:flex-row justify-between items-end gap-12">
+          
+          <div className="flex flex-col gap-8">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 text-white"><Icons.Compass /></div>
+              <span className="font-serif font-bold text-2xl">JobPilot</span>
+            </div>
+            <div className="flex gap-8 text-xs font-bold uppercase tracking-widest text-stone-500">
+              <a href="#" className="hover:text-white transition-colors">Terms</a>
+              <a href="#" className="hover:text-white transition-colors">Privacy</a>
+              <a href="#" className="hover:text-white transition-colors">Cookies</a>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:items-end gap-4">
+            <div className="flex gap-8 text-sm font-bold uppercase tracking-widest">
+              <a href="#" className="hover:text-amber-500 transition-colors">Twitter</a>
+              <a href="#" className="hover:text-amber-500 transition-colors">LinkedIn</a>
+              <a href="#" className="hover:text-amber-500 transition-colors">Instagram</a>
+            </div>
+            <span className="text-xs text-stone-600 uppercase tracking-widest">© 2024 JobPilot Inc. All Rights Reserved.</span>
+          </div>
+
+        </div>
+      </footer>
+
+    </div>
   );
 };
 
-export default Home;
+export default JobPilot;
