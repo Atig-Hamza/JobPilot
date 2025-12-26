@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate } from 'framer-motion';
 
-// --- ICONS (Expanded Set) ---
+// --- ICONS ---
 const Icons = {
   ArrowRight: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>,
   Compass: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>,
@@ -19,9 +19,118 @@ const Icons = {
   Users: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
   Briefcase: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>,
   Building: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line><line x1="9" y1="18" x2="9" y2="18.01"></line><line x1="15" y1="18" x2="15" y2="18.01"></line><line x1="9" y1="14" x2="9" y2="14.01"></line><line x1="15" y1="14" x2="15" y2="14.01"></line><line x1="9" y1="10" x2="9" y2="10.01"></line><line x1="15" y1="10" x2="15" y2="10.01"></line><line x1="9" y1="6" x2="9" y2="6.01"></line><line x1="15" y1="6" x2="15" y2="6.01"></line></svg>,
-  Book: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+  Book: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>,
+  Mail: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
 };
 
+// --- SUB-COMPONENTS FOR HERO ---
+
+// 1. Grid Background
+const GridBackground = () => (
+  <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+    <svg className="absolute w-full h-full opacity-[0.03]" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid-pattern)" />
+    </svg>
+    <div className="absolute inset-0 bg-gradient-to-t from-[#FDFBF9] via-transparent to-transparent h-full w-full" />
+  </div>
+);
+
+// 2. Parallax Radar Animation
+const RadarVisual = ({ mouseX, mouseY }) => {
+  // Create a subtle parallax effect based on mouse position
+  const rotateX = useTransform(mouseY, [-500, 500], [15, -15]);
+  const rotateY = useTransform(mouseX, [-500, 500], [-15, 15]);
+  
+  return (
+    <motion.div 
+      style={{ rotateX, rotateY, perspective: 1000 }}
+      className="relative w-full aspect-square max-w-[400px] flex items-center justify-center transition-transform duration-100 ease-out"
+    >
+      {/* Outer Ring */}
+      <motion.div 
+        animate={{ rotate: 360 }}
+        transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+        className="absolute inset-0 border border-stone-200 rounded-full border-dashed"
+      />
+      {/* Middle Ring */}
+      <motion.div 
+        animate={{ rotate: -360 }}
+        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+        className="absolute inset-12 border border-stone-100 rounded-full"
+      />
+       {/* Scanning Line */}
+       <motion.div 
+        animate={{ rotate: 360 }}
+        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        className="absolute inset-0 rounded-full"
+        style={{ background: 'conic-gradient(from 0deg, transparent 0deg, transparent 300deg, rgba(217, 119, 6, 0.1) 360deg)' }}
+      />
+      {/* Inner Elements */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-2 h-2 bg-amber-600 rounded-full animate-pulse shadow-[0_0_20px_rgba(217,119,6,0.5)]" />
+      </div>
+      
+      {/* Floating "Target" Blips */}
+      {[0, 120, 240].map((deg, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-full h-full"
+          initial={{ rotate: deg }}
+          animate={{ rotate: deg + 360 }}
+          transition={{ duration: 20 + i * 5, repeat: Infinity, ease: "linear" }}
+        >
+          <div className="w-2 h-2 bg-stone-300 rounded-full absolute top-10 left-1/2 -translate-x-1/2" />
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+};
+
+// 3. Magnetic Button
+const MagneticButton = ({ children }) => {
+    const ref = useRef(null);
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+
+    const mouseX = useSpring(x, { stiffness: 150, damping: 15, mass: 0.1 });
+    const mouseY = useSpring(y, { stiffness: 150, damping: 15, mass: 0.1 });
+
+    const handleMouseMove = (e) => {
+        const { clientX, clientY } = e;
+        const { left, top, width, height } = ref.current.getBoundingClientRect();
+        const center = { x: left + width / 2, y: top + height / 2 };
+        x.set(clientX - center.x);
+        y.set(clientY - center.y);
+    };
+
+    const handleMouseLeave = () => {
+        x.set(0);
+        y.set(0);
+    };
+
+    return (
+        <motion.button
+            ref={ref}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            style={{ x: mouseX, y: mouseY }}
+            className="group relative px-8 py-4 bg-[#1A1A18] text-white overflow-hidden rounded-sm transition-all hover:pr-12"
+        >
+            <div className="relative z-10 flex items-center gap-3">
+                {children}
+            </div>
+            <div className="absolute inset-0 bg-amber-600 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-[0.22, 1, 0.36, 1]" />
+        </motion.button>
+    );
+};
+
+
+// --- DATA ---
 const menuData = {
   technology: {
     title: "The Engine",
@@ -60,10 +169,24 @@ const JobPilot = () => {
   const [activeNav, setActiveNav] = useState(null);
   const [openAccordion, setOpenAccordion] = useState(0);
 
+  // Mouse tracking for hero parallax
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const handleMouseMove = (e) => {
+    const { clientX, clientY } = e;
+    // Normalize coordinates relative to center
+    x.set(clientX - window.innerWidth / 2);
+    y.set(clientY - window.innerHeight / 2);
+  };
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+        window.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('mousemove', handleMouseMove);
+    }
   }, []);
 
   // --- ANIMATION VARIANTS ---
@@ -71,9 +194,15 @@ const JobPilot = () => {
     hidden: { opacity: 0, y: 60 },
     visible: { opacity: 1, y: 0, transition: { duration: 1, ease: [0.22, 1, 0.36, 1] } }
   };
+  
+  // Stagger for text reveal (Word by Word)
+  const containerStagger = {
+      visible: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } }
+  };
 
-  const staggerChildren = {
-    visible: { transition: { staggerChildren: 0.1 } }
+  const wordReveal = {
+      hidden: { y: "110%", rotate: 5, opacity: 0 },
+      visible: { y: "0%", rotate: 0, opacity: 1, transition: { duration: 1, ease: [0.16, 1, 0.3, 1] } }
   };
 
   return (
@@ -153,44 +282,112 @@ const JobPilot = () => {
         </AnimatePresence>
       </nav>
 
-      {/* 2. HERO / WELCOME */}
-      <section className="relative pt-64 pb-20 px-6 md:px-12 max-w-[1800px] mx-auto min-h-[90vh] flex flex-col justify-center">
-        <motion.div 
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={staggerChildren}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-end"
-        >
-          <div className="lg:col-span-9">
-            <motion.h1 variants={fadeInUp} className="font-serif text-[15vw] lg:text-[11rem] leading-[0.8] tracking-tighter text-[#1A1A18] mb-8">
-              Don’t Search.<br/>
-              <span className="italic text-stone-300">Navigate.</span>
-            </motion.h1>
-          </div>
-          
-          <div className="lg:col-span-3 lg:pb-8">
-            <motion.div variants={fadeInUp} className="space-y-8">
-              <p className="text-xl md:text-2xl leading-relaxed text-stone-600">
-                The career co-pilot that decodes culture, negotiates salary, and routes you to the top 1% of opportunities.
-              </p>
-              
-              <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-amber-600 mb-4">
-                <span className="flex gap-1">
-                  {[1,2,3,4,5].map(i => <Icons.Star key={i} />)}
-                </span>
-                <span>4.9/5 Developer Rating</span>
-              </div>
+      {/* 2. HERO / WELCOME (HIGH-END ANIMATION) */}
+      <section className="relative pt-48 pb-20 px-6 md:px-12 max-w-[1800px] mx-auto min-h-[95vh] flex flex-col justify-center overflow-hidden">
+        
+        {/* Background Layer */}
+        <GridBackground />
 
-              <div className="flex items-center gap-6 group cursor-pointer">
-                <div className="h-16 w-16 bg-[#1A1A18] text-white rounded-full flex items-center justify-center transition-transform duration-500 group-hover:scale-110 group-hover:rotate-45">
-                  <Icons.ArrowRight />
-                </div>
-                <span className="text-sm uppercase tracking-widest font-bold border-b border-black pb-1">Start Engine</span>
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          {/* Main Typography Column */}
+          <div className="lg:col-span-8 relative">
+            
+            {/* Semantic Label */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center gap-3 mb-8"
+            >
+              <div className="h-[1px] w-12 bg-amber-600"></div>
+              <span className="text-xs font-mono text-amber-600 tracking-[0.2em] uppercase flex gap-2">
+                System Online <span className="animate-pulse">_</span>
+              </span>
+            </motion.div>
+
+            {/* Headline with Staggered Word Reveal */}
+            <motion.h1 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={containerStagger}
+              className="relative z-20 font-serif text-[14vw] lg:text-[10rem] leading-[0.85] tracking-tighter text-[#1A1A18] mb-10 flex flex-col"
+            >
+              {/* Line 1 */}
+              <div className="overflow-hidden flex gap-[0.2em]">
+                 {["Don’t", "Search."].map((word, i) => (
+                     <motion.span key={i} variants={wordReveal} className="block">{word}</motion.span>
+                 ))}
               </div>
+              
+              {/* Line 2 */}
+              <div className="overflow-hidden flex items-baseline pb-4 -mb-4">
+                <motion.span variants={wordReveal} className="italic text-stone-300 flex items-center">
+                  <span className="text-amber-600/30 mr-4 font-sans not-italic text-[0.4em] align-middle tracking-tighter">{'//'}</span>
+                  Navigate.
+                </motion.span>
+              </div>
+            </motion.h1>
+
+            {/* Sub-content Container */}
+            <div className="flex flex-col md:flex-row gap-12 md:items-end max-w-3xl">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.8 }}
+                className="flex-1"
+              >
+                 <p className="text-xl leading-relaxed text-stone-600 font-medium">
+                  The career co-pilot that decodes culture, negotiates salary, and routes you to the top 1% of opportunities.
+                </p>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.8 }}
+              >
+                <MagneticButton>
+                    <span className="text-sm font-bold uppercase tracking-widest">Start Engine</span>
+                    <Icons.ArrowRight />
+                </MagneticButton>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Visual/Tech Column with Parallax Radar */}
+          <div className="lg:col-span-4 hidden lg:flex flex-col items-center justify-center relative perspective-1000">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
+            >
+              <RadarVisual mouseX={x} mouseY={y} />
+            </motion.div>
+
+            {/* Floating Stats Card - Glassmorphism */}
+            <motion.div 
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1, duration: 0.8 }}
+              className="absolute -bottom-12 -left-12 bg-white/80 backdrop-blur-md p-6 border border-stone-200 shadow-xl max-w-[240px]"
+            >
+              <div className="flex items-center gap-4 mb-3">
+                <div className="flex -space-x-2">
+                  {[1,2,3].map(i => (
+                    <div key={i} className="w-8 h-8 rounded-full bg-stone-200 border-2 border-white" />
+                  ))}
+                </div>
+                <span className="text-xs font-bold text-amber-600">+424 hired</span>
+              </div>
+              <p className="text-xs text-stone-500 leading-tight">
+                "This tool found my role at Vercel in 48 hours."
+              </p>
             </motion.div>
           </div>
-        </motion.div>
+
+        </div>
       </section>
 
       {/* 2.5 SCROLLING MARQUEE (Social Proof) */}
@@ -376,7 +573,7 @@ const JobPilot = () => {
                 JobPilot wasn't built by a committee. It was engineered by a single developer obsessed with craft, performance, and user empathy.
               </p>
 
-              {/* Added Tech Stack Section */}
+              {/* Tech Stack Section */}
               <div className="flex flex-wrap gap-2 mb-16 max-w-md">
                  {['React', 'Node.js', 'Next.js', 'Tailwind', 'MongoDB', 'OpenAI API'].map(tech => (
                    <span key={tech} className="px-3 py-1 border border-stone-800 text-xs text-stone-500 uppercase tracking-widest rounded-full">
@@ -416,7 +613,7 @@ const JobPilot = () => {
                 {/* Placeholder for User Image - stylized */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
                 <div className="absolute inset-0 flex items-center justify-center bg-stone-900 group-hover:scale-105 transition-transform duration-1000">
-                   {/* This would be an actual image, using a text placeholder for style */}
+                    {/* This would be an actual image, using a text placeholder for style */}
                   <span className="font-serif italic text-[12rem] text-stone-800 opacity-20">HA</span>
                 </div>
                 
@@ -433,31 +630,35 @@ const JobPilot = () => {
         </div>
       </section>
 
-      {/* 7. CALL TO ACTION */}
+      {/* 7. NEWSLETTER (Updated for News/Updates) */}
       <section className="py-40 px-6 md:px-12 bg-white border-t border-stone-200">
         <div className="max-w-7xl mx-auto text-center">
-          <motion.h2 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            className="font-serif text-6xl md:text-9xl mb-12 text-[#1A1A18]"
+          <motion.div
+             initial={{ opacity: 0, y: 30 }}
+             whileInView={{ opacity: 1, y: 0 }}
           >
-            Ready to ascend?
-          </motion.h2>
+             <span className="font-mono text-amber-600 text-sm tracking-widest mb-4 block uppercase">The Signal</span>
+            <h2 className="font-serif text-6xl md:text-9xl mb-12 text-[#1A1A18]">
+                Market Intelligence.
+            </h2>
+          </motion.div>
+          
           <p className="text-xl text-stone-500 mb-16 max-w-2xl mx-auto">
-            We are onboarding 100 new pilots this week. Secure your spot on the manifest before the window closes.
+            Get the latest industry news, feature updates, and career insights directly to your inbox.
           </p>
           
           <div className="flex flex-col md:flex-row justify-center gap-0 max-w-xl mx-auto">
             <input 
               type="email" 
-              placeholder="Enter your email" 
-              className="bg-stone-50 border border-stone-300 border-r-0 py-6 px-8 outline-none focus:bg-white w-full text-lg placeholder:text-stone-400 focus:border-amber-600 transition-colors"
+              placeholder="pilot@example.com" 
+              className="bg-stone-5 border border-stone-300 border-r-0 py-6 px-8 outline-none focus:bg-white w-full text-lg placeholder:text-stone-400 focus:border-amber-600 transition-colors"
             />
-            <button className="whitespace-nowrap px-12 py-6 bg-[#1A1A18] text-white font-bold tracking-widest uppercase hover:bg-amber-600 transition-colors">
-              Request Access
+            <button className="whitespace-nowrap px-12 py-6 bg-[#1A1A18] text-white font-bold tracking-widest uppercase hover:bg-amber-600 transition-colors flex items-center gap-2">
+              <Icons.Mail />
+              <span>Subscribe</span>
             </button>
           </div>
-          <p className="text-xs text-stone-400 mt-6 uppercase tracking-widest">Limited Availability. No Spam.</p>
+          <p className="text-xs text-stone-400 mt-6 uppercase tracking-widest">Low frequency. High signal.</p>
         </div>
       </section>
 
