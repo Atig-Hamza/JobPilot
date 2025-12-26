@@ -10,7 +10,49 @@ const Icons = {
   Code: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>,
   Plus: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>,
   Star: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
-  Terminal: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+  Terminal: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>,
+  FileText: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
+  Chart: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>,
+  Lock: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>,
+  DollarSign: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>,
+  EyeOff: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>,
+  Users: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
+  Briefcase: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>,
+  Building: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line><line x1="9" y1="18" x2="9" y2="18.01"></line><line x1="15" y1="18" x2="15" y2="18.01"></line><line x1="9" y1="14" x2="9" y2="14.01"></line><line x1="15" y1="14" x2="15" y2="14.01"></line><line x1="9" y1="10" x2="9" y2="10.01"></line><line x1="15" y1="10" x2="15" y2="10.01"></line><line x1="9" y1="6" x2="9" y2="6.01"></line><line x1="15" y1="6" x2="15" y2="6.01"></line></svg>,
+  Book: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+};
+
+const menuData = {
+  technology: {
+    title: "The Engine",
+    description: "A proprietary blend of Large Language Models and behavioral psychology designed to decode job descriptions.",
+    items: [
+      { title: "Semantic Matching", desc: "Mapping intent, not just keyword density.", icon: <Icons.Compass /> },
+      { title: "Automated Outreach", desc: "Draft personalized cover letters in ms.", icon: <Icons.Code /> },
+      { title: "Resume Optimization", desc: "Tailor your CV for every single application.", icon: <Icons.FileText /> },
+      { title: "Market Analytics", desc: "Real-time insights on salary and demand.", icon: <Icons.Chart /> }
+    ]
+  },
+  manifesto: {
+    title: "Our Why",
+    description: "We believe the job hunt strips away humanity. We are using code to bring it back.",
+    items: [
+      { title: "Privacy First", desc: "Your current employer will never see you.", icon: <Icons.Lock /> },
+      { title: "Salary Transparent", desc: "We calculate real market value, not guesses.", icon: <Icons.DollarSign /> },
+      { title: "Bias Elimination", desc: "Focus on skills, ignoring the noise.", icon: <Icons.EyeOff /> },
+      { title: "Community Driven", desc: "Built by engineers, for engineers.", icon: <Icons.Users /> }
+    ]
+  },
+  membership: {
+    title: "Invest in You",
+    description: "Pricing designed for the individual, not the enterprise. High-leverage tools for career ascension.",
+    items: [
+      { title: "Pro Plan", desc: "Unlimited applications and AI credits.", icon: <Icons.Star /> },
+      { title: "Team Access", desc: "For recruitment agencies and small teams.", icon: <Icons.Briefcase /> },
+      { title: "Enterprise", desc: "Custom solutions for large organizations.", icon: <Icons.Building /> },
+      { title: "Student Tier", desc: "Free access for verified students.", icon: <Icons.Book /> }
+    ]
+  }
 };
 
 const JobPilot = () => {
@@ -63,13 +105,13 @@ const JobPilot = () => {
           </div>
 
           <button className="hidden md:block px-8 py-3 bg-[#1A1A18] text-white text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-amber-600 transition-colors">
-            Initialize
+            Login
           </button>
         </div>
 
         {/* Mega Menu Content */}
         <AnimatePresence>
-          {activeNav && (
+          {activeNav && menuData[activeNav] && (
             <motion.div 
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -79,36 +121,31 @@ const JobPilot = () => {
               <div className="max-w-7xl mx-auto px-12 py-16 grid grid-cols-12 gap-12">
                 <div className="col-span-4 border-r border-stone-100">
                   <h3 className="font-serif text-4xl mb-4 text-[#1A1A18]">
-                    {activeNav === 'technology' ? 'The Engine' : activeNav === 'manifesto' ? 'Our Why' : 'Invest in You'}
+                    {menuData[activeNav].title}
                   </h3>
                   <p className="text-stone-500 leading-relaxed pr-8">
-                    {activeNav === 'technology' 
-                      ? "A proprietary blend of Large Language Models and behavioral psychology designed to decode job descriptions."
-                      : activeNav === 'manifesto'
-                      ? "We believe the job hunt strips away humanity. We are using code to bring it back."
-                      : "Pricing designed for the individual, not the enterprise. High-leverage tools for career ascension."
-                    }
+                    {menuData[activeNav].description}
                   </p>
                 </div>
                 <div className="col-span-8 grid grid-cols-2 gap-8 pl-8">
-                  <div className="group cursor-pointer p-6 hover:bg-stone-100 rounded-sm transition-colors">
-                    <h4 className="font-bold mb-2 flex items-center gap-2 text-lg">
-                      {activeNav === 'technology' ? 'Semantic Matching' : 'Privacy First'} 
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity transform -rotate-45"><Icons.ArrowRight /></div>
-                    </h4>
-                    <p className="text-sm text-stone-500">
-                       {activeNav === 'technology' ? 'Mapping intent, not just keyword density.' : 'Your current employer will never see you.'}
-                    </p>
-                  </div>
-                  <div className="group cursor-pointer p-6 hover:bg-stone-100 rounded-sm transition-colors">
-                    <h4 className="font-bold mb-2 flex items-center gap-2 text-lg">
-                      {activeNav === 'technology' ? 'Automated Outreach' : 'Salary Transparent'}
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity transform -rotate-45"><Icons.ArrowRight /></div>
-                    </h4>
-                    <p className="text-sm text-stone-500">
-                      {activeNav === 'technology' ? 'Draft personalized cover letters in ms.' : 'We calculate real market value, not guesses.'}
-                    </p>
-                  </div>
+                  {menuData[activeNav].items.map((item, index) => (
+                    <div key={index} className="group cursor-pointer p-6 hover:bg-stone-100 rounded-sm transition-colors">
+                      <div className="flex items-start gap-4">
+                        <div className="text-stone-400 group-hover:text-amber-600 transition-colors mt-1">
+                          {item.icon}
+                        </div>
+                        <div>
+                          <h4 className="font-bold mb-2 flex items-center gap-2 text-lg">
+                            {item.title}
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity transform -rotate-45"><Icons.ArrowRight /></div>
+                          </h4>
+                          <p className="text-sm text-stone-500">
+                            {item.desc}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </motion.div>
