@@ -45,113 +45,410 @@ const RadarVisual = ({ mouseX, mouseY }) => {
   const rotateX = useTransform(mouseY, [-500, 500], [5, -5]);
   const rotateY = useTransform(mouseX, [-500, 500], [-5, 5]);
   
+  const [step, setStep] = useState(0);
+  
+  // Cycle through steps
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStep((prev) => (prev + 1) % 6);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, []);
+
+  const steps = [
+    { id: 0, label: "ANALYSIS", color: "bg-stone-400" },
+    { id: 1, label: "OPTIMIZE", color: "bg-blue-400" },
+    { id: 2, label: "SOURCING", color: "bg-amber-400" },
+    { id: 3, label: "APPLYING", color: "bg-purple-400" },
+    { id: 4, label: "TRACKING", color: "bg-indigo-400" },
+    { id: 5, label: "HIRED", color: "bg-green-400" },
+  ];
+
   return (
     <motion.div 
       style={{ rotateX, rotateY, perspective: 1000 }}
       className="relative w-full h-[600px] flex items-center justify-center"
     >
       {/* Main Glass Panel */}
-      <div className="absolute inset-0 bg-white/40 backdrop-blur-xl border border-white/50 rounded-2xl shadow-2xl overflow-hidden">
+      <div className="absolute inset-0 bg-white/40 backdrop-blur-xl border border-white/50 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         
         {/* Grid Overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
         
         {/* Header Bar */}
-        <div className="absolute top-0 left-0 right-0 h-12 border-b border-white/50 flex items-center px-6 justify-between bg-white/20">
+        <div className="h-12 border-b border-white/50 flex items-center px-6 justify-between bg-white/20 shrink-0 z-20">
            <div className="flex gap-2">
              <div className="w-3 h-3 rounded-full bg-red-400/80" />
              <div className="w-3 h-3 rounded-full bg-amber-400/80" />
              <div className="w-3 h-3 rounded-full bg-green-400/80" />
            </div>
-           <div className="font-mono text-xs text-stone-500 tracking-widest">JOBPILOT_CORE_V2.4</div>
+           <div className="flex items-center gap-4">
+             <div className="flex gap-1">
+                {steps.map((s, i) => (
+                    <div key={s.id} className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${i === step ? s.color : "bg-stone-300"}`} />
+                ))}
+             </div>
+             <div className="font-mono text-xs text-stone-500 tracking-widest">JOBPILOT_CORE_V2.5</div>
+           </div>
         </div>
 
-        {/* Content Area */}
-        <div className="p-8 pt-20 h-full flex flex-col gap-6">
-           
-           {/* 1. Processing Status */}
-           <div className="flex justify-between items-end">
-              <div>
-                <div className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Status</div>
-                <div className="text-2xl font-serif text-[#1A1A18]">Analyzing Market...</div>
-              </div>
-              <div className="flex gap-1">
-                {[1,2,3,4,5].map(i => (
-                  <motion.div 
-                    key={i}
-                    animate={{ height: [10, 24, 10] }}
-                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.1 }}
-                    className="w-1 bg-amber-600 rounded-full"
-                  />
-                ))}
-              </div>
-           </div>
+        {/* Main Content Area */}
+        <div className="flex-1 relative p-8 overflow-hidden">
+            <AnimatePresence mode="wait">
+                
+                {/* STEP 1: ANALYZING CV */}
+                {step === 0 && (
+                    <motion.div 
+                        key="analyzing"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="h-full flex flex-col"
+                    >
+                        <div className="flex justify-between items-end mb-6">
+                            <div>
+                                <div className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Phase 01</div>
+                                <div className="text-2xl font-serif text-[#1A1A18]">CV Analysis</div>
+                            </div>
+                            <div className="font-mono text-xs text-stone-400">Parsing Structure...</div>
+                        </div>
+                        
+                        <div className="flex-1 flex items-center justify-center relative">
+                            <div className="w-48 h-64 bg-white border border-stone-200 shadow-lg rounded-lg p-4 relative overflow-hidden">
+                                <div className="space-y-3">
+                                    <div className="w-12 h-12 bg-stone-100 rounded-full mb-4" />
+                                    <div className="h-2 w-3/4 bg-stone-200 rounded" />
+                                    <div className="h-2 w-1/2 bg-stone-200 rounded" />
+                                    <div className="h-2 w-full bg-stone-100 rounded" />
+                                    <div className="h-2 w-full bg-stone-100 rounded" />
+                                    <div className="h-2 w-2/3 bg-stone-100 rounded" />
+                                </div>
+                                {/* Scanning Line */}
+                                <motion.div 
+                                    animate={{ top: ["0%", "120%"] }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                    className="absolute left-0 right-0 h-1 bg-blue-400/50 shadow-[0_0_15px_rgba(96,165,250,0.5)] z-10"
+                                />
+                            </div>
+                            {/* Floating Data Points */}
+                            <motion.div 
+                                animate={{ x: [0, 20], opacity: [0, 1, 0] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                                className="absolute right-10 top-1/3 bg-stone-800 text-white text-[10px] px-2 py-1 rounded font-mono"
+                            >
+                                EXPERIENCE_DETECTED
+                            </motion.div>
+                             <motion.div 
+                                animate={{ x: [0, -20], opacity: [0, 1, 0] }}
+                                transition={{ duration: 2, delay: 1, repeat: Infinity }}
+                                className="absolute left-10 bottom-1/3 bg-stone-800 text-white text-[10px] px-2 py-1 rounded font-mono"
+                            >
+                                SKILLS_PARSED
+                            </motion.div>
+                        </div>
+                    </motion.div>
+                )}
 
-           {/* 2. Data Stream Visualization */}
-           <div className="flex-1 bg-white/50 rounded-lg border border-white/60 p-4 font-mono text-[10px] text-stone-500 overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/80 z-10" />
-              <motion.div 
-                animate={{ y: [-200, 0] }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="space-y-1 opacity-70"
-              >
-                {Array.from({ length: 20 }).map((_, i) => (
-                  <div key={i} className="flex gap-4">
-                    <span className="text-stone-300">0{i + 1}</span>
-                    <span className="text-amber-600/80">GET /api/jobs/match</span>
-                    <span className="text-stone-400">200 OK</span>
-                    <span className="text-stone-300">{Math.floor(Math.random() * 50)}ms</span>
-                  </div>
-                ))}
-                 {Array.from({ length: 20 }).map((_, i) => (
-                  <div key={i + 20} className="flex gap-4">
-                    <span className="text-stone-300">0{i + 21}</span>
-                    <span className="text-amber-600/80">POST /api/analyze</span>
-                    <span className="text-stone-400">PROCESSING</span>
-                    <span className="text-stone-300">...</span>
-                  </div>
-                ))}
-              </motion.div>
-           </div>
+                {/* STEP 2: OPTIMIZE IT */}
+                {step === 1 && (
+                    <motion.div 
+                        key="optimize"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="h-full flex flex-col"
+                    >
+                        <div className="flex justify-between items-end mb-6">
+                            <div>
+                                <div className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2">Phase 02</div>
+                                <div className="text-2xl font-serif text-[#1A1A18]">AI Optimization</div>
+                            </div>
+                            <div className="font-mono text-xs text-stone-400">Enhancing Keywords...</div>
+                        </div>
 
-           {/* 3. Match Cards (Floating) */}
-           <div className="relative h-32">
-              <motion.div 
-                animate={{ x: [0, 10, 0], y: [0, -5, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute top-0 right-0 bg-[#1A1A18] text-white p-4 rounded-lg shadow-xl w-64 z-20"
-              >
-                 <div className="flex justify-between items-start mb-2">
-                   <div className="flex items-center gap-2">
-                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                     <span className="text-xs font-bold tracking-widest">MATCH FOUND</span>
-                   </div>
-                   <span className="text-amber-500 font-mono text-xs">98%</span>
-                 </div>
-                 <div className="text-sm font-serif mb-1">Senior Frontend Engineer</div>
-                 <div className="text-xs text-stone-400">San Francisco • $180k - $220k</div>
-              </motion.div>
+                        <div className="flex-1 flex items-center justify-center gap-8">
+                            {/* Before */}
+                            <div className="w-32 h-40 bg-stone-50 border border-stone-200 rounded p-2 opacity-50 scale-90 blur-[1px]">
+                                <div className="h-1.5 w-full bg-stone-200 mb-2 rounded" />
+                                <div className="h-1.5 w-2/3 bg-stone-200 mb-2 rounded" />
+                            </div>
+                            
+                            <div className="flex flex-col items-center gap-2">
+                                <Icons.ArrowRight />
+                                <motion.div 
+                                    animate={{ scale: [1, 1.2, 1] }}
+                                    transition={{ duration: 1, repeat: Infinity }}
+                                    className="text-xs font-bold text-blue-500"
+                                >
+                                    AI MAGIC
+                                </motion.div>
+                            </div>
 
-              <motion.div 
-                animate={{ x: [0, -5, 0], y: [0, 5, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                className="absolute bottom-0 left-0 bg-white border border-stone-200 p-4 rounded-lg shadow-lg w-56 z-10 opacity-90"
-              >
-                 <div className="flex items-center gap-2 mb-2">
-                   <Icons.Compass className="w-4 h-4 text-stone-400" />
-                   <span className="text-xs font-bold tracking-widest text-stone-500">CULTURE FIT</span>
-                 </div>
-                 <div className="h-1 w-full bg-stone-100 rounded-full overflow-hidden">
-                   <motion.div 
-                     initial={{ width: 0 }}
-                     animate={{ width: "92%" }}
-                     transition={{ duration: 1.5, delay: 0.5 }}
-                     className="h-full bg-amber-600" 
-                   />
-                 </div>
-              </motion.div>
-           </div>
+                            {/* After */}
+                            <div className="w-40 h-52 bg-white border-2 border-blue-400 shadow-xl rounded-lg p-4 relative">
+                                <motion.div 
+                                    initial={{ width: "0%" }}
+                                    animate={{ width: "100%" }}
+                                    transition={{ duration: 1.5 }}
+                                    className="absolute top-0 left-0 h-1 bg-blue-500"
+                                />
+                                <div className="space-y-2">
+                                    <motion.div 
+                                        animate={{ backgroundColor: ["#e7e5e4", "#60a5fa", "#1e3a8a"] }}
+                                        className="h-2 w-full rounded"
+                                    />
+                                    <div className="h-2 w-full bg-stone-100 rounded" />
+                                    <div className="h-2 w-3/4 bg-stone-100 rounded" />
+                                    <div className="mt-4 p-2 bg-blue-50 rounded border border-blue-100">
+                                        <div className="flex gap-1 mb-1">
+                                            <Icons.Star className="w-3 h-3 text-amber-400" />
+                                            <Icons.Star className="w-3 h-3 text-amber-400" />
+                                            <Icons.Star className="w-3 h-3 text-amber-400" />
+                                        </div>
+                                        <div className="h-1.5 w-full bg-blue-200 rounded" />
+                                    </div>
+                                </div>
+                                <div className="absolute -right-3 -top-3 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg">
+                                    +45% SCORE
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
 
+                {/* STEP 3: GETTING JOBS (SOURCING) */}
+                {step === 2 && (
+                    <motion.div 
+                        key="sourcing"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="h-full flex flex-col"
+                    >
+                        <div className="flex justify-between items-end mb-6">
+                            <div>
+                                <div className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-2">Phase 03</div>
+                                <div className="text-2xl font-serif text-[#1A1A18]">Job Sourcing</div>
+                            </div>
+                            <div className="font-mono text-xs text-stone-400">Scanning Market...</div>
+                        </div>
+
+                        <div className="flex-1 relative border border-stone-200/50 rounded-lg bg-stone-900 overflow-hidden">
+                            {/* Radar Grid */}
+                            <div className="absolute inset-0 opacity-20" 
+                                style={{ backgroundImage: 'radial-gradient(#444 1px, transparent 1px)', backgroundSize: '20px 20px' }} 
+                            />
+                            
+                            {/* Radar Sweep */}
+                            <motion.div 
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                className="absolute top-1/2 left-1/2 w-[150%] h-[150%] origin-top-left bg-gradient-to-r from-transparent via-amber-500/10 to-amber-500/40 -translate-y-1/2 -translate-x-1/2"
+                                style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 0)' }}
+                            />
+
+                            {/* Job Nodes */}
+                            {Array.from({ length: 8 }).map((_, i) => (
+                                <motion.div 
+                                    key={i}
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ delay: i * 0.3, duration: 0.5 }}
+                                    className="absolute w-3 h-3 bg-amber-500 rounded-full shadow-[0_0_10px_#f59e0b]"
+                                    style={{ 
+                                        top: `${20 + Math.random() * 60}%`, 
+                                        left: `${20 + Math.random() * 60}%` 
+                                    }}
+                                >
+                                    <div className="absolute top-4 left-4 bg-stone-800 text-amber-500 text-[8px] px-1 rounded whitespace-nowrap">
+                                        MATCH FOUND
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* STEP 4: AUTO APPLY */}
+                {step === 3 && (
+                    <motion.div 
+                        key="applying"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="h-full flex flex-col"
+                    >
+                        <div className="flex justify-between items-end mb-6">
+                            <div>
+                                <div className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2">Phase 04</div>
+                                <div className="text-2xl font-serif text-[#1A1A18]">Auto-Applying</div>
+                            </div>
+                            <div className="font-mono text-xs text-stone-400">Sending Applications...</div>
+                        </div>
+
+                        <div className="flex-1 flex items-center justify-center gap-12">
+                            {/* User Node */}
+                            <div className="w-16 h-16 bg-stone-900 rounded-full flex items-center justify-center text-white z-10 shadow-xl">
+                                <Icons.Users />
+                            </div>
+
+                            {/* Connection Lines */}
+                            <div className="flex-1 relative h-32">
+                                {Array.from({ length: 3 }).map((_, i) => (
+                                    <motion.div 
+                                        key={i}
+                                        className="absolute left-0 top-1/2 h-0.5 bg-purple-200 w-full origin-left"
+                                        style={{ rotate: (i - 1) * 15 }}
+                                    >
+                                        <motion.div 
+                                            animate={{ offsetDistance: "100%", left: ["0%", "100%"] }}
+                                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.4, ease: "linear" }}
+                                            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-600 rounded-full shadow-lg"
+                                        />
+                                    </motion.div>
+                                ))}
+                            </div>
+
+                            {/* Company Nodes */}
+                            <div className="flex flex-col gap-4">
+                                {['Google', 'Meta', 'Netflix'].map((company, i) => (
+                                    <motion.div 
+                                        key={company}
+                                        initial={{ x: 20, opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        transition={{ delay: i * 0.2 }}
+                                        className="bg-white border border-stone-200 px-4 py-2 rounded-lg shadow-sm flex items-center gap-2 w-32"
+                                    >
+                                        <div className="w-2 h-2 bg-green-400 rounded-full" />
+                                        <span className="text-xs font-bold">{company}</span>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* STEP 5: TRACKING */}
+                {step === 4 && (
+                    <motion.div 
+                        key="tracking"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="h-full flex flex-col"
+                    >
+                        <div className="flex justify-between items-end mb-6">
+                            <div>
+                                <div className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-2">Phase 05</div>
+                                <div className="text-2xl font-serif text-[#1A1A18]">Status Tracking</div>
+                            </div>
+                            <div className="font-mono text-xs text-stone-400">Real-time Updates...</div>
+                        </div>
+
+                        <div className="flex-1 grid grid-cols-3 gap-4">
+                            {/* Columns */}
+                            {[
+                                { title: "APPLIED", color: "bg-stone-100", count: 12 },
+                                { title: "INTERVIEW", color: "bg-blue-50", count: 3 },
+                                { title: "OFFER", color: "bg-green-50", count: 1 }
+                            ].map((col, i) => (
+                                <div key={col.title} className={`rounded-lg p-3 ${col.color} flex flex-col gap-3`}>
+                                    <div className="text-[10px] font-bold text-stone-500 flex justify-between">
+                                        {col.title}
+                                        <span className="bg-white px-1.5 rounded text-stone-800">{col.count}</span>
+                                    </div>
+                                    {/* Cards */}
+                                    <motion.div 
+                                        initial={{ y: 10, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        transition={{ delay: i * 0.3 }}
+                                        className="bg-white p-2 rounded shadow-sm border border-stone-200/50"
+                                    >
+                                        <div className="h-2 w-12 bg-stone-200 rounded mb-2" />
+                                        <div className="h-1.5 w-full bg-stone-100 rounded" />
+                                    </motion.div>
+                                    {i === 1 && (
+                                        <motion.div 
+                                            initial={{ y: 10, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            transition={{ delay: 0.5 }}
+                                            className="bg-white p-2 rounded shadow-sm border border-stone-200/50"
+                                        >
+                                            <div className="h-2 w-16 bg-blue-200 rounded mb-2" />
+                                            <div className="h-1.5 w-3/4 bg-stone-100 rounded" />
+                                        </motion.div>
+                                    )}
+                                    {i === 2 && (
+                                        <motion.div 
+                                            layoutId="offer-card"
+                                            className="bg-white p-2 rounded shadow-md border border-green-200"
+                                        >
+                                            <div className="flex justify-between items-center mb-2">
+                                                <div className="h-2 w-16 bg-green-600 rounded" />
+                                                <Icons.Star className="w-3 h-3 text-amber-400" />
+                                            </div>
+                                            <div className="h-1.5 w-full bg-stone-100 rounded" />
+                                        </motion.div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* STEP 6: HIRED */}
+                {step === 5 && (
+                    <motion.div 
+                        key="hired"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="h-full flex flex-col items-center justify-center relative"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-b from-green-50/50 to-transparent" />
+                        
+                        {/* Confetti / Particles */}
+                        {Array.from({ length: 20 }).map((_, i) => (
+                            <motion.div 
+                                key={i}
+                                initial={{ y: 0, opacity: 1 }}
+                                animate={{ y: -100, x: (Math.random() - 0.5) * 200, opacity: 0 }}
+                                transition={{ duration: 2, ease: "easeOut" }}
+                                className="absolute w-2 h-2 rounded-full"
+                                style={{ 
+                                    backgroundColor: ['#fca5a5', '#fcd34d', '#86efac', '#93c5fd'][Math.floor(Math.random() * 4)],
+                                    left: '50%',
+                                    top: '50%'
+                                }}
+                            />
+                        ))}
+
+                        <motion.div 
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="bg-white border border-stone-200 p-8 rounded-xl shadow-2xl w-3/4 z-10 text-center"
+                        >
+                            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Icons.Check />
+                            </div>
+                            
+                            <h3 className="text-2xl font-serif font-bold text-[#1A1A18] mb-2">You're Hired!</h3>
+                            <p className="text-stone-500 text-sm mb-6">Offer accepted at TechCorp Inc.</p>
+                            
+                            <div className="bg-stone-50 rounded-lg p-4 mb-6">
+                                <div className="text-xs text-stone-400 uppercase tracking-widest mb-1">Total Compensation</div>
+                                <div className="text-3xl font-mono font-bold text-[#1A1A18]">$220,000</div>
+                            </div>
+
+                            <button className="w-full bg-[#1A1A18] text-white py-3 rounded-lg text-sm font-bold tracking-wide hover:bg-green-600 transition-colors">
+                                VIEW OFFER DETAILS
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+
+            </AnimatePresence>
         </div>
       </div>
       
