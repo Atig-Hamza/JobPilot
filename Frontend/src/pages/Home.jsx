@@ -40,53 +40,125 @@ const GridBackground = () => (
   </div>
 );
 
-// 2. Parallax Radar Animation
+// 2. Advanced System Visual Animation (Processing Style)
 const RadarVisual = ({ mouseX, mouseY }) => {
-  // Create a subtle parallax effect based on mouse position
-  const rotateX = useTransform(mouseY, [-500, 500], [15, -15]);
-  const rotateY = useTransform(mouseX, [-500, 500], [-15, 15]);
+  const rotateX = useTransform(mouseY, [-500, 500], [5, -5]);
+  const rotateY = useTransform(mouseX, [-500, 500], [-5, 5]);
   
   return (
     <motion.div 
       style={{ rotateX, rotateY, perspective: 1000 }}
-      className="relative w-full aspect-square max-w-[400px] flex items-center justify-center transition-transform duration-100 ease-out"
+      className="relative w-full h-[600px] flex items-center justify-center"
     >
-      {/* Outer Ring */}
-      <motion.div 
-        animate={{ rotate: 360 }}
-        transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-0 border border-stone-200 rounded-full border-dashed"
-      />
-      {/* Middle Ring */}
-      <motion.div 
-        animate={{ rotate: -360 }}
-        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-12 border border-stone-100 rounded-full"
-      />
-       {/* Scanning Line */}
-       <motion.div 
-        animate={{ rotate: 360 }}
-        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-0 rounded-full"
-        style={{ background: 'conic-gradient(from 0deg, transparent 0deg, transparent 300deg, rgba(217, 119, 6, 0.1) 360deg)' }}
-      />
-      {/* Inner Elements */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-2 h-2 bg-amber-600 rounded-full animate-pulse shadow-[0_0_20px_rgba(217,119,6,0.5)]" />
+      {/* Main Glass Panel */}
+      <div className="absolute inset-0 bg-white/40 backdrop-blur-xl border border-white/50 rounded-2xl shadow-2xl overflow-hidden">
+        
+        {/* Grid Overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        
+        {/* Header Bar */}
+        <div className="absolute top-0 left-0 right-0 h-12 border-b border-white/50 flex items-center px-6 justify-between bg-white/20">
+           <div className="flex gap-2">
+             <div className="w-3 h-3 rounded-full bg-red-400/80" />
+             <div className="w-3 h-3 rounded-full bg-amber-400/80" />
+             <div className="w-3 h-3 rounded-full bg-green-400/80" />
+           </div>
+           <div className="font-mono text-xs text-stone-500 tracking-widest">JOBPILOT_CORE_V2.4</div>
+        </div>
+
+        {/* Content Area */}
+        <div className="p-8 pt-20 h-full flex flex-col gap-6">
+           
+           {/* 1. Processing Status */}
+           <div className="flex justify-between items-end">
+              <div>
+                <div className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Status</div>
+                <div className="text-2xl font-serif text-[#1A1A18]">Analyzing Market...</div>
+              </div>
+              <div className="flex gap-1">
+                {[1,2,3,4,5].map(i => (
+                  <motion.div 
+                    key={i}
+                    animate={{ height: [10, 24, 10] }}
+                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.1 }}
+                    className="w-1 bg-amber-600 rounded-full"
+                  />
+                ))}
+              </div>
+           </div>
+
+           {/* 2. Data Stream Visualization */}
+           <div className="flex-1 bg-white/50 rounded-lg border border-white/60 p-4 font-mono text-[10px] text-stone-500 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/80 z-10" />
+              <motion.div 
+                animate={{ y: [-200, 0] }}
+                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                className="space-y-1 opacity-70"
+              >
+                {Array.from({ length: 20 }).map((_, i) => (
+                  <div key={i} className="flex gap-4">
+                    <span className="text-stone-300">0{i + 1}</span>
+                    <span className="text-amber-600/80">GET /api/jobs/match</span>
+                    <span className="text-stone-400">200 OK</span>
+                    <span className="text-stone-300">{Math.floor(Math.random() * 50)}ms</span>
+                  </div>
+                ))}
+                 {Array.from({ length: 20 }).map((_, i) => (
+                  <div key={i + 20} className="flex gap-4">
+                    <span className="text-stone-300">0{i + 21}</span>
+                    <span className="text-amber-600/80">POST /api/analyze</span>
+                    <span className="text-stone-400">PROCESSING</span>
+                    <span className="text-stone-300">...</span>
+                  </div>
+                ))}
+              </motion.div>
+           </div>
+
+           {/* 3. Match Cards (Floating) */}
+           <div className="relative h-32">
+              <motion.div 
+                animate={{ x: [0, 10, 0], y: [0, -5, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-0 right-0 bg-[#1A1A18] text-white p-4 rounded-lg shadow-xl w-64 z-20"
+              >
+                 <div className="flex justify-between items-start mb-2">
+                   <div className="flex items-center gap-2">
+                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                     <span className="text-xs font-bold tracking-widest">MATCH FOUND</span>
+                   </div>
+                   <span className="text-amber-500 font-mono text-xs">98%</span>
+                 </div>
+                 <div className="text-sm font-serif mb-1">Senior Frontend Engineer</div>
+                 <div className="text-xs text-stone-400">San Francisco • $180k - $220k</div>
+              </motion.div>
+
+              <motion.div 
+                animate={{ x: [0, -5, 0], y: [0, 5, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                className="absolute bottom-0 left-0 bg-white border border-stone-200 p-4 rounded-lg shadow-lg w-56 z-10 opacity-90"
+              >
+                 <div className="flex items-center gap-2 mb-2">
+                   <Icons.Compass className="w-4 h-4 text-stone-400" />
+                   <span className="text-xs font-bold tracking-widest text-stone-500">CULTURE FIT</span>
+                 </div>
+                 <div className="h-1 w-full bg-stone-100 rounded-full overflow-hidden">
+                   <motion.div 
+                     initial={{ width: 0 }}
+                     animate={{ width: "92%" }}
+                     transition={{ duration: 1.5, delay: 0.5 }}
+                     className="h-full bg-amber-600" 
+                   />
+                 </div>
+              </motion.div>
+           </div>
+
+        </div>
       </div>
       
-      {/* Floating "Target" Blips */}
-      {[0, 120, 240].map((deg, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-full h-full"
-          initial={{ rotate: deg }}
-          animate={{ rotate: deg + 360 }}
-          transition={{ duration: 20 + i * 5, repeat: Infinity, ease: "linear" }}
-        >
-          <div className="w-2 h-2 bg-stone-300 rounded-full absolute top-10 left-1/2 -translate-x-1/2" />
-        </motion.div>
-      ))}
+      {/* Decorative Elements behind */}
+      <div className="absolute -right-12 -top-12 w-64 h-64 bg-amber-200/30 rounded-full blur-3xl -z-10" />
+      <div className="absolute -left-12 -bottom-12 w-64 h-64 bg-blue-200/30 rounded-full blur-3xl -z-10" />
+
     </motion.div>
   );
 };
@@ -189,20 +261,33 @@ const JobPilot = () => {
     }
   }, []);
 
-  // --- ANIMATION VARIANTS ---
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 60 },
-    visible: { opacity: 1, y: 0, transition: { duration: 1, ease: [0.22, 1, 0.36, 1] } }
-  };
-  
-  // Stagger for text reveal (Word by Word)
-  const containerStagger = {
-      visible: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } }
+  // --- ADVANCED ANIMATION VARIANTS ---
+  const heroContainer = {
+    visible: {
+      transition: {
+        staggerChildren: 0.05,
+        delayChildren: 0.2
+      }
+    }
   };
 
-  const wordReveal = {
-      hidden: { y: "110%", rotate: 5, opacity: 0 },
-      visible: { y: "0%", rotate: 0, opacity: 1, transition: { duration: 1, ease: [0.16, 1, 0.3, 1] } }
+  const heroItem = {
+    hidden: { 
+      y: "130%", 
+      skewY: 5,
+      opacity: 0,
+      filter: "blur(10px)"
+    },
+    visible: { 
+      y: "0%", 
+      skewY: 0,
+      opacity: 1,
+      filter: "blur(0px)",
+      transition: { 
+        duration: 1.2, 
+        ease: [0.19, 1, 0.22, 1] 
+      } 
+    }
   };
 
   return (
@@ -311,19 +396,19 @@ const JobPilot = () => {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              variants={containerStagger}
-              className="relative z-20 font-serif text-[14vw] lg:text-[10rem] leading-[0.85] tracking-tighter text-[#1A1A18] mb-10 flex flex-col"
+              variants={heroContainer}
+              className="relative z-30 font-serif text-[14vw] lg:text-[10rem] leading-[0.85] tracking-tighter text-[#1A1A18] mb-10 flex flex-col"
             >
               {/* Line 1 */}
-              <div className="overflow-hidden flex gap-[0.2em]">
+              <div className="overflow-hidden flex gap-[0.2em] pb-2">
                  {["Don’t", "Search."].map((word, i) => (
-                     <motion.span key={i} variants={wordReveal} className="block">{word}</motion.span>
+                     <motion.span key={i} variants={heroItem} className="block origin-bottom-left">{word}</motion.span>
                  ))}
               </div>
               
               {/* Line 2 */}
-              <div className="overflow-hidden flex items-baseline pb-4 -mb-4">
-                <motion.span variants={wordReveal} className="italic text-stone-300 flex items-center">
+              <div className="overflow-hidden flex items-baseline pb-12 -mb-12 relative z-30">
+                <motion.span variants={heroItem} className="italic text-stone-300 flex items-center origin-bottom-left">
                   <span className="text-amber-600/30 mr-4 font-sans not-italic text-[0.4em] align-middle tracking-tighter">{'//'}</span>
                   Navigate.
                 </motion.span>
@@ -331,10 +416,10 @@ const JobPilot = () => {
             </motion.h1>
 
             {/* Sub-content Container */}
-            <div className="flex flex-col md:flex-row gap-12 md:items-end max-w-3xl">
+            <div className="flex flex-col md:flex-row gap-12 md:items-end max-w-3xl relative z-10">
               <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
+                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 transition={{ delay: 0.6, duration: 0.8 }}
                 className="flex-1"
               >
@@ -357,11 +442,12 @@ const JobPilot = () => {
           </div>
 
           {/* Visual/Tech Column with Parallax Radar */}
-          <div className="lg:col-span-4 hidden lg:flex flex-col items-center justify-center relative perspective-1000">
+          <div className="lg:col-span-4 flex flex-col items-center justify-center relative perspective-1000">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1.2, ease: "easeOut" }}
+              className="w-full"
             >
               <RadarVisual mouseX={x} mouseY={y} />
             </motion.div>
