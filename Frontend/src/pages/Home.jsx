@@ -4,7 +4,11 @@ import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionV
 // --- ICONS ---
 const Icons = {
   ArrowRight: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>,
-  Compass: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>,
+  Compass: (props) => <svg xmlns="http://www.w3.org/2000/svg" version="1.0" width="40" height="40" viewBox="0 0 600.000000 600.000000" {...props}>
+<g transform="translate(0.000000,600.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none">
+<path d="M3380 4176 c-224 -79 -522 -288 -780 -546 -356 -355 -560 -722 -560 -1007 0 -64 5 -99 19 -129 19 -41 63 -84 86 -84 7 0 38 45 69 100 118 208 283 389 391 429 79 30 136 28 175 -5 65 -55 89 -143 115 -419 18 -201 30 -274 57 -375 103 -380 400 -451 692 -165 192 189 316 483 316 749 0 212 -91 413 -219 484 l-41 23 0 -78 c-1 -238 -95 -454 -241 -553 -100 -69 -180 -75 -243 -20 -44 39 -62 102 -59 210 3 167 83 409 274 833 170 375 202 503 143 561 -23 24 -116 20 -194 -8z"/>
+</g>
+</svg>,
   Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>,
   Github: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>,
   Code: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>,
@@ -505,7 +509,7 @@ const menuData = {
     title: "The Engine",
     description: "A proprietary blend of Large Language Models and behavioral psychology designed to decode job descriptions.",
     items: [
-      { title: "Semantic Matching", desc: "Mapping intent, not just keyword density.", icon: <Icons.Compass /> },
+      { title: "Semantic Matching", desc: "Mapping intent, not just keyword density.", icon: <Icons.Compass width="20" height="20" /> },
       { title: "Automated Outreach", desc: "Draft personalized cover letters in ms.", icon: <Icons.Code /> },
       { title: "Resume Optimization", desc: "Tailor your CV for every single application.", icon: <Icons.FileText /> },
       { title: "Market Analytics", desc: "Real-time insights on salary and demand.", icon: <Icons.Chart /> }
@@ -592,15 +596,15 @@ const JobPilot = () => {
       
       {/* 1. NAVIGATION & MEGA MENU */}
       <nav 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out px-6 md:px-12 py-6 border-b ${scrolled || activeNav ? 'bg-[#FDFBF9] border-stone-200' : 'bg-transparent border-transparent'}`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out px-6 md:px-12 py-3 border-b ${scrolled || activeNav ? 'bg-[#FDFBF9] border-stone-200' : 'bg-transparent border-transparent'}`}
         onMouseLeave={() => setActiveNav(null)}
       >
         <div className="flex justify-between items-center max-w-[1800px] mx-auto relative z-50">
-          <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="w-10 h-10 bg-[#1A1A18] text-[#FDFBF9] flex items-center justify-center rounded-sm transition-transform duration-500 group-hover:rotate-180">
-              <Icons.Compass />
+          <div className="flex items-center group cursor-pointer gap-2">
+            <div className="w-10 h-10 text-[#1A1A18] flex items-center justify-center rounded-sm transition-transform duration-500">
+              <Icons.Compass className="w-full h-full" />
             </div>
-            <span className="font-serif font-bold text-2xl tracking-tighter">JobPilot</span>
+            <span className="font-serif font-bold text-xl tracking-tighter">JobPilot</span>
           </div>
           
           <div className="hidden md:flex items-center gap-12 text-sm font-bold tracking-widest uppercase">
