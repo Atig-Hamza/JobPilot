@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 // --- ICONS ---
 const Icons = {
@@ -465,7 +466,7 @@ const RadarVisual = ({ mouseX, mouseY }) => {
 };
 
 // 3. Magnetic Button
-const MagneticButton = ({ children }) => {
+const MagneticButton = ({ children, onClick, ...props }) => {
     const ref = useRef(null);
     const x = useMotionValue(0);
     const y = useMotionValue(0);
@@ -489,6 +490,8 @@ const MagneticButton = ({ children }) => {
     return (
         <motion.button
             ref={ref}
+            onClick={onClick}
+            {...props}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             style={{ x: mouseX, y: mouseY }}
@@ -538,6 +541,7 @@ const menuData = {
 };
 
 const JobPilot = () => {
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [activeNav, setActiveNav] = useState(null);
   const [openAccordion, setOpenAccordion] = useState(0);
@@ -619,7 +623,10 @@ const JobPilot = () => {
             ))}
           </div>
 
-          <button className="hidden md:block px-8 py-3 bg-[#1A1A18] text-white text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-amber-600 transition-colors">
+          <button 
+            onClick={() => navigate('/login')}
+            className="hidden md:block px-8 py-3 bg-[#1A1A18] text-white text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-amber-600 transition-colors"
+          >
             Login
           </button>
         </div>
@@ -734,7 +741,7 @@ const JobPilot = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.8 }}
               >
-                <MagneticButton>
+                <MagneticButton onClick={() => navigate('/waitlist')}>
                     <span className="text-sm font-bold uppercase tracking-widest">Start Engine</span>
                     <Icons.ArrowRight />
                 </MagneticButton>
