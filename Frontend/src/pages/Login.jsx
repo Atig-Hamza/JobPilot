@@ -13,7 +13,9 @@ const Icons = {
   ArrowRight: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>,
   Shield: () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
   Lock: () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
-  Check: () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+  Check: () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>,
+  Alert: () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line><circle cx="12" cy="12" r="10"></circle></svg>,
+  Cpu: () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
 };
 
 // --- UI COMPONENTS ---
@@ -86,7 +88,7 @@ const VisualEngine = () => {
     const [isOptimized, setIsOptimized] = useState(false);
     
     useEffect(() => {
-        const timer = setInterval(() => setIsOptimized(p => !p), 4500);
+        const timer = setInterval(() => setIsOptimized(p => !p), 5000); // 5 Seconds cycle
         return () => clearInterval(timer);
     }, []);
 
@@ -118,19 +120,68 @@ const VisualEngine = () => {
                 style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
                 className="relative w-[340px] h-[500px]"
             >
-                {/* Floating Badge */}
-                <div className="absolute -top-10 left-0 right-0 flex justify-center z-50">
+                {/* --- DYNAMIC STATUS HUD --- */}
+                <div className="absolute -top-16 left-0 right-0 flex justify-center z-50">
                     <motion.div 
+                        initial={false}
                         animate={{ 
-                            backgroundColor: isOptimized ? "#1A1A18" : "#E7E5E4",
-                            borderColor: isOptimized ? "#1A1A18" : "#D6D3D1",
-                            y: isOptimized ? [0, -5, 0] : 0
+                            backgroundColor: isOptimized ? "#1A1A18" : "#FFFFFF",
+                            borderColor: isOptimized ? "#1A1A18" : "#E5E7EB",
+                            color: isOptimized ? "#FFFFFF" : "#6B7280"
                         }}
-                        transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
-                        className="h-6 w-24 rounded-full border shadow-lg flex items-center justify-center gap-2"
+                        className="px-4 py-2 rounded-lg border shadow-xl flex items-center gap-3 min-w-[200px] justify-center"
                     >
-                         <motion.div animate={{ backgroundColor: isOptimized ? "#FBBF24" : "#A8A29E" }} className="w-1.5 h-1.5 rounded-full" />
-                         <motion.div animate={{ width: isOptimized ? "40px" : "30px", backgroundColor: isOptimized ? "#57534E" : "#A8A29E" }} className="h-1 rounded-full" />
+                         {/* Icon Switcher */}
+                         <div className="relative w-4 h-4 flex items-center justify-center">
+                             <AnimatePresence mode="wait">
+                                {isOptimized ? (
+                                    <motion.div 
+                                        key="check" 
+                                        initial={{ scale: 0 }} 
+                                        animate={{ scale: 1 }} 
+                                        exit={{ scale: 0 }}
+                                        className="text-green-400"
+                                    >
+                                        <Icons.Check />
+                                    </motion.div>
+                                ) : (
+                                    <motion.div 
+                                        key="alert" 
+                                        initial={{ scale: 0 }} 
+                                        animate={{ scale: 1 }} 
+                                        exit={{ scale: 0 }}
+                                        className="text-amber-500"
+                                    >
+                                        <Icons.Alert />
+                                    </motion.div>
+                                )}
+                             </AnimatePresence>
+                         </div>
+                         
+                         {/* Text Switcher */}
+                         <div className="text-[10px] font-bold tracking-widest uppercase">
+                             <AnimatePresence mode="wait">
+                                {isOptimized ? (
+                                    <motion.span 
+                                        key="opt"
+                                        initial={{ y: 10, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        exit={{ y: -10, opacity: 0 }}
+                                    >
+                                        Optimization Complete
+                                    </motion.span>
+                                ) : (
+                                    <motion.span 
+                                        key="raw"
+                                        initial={{ y: 10, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        exit={{ y: -10, opacity: 0 }}
+                                    >
+                                        Raw Input Detected
+                                    </motion.span>
+                                )}
+                             </AnimatePresence>
+                         </div>
                     </motion.div>
                 </div>
 
@@ -138,7 +189,7 @@ const VisualEngine = () => {
                 <motion.div 
                     animate={{ 
                         boxShadow: isOptimized 
-                            ? "0 25px 50px -12px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.8)" 
+                            ? "0 30px 60px -15px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.8)" 
                             : "0 5px 15px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.05)",
                         scale: isOptimized ? 1.02 : 1
                     }}
