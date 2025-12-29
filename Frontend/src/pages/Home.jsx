@@ -19,6 +19,7 @@ import {
   Globe,
   X
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 // --- Styles for Animations (Injected for portability) ---
 const styles = `
@@ -137,7 +138,7 @@ const Navbar = () => (
       </div>
       
       <div className="flex items-center gap-4">
-        <button className="text-sm font-bold text-gray-900 hover:text-black hidden sm:block">Login</button>
+        <Link to="/login" className="text-sm font-bold text-gray-900 hover:text-black hidden sm:block">Login</Link>
         <button className="bg-[#ffb6e6] hover:bg-pink-300 text-gray-900 px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm">
           Get Started
         </button>
