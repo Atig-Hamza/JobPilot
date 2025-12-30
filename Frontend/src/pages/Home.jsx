@@ -27,7 +27,8 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import kimiK2 from '../assets/kimi-k2.png';
+import kimiK2 from '../assets/Secondaire/kimi-k2.png';
+import MainLogo from '../assets/Main/logo-without-bg.png';
 
 
 // --- Styles for Animations & Grid (Injected) ---
@@ -134,9 +135,7 @@ const Navbar = () => (
 
       {/* Logo Area */}
       <div className="flex items-center gap-2 font-bold text-gray-900 tracking-tight text-lg pl-2 select-none cursor-pointer">
-        <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center shadow-lg shadow-black/20">
-          <div className="w-3 h-3 bg-white rounded-full"></div>
-        </div>
+        <img src={MainLogo} alt="JobPilot Logo" className='w-5 h-5' />
         JOBPILOT
       </div>
 
@@ -741,9 +740,7 @@ const App = () => {
 
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500 border-t border-gray-200/50 pt-10">
           <div className="flex items-center gap-2 font-bold text-gray-900 tracking-tight mb-6 md:mb-0 text-lg">
-            <div className="w-5 h-5 bg-black rounded flex items-center justify-center">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-            </div>
+            <img src={MainLogo} alt="JobPilot Logo" className='w-4 h-4' />
             JOBPILOT
           </div>
           <div className="flex gap-8 font-medium">
