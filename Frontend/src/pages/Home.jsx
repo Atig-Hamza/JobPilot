@@ -90,12 +90,17 @@ const TopBanner = () => {
         <div className="flex w-full whitespace-nowrap overflow-hidden">
           <div className="flex animate-scroll min-w-full items-center">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center gap-8 mx-4 text-xs font-bold uppercase tracking-widest text-pink-950">
-                <span className="flex items-center gap-2">🛍️ Joining the beta cohort? Limited spots available</span>
+              <div
+                key={i}
+                className="flex items-center gap-8 mx-4 text-xs font-bold uppercase tracking-widest text-pink-950"
+              >
+                <span className="flex items-center gap-2">
+                  🚀 Join the JobPilot waitlist today
+                </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-pink-600"></span>
-                <span>New Integration: Workday Auto-Fill is live</span>
+                <span>Be first to access the private beta</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-pink-600"></span>
-                <span>v2.4 Release Notes</span>
+                <span>Developed by Hamza Atig</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-pink-600"></span>
               </div>
             ))}
