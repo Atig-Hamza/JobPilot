@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import MainWhiteLogo from '../assets/Main/logo-white-without-bg.png';
 
-// --- Styles (Minimal & Premium) ---
+
 const styles = `
   /* 1. Subtle Grain/Noise Texture */
   .bg-noise {
@@ -38,9 +38,9 @@ const styles = `
   }
 `;
 
-// --- Components ---
 
-// 1. Google Icon
+
+
 const GoogleIcon = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20px" height="20px" {...props}>
     <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
@@ -50,7 +50,7 @@ const GoogleIcon = (props) => (
   </svg>
 );
 
-// 2. PREMIUM SPLIT TEXT (Masked Reveal)
+
 const SplitTextReveal = () => {
   const words = ["Cockpit.", "Future.", "Workflow.", "Legacy."];
   const [index, setIndex] = useState(0);
@@ -97,7 +97,7 @@ const SplitTextReveal = () => {
           initial="hidden"
           animate="visible"
           exit="exit"
-          // COLOR UPDATE: Text color set to the brand pink
+          
           className="flex whitespace-nowrap text-[#ffb6e6]"
         >
           {currentWord.split("").map((char, i) => (
@@ -111,7 +111,7 @@ const SplitTextReveal = () => {
   );
 };
 
-// 3. Minimal Input (Underline Style)
+
 const MinimalInput = ({ label, type, placeholder, icon: Icon }) => (
   <div className="group space-y-2">
     <div className="relative flex items-center">
@@ -121,7 +121,7 @@ const MinimalInput = ({ label, type, placeholder, icon: Icon }) => (
       <input
         type={type}
         placeholder={placeholder}
-        // COLOR UPDATE: Focus border color set to brand pink
+        
         className="w-full bg-transparent border-b border-gray-200 py-3 pl-8 pr-4 text-base font-medium text-gray-900 outline-none placeholder:text-gray-400 transition-all duration-300 group-focus-within:border-[#ffb6e6]"
       />
       <span className="absolute right-0 text-[10px] font-bold uppercase tracking-widest text-gray-300 opacity-0 -translate-y-2 group-focus-within:opacity-100 group-focus-within:translate-y-0 transition-all duration-500 delay-100 pointer-events-none">
@@ -131,7 +131,7 @@ const MinimalInput = ({ label, type, placeholder, icon: Icon }) => (
   </div>
 );
 
-// 4. Ghost Social Button
+
 const MinimalSocialButton = ({ icon: Icon, label }) => (
   <button type="button" className="flex-1 flex items-center justify-center gap-3 bg-gray-50/50 hover:bg-gray-100 py-3 px-4 rounded-lg text-sm font-semibold text-gray-600 transition-all duration-200 active:scale-[0.98]">
     {Icon && <Icon size={18} />}
@@ -139,7 +139,7 @@ const MinimalSocialButton = ({ icon: Icon, label }) => (
   </button>
 );
 
-// --- Main Login Page ---
+
 const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);

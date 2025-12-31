@@ -23,10 +23,9 @@ import {
   Mail
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-// NOTE: Ensure these paths match your project structure
 import MainLogo from '../assets/Main/logo-without-bg.png';
 
-// --- Styles for Animations & Layout ---
+
 const styles = `
   @keyframes scroll {
     0% { transform: translateX(0); }
@@ -70,7 +69,7 @@ const styles = `
   }
 `;
 
-// --- Components ---
+
 
 const TopBanner = () => {
   return (
@@ -100,7 +99,7 @@ const TopBanner = () => {
   );
 };
 
-// Minimal Header replacing the complex Navbar
+
 const SimpleHeader = () => (
   <div className="absolute top-14 left-0 right-0 z-50 flex justify-between items-center px-6 md:px-12 pt-4">
     {/* Logo */}
@@ -147,12 +146,12 @@ const SubHeading = ({ children }) => (
   <h3 className="text-lg font-bold text-gray-900 mt-6 mb-3">{children}</h3>
 );
 
-// --- Main Page Component ---
+
 
 const TermsAndPrivacy = () => {
   const [activeSection, setActiveSection] = useState('intro');
 
-  // Handle scroll spy
+  
   useEffect(() => {
     const handleScroll = () => {
       const sections = [

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import MainLogo from '../assets/Main/logo-without-bg.png';
 
-// --- Styles ---
+
 const premiumStyles = `
   body {
     -webkit-font-smoothing: antialiased;
@@ -27,7 +27,7 @@ const premiumStyles = `
   }
 `;
 
-// --- Keyboard Data ---
+
 const rows = [
   ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
   ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
@@ -37,13 +37,13 @@ const rows = [
 const ComingSoon = () => {
   const [activeKey, setActiveKey] = useState(null);
 
-  // Rapid Typing Simulation
+  
   useEffect(() => {
     const interval = setInterval(() => {
       const randomRow = rows[Math.floor(Math.random() * rows.length)];
       const randomKey = randomRow[Math.floor(Math.random() * randomRow.length)];
       
-      // 15% chance for Spacebar
+      
       if (Math.random() > 0.85) {
         setActiveKey('SPACE');
       } else {
@@ -52,7 +52,7 @@ const ComingSoon = () => {
 
       setTimeout(() => setActiveKey(null), 120);
 
-    }, 80); // Fast typing speed
+    }, 80); 
 
     return () => clearInterval(interval);
   }, []);

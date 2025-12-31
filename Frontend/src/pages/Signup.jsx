@@ -15,7 +15,7 @@ import {
 import { Link } from 'react-router-dom';
 import MainLogo from '../assets/Main/logo-without-bg.png';
 
-// --- Styles ---
+
 const premiumStyles = `
   /* Global Font Settings */
   body {
@@ -74,7 +74,7 @@ const premiumStyles = `
   }
 `;
 
-// --- Custom Icons ---
+
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
@@ -87,7 +87,7 @@ const GoogleIcon = () => (
   </svg>
 );
 
-// --- Components ---
+
 
 const MinimalInput = ({ type = "text", placeholder, autoFocus, value, onChange, icon: Icon }) => (
   <div className="group relative w-full">
@@ -107,7 +107,7 @@ const MinimalInput = ({ type = "text", placeholder, autoFocus, value, onChange, 
   </div>
 );
 
-// --- New Premium Birthday Component (Split Input) ---
+
 const SplitDateInput = () => {
   return (
     <div className="group relative w-full">
@@ -152,7 +152,7 @@ const SplitDateInput = () => {
   );
 };
 
-// --- New Premium Gender Select (Custom Dropdown) ---
+
 const CustomGenderSelect = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState("");
@@ -160,7 +160,7 @@ const CustomGenderSelect = () => {
 
   const options = ["Male", "Female", "Non-binary", "Prefer not to say"];
 
-  // Close dropdown when clicking outside
+  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -247,7 +247,7 @@ const OptionRow = ({ title, sub, active, onClick, disabled, badge }) => (
   </div>
 );
 
-// --- Main Flow ---
+
 
 const SignUpFlow = () => {
   const [step, setStep] = useState(1);

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import MainLogo from '../../assets/Main/logo-without-bg.png'; // Ensure path is correct
+import MainLogo from '../../assets/Main/logo-without-bg.png'; 
 import { 
   LayoutGrid, 
   CheckSquare, 
@@ -26,37 +26,31 @@ import {
 } from 'lucide-react';
 
 const JobPilotDashboard = () => {
-  // Modes: 'general', 'resume_opt', 'jop1_scrape'
   const [activeMode, setActiveMode] = useState('general');
-  
-  // Real File Handling State
   const [uploadedFile, setUploadedFile] = useState(null);
   const fileInputRef = useRef(null);
-
   const handleModeChange = (mode) => {
     setActiveMode(mode);
-    setUploadedFile(null); // Reset file when changing modes
+    setUploadedFile(null); 
   };
 
-  // Trigger the hidden file input
   const handleUploadClick = () => {
     fileInputRef.current.click();
   };
 
-  // Handle the file selection
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
-      // Create a URL for preview if needed, or just store metadata
+      
       setUploadedFile({
         name: file.name,
-        size: (file.size / 1024 / 1024).toFixed(2) + ' MB', // Convert to MB
+        size: (file.size / 1024 / 1024).toFixed(2) + ' MB', 
         type: file.type
       });
     }
   };
 
-  // Remove the file
+  
   const removeFile = (e) => {
     e.stopPropagation();
     setUploadedFile(null);

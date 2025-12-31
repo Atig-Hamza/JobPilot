@@ -31,7 +31,7 @@ import kimiK2 from '../assets/Secondaire/kimi-k2.png';
 import MainLogo from '../assets/Main/logo-without-bg.png';
 
 
-// --- Styles for Animations & Grid (Injected) ---
+
 const styles = `
   @keyframes scroll {
     0% { transform: translateX(0); }
@@ -82,7 +82,7 @@ const styles = `
   }
 `;
 
-// --- Shared Components ---
+
 
 const TopBanner = () => {
   return (
@@ -112,7 +112,7 @@ const TopBanner = () => {
   );
 };
 
-// --- Navbar Components ---
+
 
 const MenuItem = ({ icon: Icon, title, desc, gradient }) => (
   <a href="#" className="flex items-start gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-all duration-300 group/item">
@@ -260,7 +260,7 @@ const Navbar = () => (
   </nav>
 );
 
-// --- Mockup Contents for "How It Works" ---
+
 
 const ConnectMockup = () => (
   <div className="flex flex-col gap-3 p-6 h-full justify-center bg-white">
@@ -326,7 +326,7 @@ const ReviewMockup = () => (
   </div>
 );
 
-// --- New Workflow Step Component ---
+
 const WorkflowStep = ({ step, title, desc, children }) => (
   <div className="flex flex-col items-start text-left group">
     {/* Image Container */}
@@ -358,7 +358,7 @@ const WorkflowStep = ({ step, title, desc, children }) => (
   </div>
 );
 
-// --- Logo Component ---
+
 const Logo = ({ name, icon: Icon }) => (
   <div className="flex items-center gap-2 text-gray-900 opacity-80 hover:opacity-100 transition-opacity font-bold text-xl px-6">
     {Icon && <Icon size={24} />}
@@ -366,7 +366,7 @@ const Logo = ({ name, icon: Icon }) => (
   </div>
 );
 
-// --- Shared Components for Rest of Page ---
+
 
 const UseCaseCard = ({ icon: Icon, title, color }) => (
   <div className="min-w-[320px] bg-white rounded-3xl p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 group cursor-default">
@@ -406,7 +406,7 @@ const CheckItem = ({ text, colorClass = "text-blue-600 bg-blue-100" }) => (
   </li>
 );
 
-// --- Main Layout ---
+
 
 const App = () => {
   return (

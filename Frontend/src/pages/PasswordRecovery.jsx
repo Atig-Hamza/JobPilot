@@ -10,7 +10,7 @@ import {
 import { Link } from 'react-router-dom';
 import MainLogo from '../assets/Main/logo-without-bg.png';
 
-// --- Styles (From your reference) ---
+
 const premiumStyles = `
   /* Global Font Settings */
   body {
@@ -57,7 +57,7 @@ const premiumStyles = `
   }
 `;
 
-// --- Components ---
+
 
 const MinimalInput = ({ type = "text", placeholder, autoFocus, value, onChange, icon: Icon }) => (
   <div className="group relative w-full">
@@ -77,21 +77,21 @@ const MinimalInput = ({ type = "text", placeholder, autoFocus, value, onChange, 
   </div>
 );
 
-// --- Main Component ---
+
 
 const PasswordRecovery = () => {
-  const [step, setStep] = useState(1); // 1: Input, 2: Loading, 3: Success
+  const [step, setStep] = useState(1); 
   const [email, setEmail] = useState('');
   const [loadingText, setLoadingText] = useState({ line1: "Verifying", line2: "credentials..." });
   const [isExiting, setIsExiting] = useState(false);
 
-  // Handle Flow Transition
+  
   useEffect(() => {
     if (step === 2) {
-      // Sequence: 
-      // 1. Show "Verifying"
-      // 2. Switch to "Sending"
-      // 3. Exit to Success
+      
+      
+      
+      
       
       const t1 = setTimeout(() => setIsExiting(true), 2000);
       const t2 = setTimeout(() => {

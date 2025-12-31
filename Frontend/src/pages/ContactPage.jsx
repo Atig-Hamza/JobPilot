@@ -12,10 +12,10 @@ import {
   Loader2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-// NOTE: Ensure these paths match your project structure
+
 import MainLogo from '../assets/Main/logo-without-bg.png';
 
-// --- Styles (Same as Terms Page) ---
+
 const styles = `
   @keyframes scroll {
     0% { transform: translateX(0); }
@@ -46,7 +46,7 @@ const styles = `
   }
 `;
 
-// --- Reused Components ---
+
 
 const TopBanner = () => {
   return (
@@ -95,7 +95,7 @@ const SimpleHeader = () => (
   </div>
 );
 
-// --- Main Page Component ---
+
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: 'support', message: '' });
@@ -105,7 +105,7 @@ const ContactPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate network request
+    
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSent(true);

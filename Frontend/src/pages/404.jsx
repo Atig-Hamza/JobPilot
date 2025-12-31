@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import MainLogo from '../assets/Main/logo-without-bg.png';
 
-// --- Styles ---
+
 const premiumStyles = `
   body {
     -webkit-font-smoothing: antialiased;
@@ -31,7 +31,7 @@ const NotFound = () => {
   const [text, setText] = useState("");
   const [showStamp, setShowStamp] = useState(false);
 
-  // The "Corporate Rejection" Copy
+  
   const fullText = `Dear User,
 
 Thank you for your interest in "This Page". We have reviewed your request, and while your URL structure was impressive, we have decided to move forward with other candidates (Existing Pages).
@@ -41,7 +41,7 @@ This position has been closed (404). We will keep your request on file in our se
 Best regards,
 The Server Team.`;
 
-  // Typing Effect
+  
   useEffect(() => {
     let i = 0;
     const typingInterval = setInterval(() => {
@@ -50,10 +50,10 @@ The Server Team.`;
         i++;
       } else {
         clearInterval(typingInterval);
-        // Delay before stamp slams
+        
         setTimeout(() => setShowStamp(true), 500);
       }
-    }, 30); // Speed of typing
+    }, 30); 
 
     return () => clearInterval(typingInterval);
   }, []);
@@ -126,7 +126,7 @@ The Server Team.`;
                         animate={{ scale: 1, opacity: 1, rotate: -15 }}
                         transition={{ type: "spring", bounce: 0.5 }}
                         className="absolute bottom-8 right-8 border-4 border-red-500 text-red-500 font-black text-6xl md:text-8xl px-6 py-2 rounded-xl opacity-80 select-none mix-blend-multiply"
-                        style={{ maskImage: 'url("https://www.transparenttextures.com/patterns/aged-paper.png")' }} // Optional grunge texture effect simulated
+                        style={{ maskImage: 'url("https://www.transparenttextures.com/patterns/aged-paper.png")' }} 
                     >
                         404
                     </motion.div>
