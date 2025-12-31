@@ -425,7 +425,7 @@ const TermsAndPrivacy = () => {
               If you have any questions about these Terms, please contact us.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-4">
-              <a className="cursor-pointer bg-gray-900 text-white px-6 py-3 rounded-full font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+              <a href="mailto:hamzaatig58@gmail.com" className="cursor-pointer bg-gray-900 text-white px-6 py-3 rounded-full font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl hover:-translate-y-0.5">
                 Email Legal Team
               </a>
               <div className="text-xs text-gray-500 flex items-center">
