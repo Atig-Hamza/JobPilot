@@ -252,9 +252,9 @@ const Navbar = () => (
       {/* Action Buttons */}
       <div className="flex items-center gap-4">
         <Link to="/login" className="text-sm font-bold text-gray-900 hover:text-black hidden sm:block">Login</Link>
-        <button className="bg-[#ffb6e6] hover:bg-pink-300 hover:shadow-lg hover:-translate-y-0.5 text-gray-900 px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm">
+        <Link to="/signup" className="bg-[#ffb6e6] hover:bg-pink-300 text-gray-900 px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm">
           Get Started
-        </button>
+        </Link>
       </div>
     </div>
   </nav>
@@ -446,12 +446,12 @@ const App = () => {
             <button className="px-10 py-4 rounded-full border-2 border-gray-900 font-bold text-base hover:bg-gray-50 transition-all bg-transparent text-gray-900">
               Learn more
             </button>
-            <button className="px-10 py-4 rounded-full bg-black text-white font-bold text-base flex items-center gap-3 hover:bg-gray-800 transition-all">
+            <Link to="/signup" className="px-10 py-4 rounded-full bg-black text-white font-bold text-base flex items-center gap-3 hover:bg-gray-800 transition-all">
               Get Started
               <div className="bg-white rounded-full p-1 text-black">
                 <ArrowRight size={14} />
               </div>
-            </button>
+            </Link>
           </div>
 
           {/* Trusted By Logos - Integrated directly into Hero (No free space) */}
@@ -729,12 +729,12 @@ const App = () => {
             Ready to deploy?
           </h2>
           <div className="flex justify-center gap-4 mb-32">
-            <button className="px-10 py-4 rounded-full bg-black text-white font-bold text-base flex items-center gap-3 hover:bg-gray-800 hover:shadow-xl hover:-translate-y-1 transition-all group">
+            <Link to="/signup" className="px-10 py-4 rounded-full bg-black text-white font-bold text-base flex items-center gap-3 hover:bg-gray-800 hover:shadow-xl hover:-translate-y-1 transition-all group">
               Get Started Today
               <div className="bg-white rounded-full p-1 text-black group-hover:translate-x-1 transition-transform">
                 <ArrowRight size={14} />
               </div>
-            </button>
+            </Link>
           </div>
         </div>
 
