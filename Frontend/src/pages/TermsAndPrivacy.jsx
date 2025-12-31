@@ -429,7 +429,7 @@ const TermsAndPrivacy = () => {
                 Email Legal Team
               </a>
               <div className="text-xs text-gray-500 flex items-center">
-                 JobPilot Inc. <br/> San Francisco, CA
+                 JobPilot Inc. <br/> Agadir, MA
               </div>
             </div>
           </SectionBlock>
