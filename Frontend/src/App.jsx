@@ -7,11 +7,14 @@ import TermsAndPrivacy from './pages/TermsAndPrivacy';
 import ContactPage from './pages/ContactPage';
 import PasswordRecovery from './pages/PasswordRecovery';
 import ComingSoon from './pages/ComingSoon';
+import NotFound from './pages/404';
+
 
 function App() {
   return (
     <Router>
       <Routes>
+        <Route path="*" element={<NotFound />} />
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
