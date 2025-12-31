@@ -5,6 +5,7 @@ import Signup from './pages/Signup';
 import './App.css';
 import TermsAndPrivacy from './pages/TermsAndPrivacy';
 import ContactPage from './pages/ContactPage';
+import PasswordRecovery from './pages/PasswordRecovery';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/privacy" element={<TermsAndPrivacy />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/password-recovery" element={<PasswordRecovery />} />
       </Routes>
     </Router>
   );
