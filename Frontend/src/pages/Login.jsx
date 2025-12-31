@@ -242,9 +242,9 @@ const LoginPage = () => {
               </button>
             </form>
 
-            <p className="text-center text-xs text-gray-400">
+            <Link to={'/signup'} className="text-center text-xs text-gray-400">
               No account? <a href="#" className="text-black font-semibold hover:underline decoration-[#ffb6e6] decoration-2 underline-offset-4">Request access</a>
-            </p>
+            </Link>
           </div>
         </div>
 
