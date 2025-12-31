@@ -1,19 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   ArrowRight, 
   Github, 
-  Mail, 
   Check, 
   ChevronRight,
-  Zap
+  Zap,
+  ArrowLeft,
+  Calendar,
+  User,
+  ChevronDown,
+  Search,
+  MessageSquare
 } from 'lucide-react';
-// NOTE: Ensure this path is correct based on your project structure
-import MainLogo from '../assets/Main/logo-without-bg.png';
 import { Link } from 'react-router-dom';
+import MainLogo from '../assets/Main/logo-without-bg.png';
 
-// --- Styles for Minimalist & Premium Animations ---
+// --- Styles ---
 const premiumStyles = `
-  /* Global Font Settings - Inter/SF Pro feel */
+  /* Global Font Settings */
   body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -31,60 +35,113 @@ const premiumStyles = `
   }
 
   .animate-enter {
-    animation: fadeEnterUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation: fadeEnterUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   }
   
-  .animate-exit {
-    animation: fadeExitDown 0.5s ease-in forwards;
-  }
-
-  /* Refined Shiny Text Animation (Liquid Metal) */
+  /* Loading Text Animation */
   @keyframes shineFlow {
     0% { background-position: 200% center; }
     100% { background-position: -200% center; }
   }
   
-  .shiny-text {
+  .shiny-text-dark {
     background: linear-gradient(
       110deg, 
-      #000 35%, 
-      #888 50%, 
-      #000 65%
+      #555 35%, 
+      #fff 50%, 
+      #555 65%
     );
     background-size: 200% auto;
-    color: #000;
+    color: #555;
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: shineFlow 4s linear infinite;
   }
   
-  /* Input Autofill Override */
-  input:-webkit-autofill,
-  input:-webkit-autofill:focus{
-    -webkit-box-shadow: 0 0 0 30px white inset !important;
-    transition: background-color 5000s ease-in-out 0s;
+  /* Custom Select Dropdown Arrow */
+  .custom-select {
+    appearance: none;
+    background-image: none;
+  }
+
+  /* Date Input Placeholder styling */
+  input[type="date"]::-webkit-inner-spin-button,
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
   }
 `;
 
+// --- Custom Icons ---
+
+const GoogleIcon = () => (
+  <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+    <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
+      <path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z" />
+      <path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z" />
+      <path fill="#FBBC05" d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C -21.864 50.439 -21.734 49.669 -21.484 48.949 L -21.484 45.859 L -25.464 45.859 C -26.284 47.479 -26.754 49.299 -26.754 51.239 C -26.754 53.179 -26.284 54.999 -25.464 56.619 L -21.484 53.529 Z" />
+      <path fill="#EA4335" d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.799 L -6.734 42.379 C -8.804 40.439 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z" />
+    </g>
+  </svg>
+);
+
 // --- Components ---
 
-const MinimalInput = ({ type = "text", placeholder, autoFocus }) => (
+const MinimalInput = ({ type = "text", placeholder, autoFocus, value, onChange, icon: Icon }) => (
   <div className="group relative w-full">
-    <input 
-      type={type} 
-      placeholder={placeholder}
-      autoFocus={autoFocus}
-      className="w-full py-4 bg-transparent border-b border-gray-200 text-lg font-medium text-gray-900 placeholder-gray-400 outline-none transition-colors duration-300 rounded-none"
-    />
-    {/* Animated bottom border */}
-    <div className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black group-focus-within:w-full transition-all duration-500 ease-[cubic-bezier(0.2,1,0.3,1)]"></div>
+    <div className="relative flex items-center">
+      {Icon && <Icon size={18} className="absolute left-0 text-gray-400 group-focus-within:text-pink-400 transition-colors" />}
+      <input 
+        type={type} 
+        placeholder={placeholder}
+        autoFocus={autoFocus}
+        value={value}
+        onChange={onChange}
+        className={`w-full py-4 bg-transparent border-b border-gray-200 text-lg font-medium text-gray-900 placeholder-gray-400 outline-none transition-colors duration-300 rounded-none focus:border-transparent ${Icon ? 'pl-8' : ''}`}
+      />
+    </div>
+    {/* Pink underline on focus */}
+    <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#ffb6e6] group-focus-within:w-full transition-all duration-500 ease-[cubic-bezier(0.2,1,0.3,1)]"></div>
   </div>
 );
 
-const SocialBtn = ({ icon: Icon, label }) => (
-  <button className="flex items-center justify-center gap-3 w-full py-3.5 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm transition-all duration-200 group active:scale-[0.99]">
-    <Icon size={18} className="text-gray-600 group-hover:text-black transition-colors" />
+const PremiumDateInput = () => {
+  const inputRef = useRef(null);
+  
+  return (
+    <div className="group relative w-full cursor-pointer" onClick={() => inputRef.current?.showPicker()}>
+      <div className="w-full py-4 border-b border-gray-200 flex items-center justify-between text-lg font-medium text-gray-900">
+        <input 
+          ref={inputRef}
+          type="date" 
+          className="bg-transparent border-none outline-none w-full h-full text-gray-900 placeholder-gray-400 font-medium"
+          style={{ fontFamily: 'inherit' }}
+        />
+        <Calendar size={18} className="text-gray-400 group-hover:text-black transition-colors" />
+      </div>
+      <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#ffb6e6] group-focus-within:w-full transition-all duration-500 ease-[cubic-bezier(0.2,1,0.3,1)]"></div>
+      <span className="absolute -top-2 left-0 text-[10px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-pink-400 transition-colors">Birth Date</span>
+    </div>
+  );
+};
+
+const MinimalSelect = ({ placeholder, options }) => (
+  <div className="group relative w-full">
+    <div className="relative">
+      <select className="w-full py-4 bg-transparent border-b border-gray-200 text-lg font-medium text-gray-900 placeholder-gray-400 outline-none transition-colors duration-300 rounded-none custom-select cursor-pointer focus:border-transparent bg-white">
+        <option value="" disabled selected hidden>{placeholder}</option>
+        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+      </select>
+      <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-hover:text-black transition-colors" size={16} />
+    </div>
+    <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#ffb6e6] group-focus-within:w-full transition-all duration-500 ease-[cubic-bezier(0.2,1,0.3,1)]"></div>
+  </div>
+);
+
+const SocialBtn = ({ icon: Icon, component, label }) => (
+  <button className="flex items-center justify-center gap-3 w-full py-3.5 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm transition-all duration-200 group active:scale-[0.99] bg-white">
+    {component ? component : <Icon size={20} className="text-gray-900" />}
     <span className="text-sm font-semibold text-gray-700 group-hover:text-black transition-colors tracking-tight">{label}</span>
   </button>
 );
@@ -92,19 +149,23 @@ const SocialBtn = ({ icon: Icon, label }) => (
 const OptionRow = ({ title, sub, active, onClick, disabled, badge }) => (
   <div 
     onClick={!disabled ? onClick : undefined}
-    className={`flex items-start justify-between py-6 border-b border-gray-100 cursor-pointer group transition-all duration-300 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+    className={`flex items-start justify-between py-5 border-b border-gray-100 cursor-pointer group transition-all duration-300 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
   >
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-3">
         <span className={`text-xl font-semibold tracking-tight transition-colors ${active ? 'text-black' : 'text-gray-500 group-hover:text-black'}`}>
           {title}
         </span>
-        {badge && <span className="bg-gray-100 text-gray-600 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full tracking-wider">{badge}</span>}
+        {badge && (
+          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full tracking-wider ${active || badge === 'Free' ? 'bg-[#ffb6e6] text-black' : 'bg-gray-100 text-gray-600'}`}>
+            {badge}
+          </span>
+        )}
       </div>
-      <span className="text-sm text-gray-500 font-medium leading-relaxed">{sub}</span>
+      <span className="text-sm text-gray-500 font-medium leading-relaxed max-w-[80%]">{sub}</span>
     </div>
-    <div className={`mt-1 w-6 h-6 rounded-full border-[1.5px] flex items-center justify-center transition-all duration-300 ${active ? 'border-black bg-black scale-105' : 'border-gray-300 group-hover:border-gray-500'}`}>
-      <Check size={14} className={`transition-opacity ${active ? 'text-white opacity-100' : 'opacity-0'}`} strokeWidth={3} />
+    <div className={`mt-1 w-6 h-6 rounded-full border-[1.5px] flex items-center justify-center transition-all duration-300 ${active ? 'border-[#ffb6e6] bg-[#ffb6e6] scale-105' : 'border-gray-300 group-hover:border-gray-500'}`}>
+      <Check size={14} className={`transition-opacity ${active ? 'text-black opacity-100' : 'opacity-0'}`} strokeWidth={3} />
     </div>
   </div>
 );
@@ -113,16 +174,15 @@ const OptionRow = ({ title, sub, active, onClick, disabled, badge }) => (
 
 const SignUpFlow = () => {
   const [step, setStep] = useState(1);
-  const [loadingText, setLoadingText] = useState({ line1: "Initializing", line2: "environment..." });
+  const [loadingText, setLoadingText] = useState({ line1: "Initializing", line2: "workspace..." });
   const [isExiting, setIsExiting] = useState(false);
-  const [accessSelection, setAccessSelection] = useState('waitlist');
+  const [accessMode, setAccessMode] = useState('waitlist'); 
 
-  // Animation Sequence logic for Step 2
   useEffect(() => {
     if (step === 2) {
       const t1 = setTimeout(() => setIsExiting(true), 2500);
       const t2 = setTimeout(() => {
-        setLoadingText({ line1: "Finalizing", line2: "optimization..." });
+        setLoadingText({ line1: "Configuring", line2: "preferences..." });
         setIsExiting(false);
       }, 3100); 
       const t3 = setTimeout(() => setIsExiting(true), 5500);
@@ -132,52 +192,63 @@ const SignUpFlow = () => {
   }, [step]);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans flex flex-col selection:bg-black selection:text-white relative">
+    <div className="min-h-screen bg-white text-gray-900 font-sans flex flex-col selection:bg-[#ffb6e6] selection:text-black relative">
       <style>{premiumStyles}</style>
 
-      {/* Navbar - Fades out during step 2 */}
+      {/* Navbar */}
       <div className={`w-full px-8 py-6 flex justify-between items-center fixed top-0 left-0 z-50 pointer-events-none transition-opacity duration-500 ${step === 2 ? 'opacity-0' : 'opacity-100'}`}>
         <div className="flex items-center gap-2 font-bold text-gray-900 tracking-tight text-lg select-none pointer-events-auto">
-           <img src={MainLogo} alt="JobPilot Logo" className='w-5 h-5' />
-           JOBPILOT
+            <img src={MainLogo} alt="JobPilot" className='w-5 h-5' />
+            JOBPILOT
         </div>
         {step === 1 && (
           <Link to={'/login'} className="text-sm font-medium text-gray-500 pointer-events-auto cursor-pointer hover:text-black transition-colors">
-            Have an account? <span className="text-black font-bold underline underline-offset-2">Log in</span>
+            Have an account? <span className="text-black font-bold underline underline-offset-2 decoration-[#ffb6e6]">Log in</span>
           </Link>
         )}
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center w-full px-6 pt-20">
+      <div className="flex-1 flex flex-col items-center justify-center w-full px-6 pt-20 pb-10">
         
         {/* --- STEP 1: ACCOUNT DETAILS --- */}
         {step === 1 && (
-          <div className="w-full max-w-[420px] animate-enter">
+          <div className="w-full max-w-[500px] animate-enter">
             <h1 className="text-[2.5rem] font-bold tracking-tighter mb-3 leading-none">Get started</h1>
-            <p className="text-gray-500 mb-10 text-lg font-medium">Create your JobPilot account.</p>
+            <p className="text-gray-500 mb-8 text-lg font-medium">Create your JobPilot account.</p>
 
             <div className="space-y-4 mb-10">
-              <SocialBtn icon={Mail} label="Continue with Google" />
+              <SocialBtn component={<GoogleIcon />} label="Continue with Google" />
               <SocialBtn icon={Github} label="Continue with GitHub" />
             </div>
 
-            <div className="flex items-center gap-4 mb-10">
+            <div className="flex items-center gap-4 mb-8">
               <div className="h-px bg-gray-200 flex-1"></div>
               <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Or</span>
               <div className="h-px bg-gray-200 flex-1"></div>
             </div>
 
+            {/* Expanded Inputs Grid */}
             <div className="space-y-8 mb-12">
-              <MinimalInput placeholder="Email address" autoFocus />
-              <MinimalInput type="password" placeholder="Password" />
+              <div className="grid grid-cols-2 gap-8">
+                 <MinimalInput placeholder="First Name" autoFocus />
+                 <MinimalInput placeholder="Last Name" />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-8 items-end">
+                <PremiumDateInput />
+                <MinimalSelect placeholder="Gender" options={["Male", "Female", "Non-binary", "Prefer not to say"]} />
+              </div>
+
+              <MinimalInput placeholder="Email address" type="email" />
+              <MinimalInput placeholder="Password" type="password" />
             </div>
 
             <button 
               onClick={() => setStep(2)}
-              className="w-full bg-black text-white h-14 rounded-lg font-bold text-base hover:bg-gray-900 hover:shadow-lg active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 group"
+              className="w-full bg-black text-white h-14 rounded-xl font-bold text-base hover:bg-gray-900 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 group"
             >
               Continue
-              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              <ArrowRight size={18} className="text-[#ffb6e6] group-hover:translate-x-1 transition-transform" />
             </button>
             
             <p className="text-center mt-6 text-xs text-gray-400 font-medium">
@@ -186,24 +257,22 @@ const SignUpFlow = () => {
           </div>
         )}
 
-        {/* --- STEP 2: FULL SCREEN ANIMATION --- */}
+        {/* --- STEP 2: LOADING (Dark, Serif, Big) --- */}
         {step === 2 && (
-          <div className="fixed inset-0 z-50 bg-white flex flex-col items-center justify-center">
-            <div className={`text-center transition-all duration-[600ms] ease-in-out px-6 ${isExiting ? 'opacity-0 blur-md scale-95 translate-y-4' : 'opacity-100 blur-0 scale-100 translate-y-0'}`}>
-              {/* Using a flex col here to ensure the shiny text doesn't overlap strangely during transition */}
-              <div className="flex flex-col items-center">
-                 <h2 className="text-5xl md:text-7xl font-bold tracking-tighter leading-[1.05] text-black">
+          <div className="fixed inset-0 z-50 bg-[#111] flex flex-col items-center justify-center">
+            <div className={`text-center transition-all duration-[800ms] ease-in-out px-6 ${isExiting ? 'opacity-0 blur-lg scale-95 translate-y-8' : 'opacity-100 blur-0 scale-100 translate-y-0'}`}>
+              <div className="flex flex-col items-center gap-2">
+                 <h2 className="text-4xl md:text-6xl font-serif font-medium tracking-tight text-gray-500 leading-tight">
                    {loadingText.line1}
                  </h2>
-                 <h2 className="text-5xl md:text-7xl font-bold tracking-tighter leading-[1.05] shiny-text pb-2">
+                 <h2 className="text-4xl md:text-6xl font-serif font-medium tracking-tight shiny-text-dark leading-tight">
                    {loadingText.line2}
                  </h2>
               </div>
             </div>
             
-            {/* Progress Bar */}
-            <div className="absolute bottom-0 left-0 h-[2px] bg-gray-50 w-full">
-              <div className="h-full bg-black animate-[width_6s_ease-in-out_forwards] w-0"></div>
+            <div className="absolute bottom-0 left-0 h-[2px] bg-[#222] w-full">
+              <div className="h-full bg-white animate-[width_6s_ease-in-out_forwards] w-0"></div>
             </div>
           </div>
         )}
@@ -211,41 +280,99 @@ const SignUpFlow = () => {
         {/* --- STEP 3: ACCESS SELECTION --- */}
         {step === 3 && (
           <div className="w-full max-w-[500px] animate-enter">
-            <h1 className="text-[2.5rem] font-bold tracking-tighter mb-3 leading-none">Select access</h1>
-            <p className="text-gray-500 mb-12 text-lg font-medium">Choose how you want to join JobPilot.</p>
+            
+            {/* VIEW: MAIN SELECTION */}
+            {accessMode !== 'invite_code_mode' && (
+              <>
+                <h1 className="text-[2.5rem] font-bold tracking-tighter mb-3 leading-none">Select access</h1>
+                <p className="text-gray-500 mb-10 text-lg font-medium">Choose how you want to join JobPilot.</p>
 
-            <div className="w-full mb-12">
-              <OptionRow 
-                title="Join the Waitlist" 
-                sub="Secure your spot. Current wait time is approximately 2 weeks."
-                active={accessSelection === 'waitlist'}
-                onClick={() => setAccessSelection('waitlist')}
-                badge="Free"
-              />
-              <OptionRow 
-                title="Priority Access" 
-                sub="Skip the line and get instant access to the private beta."
-                active={accessSelection === 'priority'}
-                disabled={true}
-                badge="Sold Out"
-              />
-            </div>
+                <div className="w-full mb-10">
+                  <OptionRow 
+                    title="Join the Waitlist" 
+                    sub="Secure your spot. Current wait time is approximately 2 weeks."
+                    active={accessMode === 'waitlist'}
+                    onClick={() => setAccessMode('waitlist')}
+                    badge="Free"
+                  />
+                  <OptionRow 
+                    title="Priority Access" 
+                    sub="Skip the line (Sold Out)."
+                    active={false}
+                    disabled={true}
+                    badge="Sold Out"
+                  />
+                </div>
 
-            <div className="flex flex-col gap-8">
-               <div className="flex items-center justify-between group cursor-pointer py-2 px-1">
-                  <span className="text-sm font-semibold text-gray-500 group-hover:text-black transition-colors flex items-center gap-2">
-                    <Zap size={16} /> I have an invite code
-                  </span>
-                  <ChevronRight size={16} className="text-gray-400 group-hover:text-black transition-colors group-hover:translate-x-1" />
-               </div>
+                {/* ENHANCED Waitlist Form */}
+                {accessMode === 'waitlist' && (
+                  <div className="mb-10 animate-enter space-y-6">
+                    <div className="p-1">
+                      <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Tell us about you</label>
+                      <div className="space-y-6">
+                        <MinimalInput icon={Search} placeholder="How did you find us?" />
+                        <MinimalInput icon={MessageSquare} placeholder="Why do you want early access?" />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-              <button 
-                onClick={() => alert("Setup Complete!")}
-                className="w-full bg-black text-white h-14 rounded-lg font-bold text-base hover:bg-gray-900 hover:shadow-lg active:scale-[0.98] transition-all duration-200"
-              >
-                Complete Setup
-              </button>
-            </div>
+                <div className="flex flex-col gap-6">
+                   {/* Invite Code Trigger */}
+                   <div 
+                      onClick={() => setAccessMode('invite_code_mode')}
+                      className="flex items-center justify-between group cursor-pointer py-2 px-1 hover:bg-gray-50 rounded-lg transition-colors"
+                   >
+                      <span className="text-sm font-semibold text-gray-500 group-hover:text-black transition-colors flex items-center gap-2">
+                        <Zap size={16} className="text-[#ffb6e6]" /> I have an invite code
+                      </span>
+                      <ChevronRight size={16} className="text-gray-400 group-hover:text-black transition-colors group-hover:translate-x-1" />
+                   </div>
+
+                  <button 
+                    onClick={() => alert("Application Submitted!")}
+                    className="w-full bg-black text-white h-14 rounded-xl font-bold text-base hover:bg-gray-900 hover:shadow-lg active:scale-[0.98] transition-all duration-200"
+                  >
+                    {accessMode === 'waitlist' ? 'Join Waitlist' : 'Complete Setup'}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* VIEW: INVITE CODE INPUT */}
+            {accessMode === 'invite_code_mode' && (
+              <div className="animate-enter">
+                <button 
+                  onClick={() => setAccessMode('waitlist')}
+                  className="mb-8 flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-black transition-colors group"
+                >
+                  <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back
+                </button>
+
+                <h1 className="text-[2.5rem] font-bold tracking-tighter mb-3 leading-none">Enter invite code</h1>
+                <p className="text-gray-500 mb-12 text-lg font-medium">Please enter your 8-digit access code.</p>
+
+                <div className="mb-12">
+                   <div className="group relative w-full">
+                      <input 
+                        type="text" 
+                        placeholder="JP-XXXX-XXXX"
+                        autoFocus
+                        className="w-full py-6 bg-transparent border-b-2 border-gray-200 text-3xl font-mono font-bold text-gray-900 placeholder-gray-300 outline-none transition-colors duration-300 rounded-none focus:border-[#ffb6e6] uppercase tracking-widest text-center"
+                      />
+                   </div>
+                </div>
+
+                <button 
+                    onClick={() => alert("Code Validated!")}
+                    className="w-full bg-black text-white h-14 rounded-xl font-bold text-base hover:bg-gray-900 hover:shadow-lg active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    Validate Code
+                    <ArrowRight size={18} className="text-[#ffb6e6]" />
+                </button>
+              </div>
+            )}
+
           </div>
         )}
 
