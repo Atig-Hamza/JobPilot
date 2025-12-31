@@ -6,6 +6,7 @@ import './App.css';
 import TermsAndPrivacy from './pages/TermsAndPrivacy';
 import ContactPage from './pages/ContactPage';
 import PasswordRecovery from './pages/PasswordRecovery';
+import ComingSoon from './pages/ComingSoon';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/privacy" element={<TermsAndPrivacy />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/password-recovery" element={<PasswordRecovery />} />
+        <Route path="/soon" element={<ComingSoon />} />
       </Routes>
     </Router>
   );
