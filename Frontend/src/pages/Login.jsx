@@ -233,7 +233,7 @@ const LoginPage = () => {
                   <input type="checkbox" className="hidden" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
                   <span className="text-xs font-medium text-gray-500 group-hover:text-black transition-colors">Keep me signed in</span>
                 </label>
-                <a href="#" className="text-xs font-bold text-black hover:text-[#ffb6e6] transition-colors">Recover Password</a>
+                <a href="/password-recovery" className="text-xs font-bold text-black hover:text-[#ffb6e6] transition-colors">Recover Password</a>
               </div>
 
               {/* COLOR UPDATE: Button Background set to pink, Text set to Black for premium contrast */}
