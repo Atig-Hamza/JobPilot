@@ -274,10 +274,10 @@ const SignUpFlow = () => {
 
       {/* Navbar */}
       <div className={`w-full px-8 py-6 flex justify-between items-center fixed top-0 left-0 z-50 pointer-events-none transition-opacity duration-500 ${step === 2 ? 'opacity-0' : 'opacity-100'}`}>
-        <div className="flex items-center gap-2 font-bold text-gray-900 tracking-tight text-lg select-none pointer-events-auto">
+        <Link to={'/'} className="flex items-center gap-2 font-bold text-gray-900 tracking-tight text-lg select-none pointer-events-auto">
             <img src={MainLogo} alt="JobPilot" className='w-5 h-5' />
             JOBPILOT
-        </div>
+        </Link>
         {step === 1 && (
           <Link to={'/login'} className="text-sm font-medium text-gray-500 pointer-events-auto cursor-pointer hover:text-black transition-colors">
             Have an account? <span className="text-black font-bold underline underline-offset-2 decoration-[#ffb6e6]">Log in</span>
