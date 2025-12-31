@@ -260,9 +260,9 @@ const LoginPage = () => {
             </div>
 
             <div className="flex gap-5 text-[11px] font-medium text-gray-400">
-               <a href="#" className="hover:text-black transition-colors">Privacy Policy</a>
-               <a href="#" className="hover:text-black transition-colors">Terms of Service</a>
-               <a href="#" className="hover:text-black transition-colors">Security</a>
+               <a href="/privacy" className="hover:text-black transition-colors">Privacy Policy</a>
+               <a href="/privacy" className="hover:text-black transition-colors">Terms of Service</a>
+               <a href="/privacy" className="hover:text-black transition-colors">Security</a>
             </div>
             
           </div>
