@@ -744,11 +744,11 @@ const App = () => {
             JOBPILOT
           </div>
           <div className="flex gap-8 font-medium">
-            <a href="#" className="hover:text-black transition-colors">Terms</a>
-            <a href="#" className="hover:text-black transition-colors">Privacy</a>
-            <a href="#" className="hover:text-black transition-colors">Contact Us</a>
-            <a href="#" className="hover:text-black transition-colors">X</a>
-            <a href="#" className="hover:text-black transition-colors">LinkedIn</a>
+            <a href="/privacy" className="hover:text-black transition-colors">Terms</a>
+            <a href="/privacy" className="hover:text-black transition-colors">Privacy</a>
+            <a href="/contact" className="hover:text-black transition-colors">Contact Us</a>
+            <a href="/soon" className="hover:text-black transition-colors">X</a>
+            <a href="/soon" className="hover:text-black transition-colors">LinkedIn</a>
           </div>
         </div>
       </footer>
