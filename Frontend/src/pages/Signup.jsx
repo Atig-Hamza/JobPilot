@@ -329,7 +329,7 @@ const SignUpFlow = () => {
             </button>
             
             <p className="text-center mt-6 text-xs text-gray-400 font-medium">
-              By continuing, you agree to our Terms and Privacy Policy.
+              By continuing, you agree to our <a href="/privacy" className="hover:text-black transition-colors">Terms</a> and <a href="/privacy" className="hover:text-black transition-colors">Privacy Policy</a>.
             </p>
           </div>
         )}
