@@ -123,11 +123,7 @@ const SimpleHeader = () => (
 const SidebarLink = ({ id, activeId, label, onClick }) => (
   <button
     onClick={() => onClick(id)}
-    className={`text-left w-full py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 border-l-2 ${
-      activeId === id 
-        ? 'bg-pink-50 text-pink-900 border-pink-500 pl-4' 
-        : 'text-gray-500 border-transparent hover:text-gray-900 hover:pl-4'
-    }`}
+    className={`text-left w-full py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200`}
   >
     {label}
   </button>
@@ -448,11 +444,11 @@ const TermsAndPrivacy = () => {
             JOBPILOT
           </div>
           <div className="flex gap-8 font-medium">
-            <a href="#" className="hover:text-black transition-colors">Terms</a>
-            <a href="#" className="hover:text-black transition-colors">Privacy</a>
-            <a href="#" className="hover:text-black transition-colors">Contact Us</a>
-            <a href="#" className="hover:text-black transition-colors">X</a>
-            <a href="#" className="hover:text-black transition-colors">LinkedIn</a>
+            <a href="/privacy" className="hover:text-black transition-colors">Terms</a>
+            <a href="/privacy" className="hover:text-black transition-colors">Privacy</a>
+            <a href="/contact" className="hover:text-black transition-colors">Contact Us</a>
+            <a href="/soon" className="hover:text-black transition-colors">X</a>
+            <a href="/soon" className="hover:text-black transition-colors">LinkedIn</a>
           </div>
         </div>
       </footer>
