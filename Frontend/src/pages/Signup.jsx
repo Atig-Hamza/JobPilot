@@ -7,10 +7,10 @@ import {
   Zap,
   ArrowLeft,
   Calendar,
-  User,
   ChevronDown,
   Search,
-  MessageSquare
+  MessageSquare,
+  User
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import MainLogo from '../assets/Main/logo-without-bg.png';
@@ -59,17 +59,18 @@ const premiumStyles = `
     animation: shineFlow 4s linear infinite;
   }
   
-  /* Custom Select Dropdown Arrow */
-  .custom-select {
-    appearance: none;
-    background-image: none;
+  /* Input Autofill Override */
+  input:-webkit-autofill,
+  input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    transition: background-color 5000s ease-in-out 0s;
   }
-
-  /* Date Input Placeholder styling */
-  input[type="date"]::-webkit-inner-spin-button,
-  input[type="date"]::-webkit-calendar-picker-indicator {
-    display: none;
-    -webkit-appearance: none;
+  
+  /* Remove number arrows */
+  input[type=number]::-webkit-inner-spin-button, 
+  input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
   }
 `;
 
@@ -91,7 +92,7 @@ const GoogleIcon = () => (
 const MinimalInput = ({ type = "text", placeholder, autoFocus, value, onChange, icon: Icon }) => (
   <div className="group relative w-full">
     <div className="relative flex items-center">
-      {Icon && <Icon size={18} className="absolute left-0 text-gray-400 group-focus-within:text-pink-400 transition-colors" />}
+      {Icon && <Icon size={18} className="absolute left-0 text-gray-400 group-focus-within:text-[#ffb6e6] transition-colors" />}
       <input 
         type={type} 
         placeholder={placeholder}
@@ -106,38 +107,114 @@ const MinimalInput = ({ type = "text", placeholder, autoFocus, value, onChange, 
   </div>
 );
 
-const PremiumDateInput = () => {
-  const inputRef = useRef(null);
-  
+// --- New Premium Birthday Component (Split Input) ---
+const SplitDateInput = () => {
   return (
-    <div className="group relative w-full cursor-pointer" onClick={() => inputRef.current?.showPicker()}>
-      <div className="w-full py-4 border-b border-gray-200 flex items-center justify-between text-lg font-medium text-gray-900">
-        <input 
-          ref={inputRef}
-          type="date" 
-          className="bg-transparent border-none outline-none w-full h-full text-gray-900 placeholder-gray-400 font-medium"
-          style={{ fontFamily: 'inherit' }}
-        />
-        <Calendar size={18} className="text-gray-400 group-hover:text-black transition-colors" />
+    <div className="group relative w-full">
+      <div className="flex items-end gap-3 w-full border-b border-gray-200 py-4">
+        <Calendar size={18} className="text-gray-400 mb-1 group-focus-within:text-[#ffb6e6] transition-colors" />
+        
+        <div className="flex-1 flex gap-2 text-lg font-medium text-gray-900">
+           {/* Day */}
+           <input 
+              type="number" 
+              placeholder="DD" 
+              className="w-8 bg-transparent outline-none placeholder-gray-400 text-center" 
+              min="1" max="31"
+           />
+           <span className="text-gray-300">/</span>
+           {/* Month */}
+           <input 
+              type="number" 
+              placeholder="MM" 
+              className="w-10 bg-transparent outline-none placeholder-gray-400 text-center" 
+              min="1" max="12"
+           />
+           <span className="text-gray-300">/</span>
+           {/* Year */}
+           <input 
+              type="number" 
+              placeholder="YYYY" 
+              className="w-16 bg-transparent outline-none placeholder-gray-400 text-center" 
+              min="1900" max="2025"
+           />
+        </div>
       </div>
+      
+      {/* Pink underline */}
       <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#ffb6e6] group-focus-within:w-full transition-all duration-500 ease-[cubic-bezier(0.2,1,0.3,1)]"></div>
-      <span className="absolute -top-2 left-0 text-[10px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-pink-400 transition-colors">Birth Date</span>
+      
+      {/* Label */}
+      <span className="absolute -top-2 left-0 text-[10px] font-bold text-gray-400 uppercase tracking-widest group-focus-within:text-[#ffb6e6] transition-colors">
+        Date of Birth
+      </span>
     </div>
   );
 };
 
-const MinimalSelect = ({ placeholder, options }) => (
-  <div className="group relative w-full">
-    <div className="relative">
-      <select className="w-full py-4 bg-transparent border-b border-gray-200 text-lg font-medium text-gray-900 placeholder-gray-400 outline-none transition-colors duration-300 rounded-none custom-select cursor-pointer focus:border-transparent bg-white">
-        <option value="" disabled selected hidden>{placeholder}</option>
-        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-      </select>
-      <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-hover:text-black transition-colors" size={16} />
+// --- New Premium Gender Select (Custom Dropdown) ---
+const CustomGenderSelect = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selected, setSelected] = useState("");
+  const dropdownRef = useRef(null);
+
+  const options = ["Male", "Female", "Non-binary", "Prefer not to say"];
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      {/* Trigger */}
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        className="group cursor-pointer relative w-full py-4 border-b border-gray-200 flex items-center justify-between text-lg font-medium"
+      >
+        <span className={`${selected ? 'text-gray-900' : 'text-gray-400'}`}>
+          {selected || "Gender"}
+        </span>
+        <ChevronDown 
+          size={16} 
+          className={`text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-black' : ''}`} 
+        />
+        
+        {/* Underline Animation */}
+        <div className={`absolute bottom-0 left-0 h-[2px] bg-[#ffb6e6] transition-all duration-500 ease-[cubic-bezier(0.2,1,0.3,1)] ${isOpen ? 'w-full' : 'w-0'}`}></div>
+      </div>
+
+      {/* Dropdown Menu */}
+      <div 
+        className={`absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20 transition-all duration-300 origin-top ${
+          isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+        }`}
+      >
+        {options.map((opt) => (
+          <div 
+            key={opt}
+            onClick={() => {
+              setSelected(opt);
+              setIsOpen(false);
+            }}
+            className="px-5 py-3 hover:bg-[#fff0f8] cursor-pointer flex items-center justify-between group transition-colors"
+          >
+            <span className={`text-sm font-medium ${selected === opt ? 'text-black' : 'text-gray-500 group-hover:text-black'}`}>
+              {opt}
+            </span>
+            {selected === opt && <Check size={14} className="text-[#ffb6e6]" strokeWidth={3} />}
+          </div>
+        ))}
+      </div>
     </div>
-    <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#ffb6e6] group-focus-within:w-full transition-all duration-500 ease-[cubic-bezier(0.2,1,0.3,1)]"></div>
-  </div>
-);
+  );
+};
 
 const SocialBtn = ({ icon: Icon, component, label }) => (
   <button className="flex items-center justify-center gap-3 w-full py-3.5 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm transition-all duration-200 group active:scale-[0.99] bg-white">
@@ -227,7 +304,7 @@ const SignUpFlow = () => {
               <div className="h-px bg-gray-200 flex-1"></div>
             </div>
 
-            {/* Expanded Inputs Grid */}
+            {/* Inputs Grid */}
             <div className="space-y-8 mb-12">
               <div className="grid grid-cols-2 gap-8">
                  <MinimalInput placeholder="First Name" autoFocus />
@@ -235,8 +312,8 @@ const SignUpFlow = () => {
               </div>
               
               <div className="grid grid-cols-2 gap-8 items-end">
-                <PremiumDateInput />
-                <MinimalSelect placeholder="Gender" options={["Male", "Female", "Non-binary", "Prefer not to say"]} />
+                <SplitDateInput />
+                <CustomGenderSelect />
               </div>
 
               <MinimalInput placeholder="Email address" type="email" />
@@ -308,7 +385,9 @@ const SignUpFlow = () => {
                 {accessMode === 'waitlist' && (
                   <div className="mb-10 animate-enter space-y-6">
                     <div className="p-1">
-                      <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Tell us about you</label>
+                      <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4 block flex items-center gap-2">
+                        <User size={12} className="text-[#ffb6e6]" /> Tell us about you
+                      </label>
                       <div className="space-y-6">
                         <MinimalInput icon={Search} placeholder="How did you find us?" />
                         <MinimalInput icon={MessageSquare} placeholder="Why do you want early access?" />
