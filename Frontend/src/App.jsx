@@ -8,6 +8,7 @@ import ContactPage from './pages/ContactPage';
 import PasswordRecovery from './pages/PasswordRecovery';
 import ComingSoon from './pages/ComingSoon';
 import NotFound from './pages/404';
+import UserDashboard from './pages/user/UserDashboard';
 
 
 function App() {
@@ -22,6 +23,9 @@ function App() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/password-recovery" element={<PasswordRecovery />} />
         <Route path="/soon" element={<ComingSoon />} />
+        {/* user */}
+        <Route path="/user/dashboard" element={<UserDashboard />} />
+        {/* admin */}
       </Routes>
     </Router>
   );
