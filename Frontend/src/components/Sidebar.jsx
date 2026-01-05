@@ -1,80 +1,104 @@
 import React from 'react';
-import MainLogo from '../assets/Main/logo-without-bg.png'; 
-import { 
-  LayoutGrid, 
-  CheckSquare, 
-  Calendar, 
-  FileText, 
-  Settings, 
-  Bot,
-  Code2,
-  Users,
-  Briefcase
+import MainLogo from '../assets/Main/logo-without-bg.png';
+import {
+    Home,
+    Sparkles,
+    LayoutGrid,
+    CheckSquare,
+    Calendar,
+    FileText,
+    Bot,
+    Code2,
+    Users,
+    Briefcase,
+    Megaphone,
+    Plus,
+    UserPlus,
+    ChevronRight
 } from 'lucide-react';
 
-const NavItem = ({ icon, label, active }) => (
-  <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 group ${active ? 'bg-pink-50 text-gray-900' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
-    <div className={`transition-colors ${active ? "text-pink-600" : "text-gray-400 group-hover:text-gray-900"}`}>{icon}</div>
-    <span className={`text-sm font-bold ${active ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'}`}>{label}</span>
-  </div>
-);
-
-const ToolItem = ({ icon, label }) => (
-    <div className="flex items-center gap-3 text-sm font-medium text-gray-500 hover:text-pink-600 cursor-pointer group py-1">
-        <div className="text-gray-300 group-hover:text-pink-400 transition-colors">{icon}</div>
-        <span>{label}</span>
+const NavItem = ({ icon, label, active, badge, isPro }) => (
+    <div className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 group mb-1 ${active
+            ? 'bg-[#F1F5F9] text-gray-900 font-semibold' // Matches the "Accueil" style in image
+            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-medium'
+        }`}>
+        <div className="flex items-center gap-3">
+            <div className={`${active ? "text-gray-900" : "text-gray-500"}`}>
+                {icon}
+            </div>
+            <span className="text-[14px]">{label}</span>
+        </div>
+        {isPro && (
+            <span className="bg-[#FF7A00] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[4px] uppercase tracking-wide">
+                NEW
+            </span>
+        )}
+        {badge && !isPro && (
+            <span className="text-gray-400 text-xs">{badge}</span>
+        )}
     </div>
 );
 
 const Sidebar = () => {
-  return (
-    <aside className="w-[260px] bg-[#FDFDFD] border-r border-gray-100 flex flex-col justify-between shrink-0 z-20 hidden md:flex">
-        <div className="p-5 flex flex-col h-full">
-          
-          {/* Logo Section */}
-          <div className="flex items-center gap-2 mb-10 pl-2 select-none cursor-pointer">
-             {/* Placeholder Logo */}
-            <img src={MainLogo} alt="JobPilot Logo" className="w-8 h-8 object-contain"/>
-            <span className="font-bold text-gray-900 tracking-tight text-xl">JOBPILOT</span>
-          </div>
-
-          {/* Navigation */}
-          <div className="space-y-8 flex-1 overflow-y-auto scrollbar-hide">
-            <nav className="space-y-1">
-              <NavItem icon={<LayoutGrid size={18} />} label="Dashboard" active />
-              <NavItem icon={<Bot size={18} />} label="AutoPilot Agent" />
-              <NavItem icon={<CheckSquare size={18} />} label="Applications" />
-              <NavItem icon={<Calendar size={18} />} label="Interviews" />
-              <NavItem icon={<FileText size={18} />} label="Cover Letters" />
-            </nav>
-
-            {/* Tools List */}
-            <div className="px-3">
-              <h3 className="text-[10px] font-bold text-gray-400 mb-4 uppercase tracking-widest">Power Tools</h3>
-              <div className="space-y-4">
-                <ToolItem icon={<Code2 size={16} />} label="Tech Interview Lab" />
-                <ToolItem icon={<Users size={16} />} label="Behavioral Sim" />
-                <ToolItem icon={<Briefcase size={16} />} label="Lead Finder" />
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar Footer */}
-          <div className="mt-auto pt-6 border-t border-gray-100 space-y-2">
-            <div className="flex items-center justify-between px-3 py-2 text-gray-500 hover:text-gray-900 cursor-pointer rounded-xl hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-100 to-purple-100 border border-white shadow-sm flex items-center justify-center text-xs font-bold text-gray-700">JS</div>
-                <div className="flex flex-col">
-                    <span className="text-xs font-bold text-gray-900">Sam Smith</span>
-                    <span className="text-[10px] text-gray-400">Pro Plan</span>
+    return (
+        <aside className="w-[260px] bg-white border-r border-gray-100 flex flex-col h-full shrink-0 z-20 hidden md:flex font-sans">
+            <div className="p-5 pb-2">
+                <div className="flex items-center gap-2 mb-6 cursor-pointer">
+                    <img src={MainLogo} alt="JobPilot" className="w-7 h-7 object-contain" />
+                    <span className="font-bold text-gray-900 text-lg tracking-tight">JobPilot</span>
                 </div>
-              </div>
-              <Settings size={14} />
+
+                <div className="space-y-1">
+                    <NavItem icon={<Home size={18} />} label="Dashboard" active />
+                    <NavItem icon={<Sparkles size={18} />} label="AutoPilot Agent" />
+                </div>
             </div>
-          </div>
-        </div>
-      </aside>
-  );
+
+            <div className="h-px bg-gray-100 mx-5 my-2"></div>
+
+            <div className="flex-1 overflow-y-auto scrollbar-hide px-5 py-2 space-y-6">
+                <div>
+                    <h3 className="text-xs font-bold text-gray-400 mb-3 px-1">AI TOOLS</h3>
+                    <nav>
+                        <NavItem
+                            icon={<Briefcase size={18} />}
+                            label="Lead Finder"
+                            isPro={true}
+                        />
+                        <NavItem icon={<Code2 size={18} />} label="Tech Interview Lab" />
+                        <NavItem icon={<Users size={18} />} label="Behavioral Sim" />
+                    </nav>
+                </div>
+                <div>
+                    <h3 className="text-xs font-bold text-gray-400 mb-3 px-1">MANAGEMENT</h3>
+                    <nav>
+                        <NavItem icon={<CheckSquare size={18} />} label="Applications" badge="12" />
+                        <NavItem icon={<Calendar size={18} />} label="Interviews" />
+                        <NavItem icon={<FileText size={18} />} label="Cover Letters" />
+                    </nav>
+                </div>
+
+                <div>
+                    <nav>
+                        <div className="h-px bg-gray-100 my-3"></div>
+                        <NavItem icon={<Megaphone size={18} />} label="What's New" />
+                    </nav>
+                </div>
+            </div>
+            <div className="p-4 border-t border-gray-100 mt-auto">
+                <div className="flex items-center gap-3 p-2 -mx-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
+                    <div className="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center text-white font-bold text-xs">
+                        JP
+                    </div>
+                    <div className="flex-1 text-left">
+                        <p className="text-sm font-medium text-gray-900">My Profile</p>
+                        <p className="text-xs text-gray-500">Manage account</p>
+                    </div>
+                    <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600" />
+                </div>
+            </div>
+        </aside>
+    );
 };
 
 export default Sidebar;
