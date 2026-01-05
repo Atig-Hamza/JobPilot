@@ -113,7 +113,7 @@ const JobPilotDashboard = () => {
                                     <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
 
                                         {/* Item 1: New Application */}
-                                        <div className="min-w-[240px] h-[100px] bg-[#F2F4F7] hover:bg-white hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
+                                        <div className="min-w-[240px] h-[100px] bg-[#F2F4F7] hover:bg-[#f5f6f7] hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
                                             <span className="font-bold text-sm text-gray-900 z-10">New<br />Application</span>
                                             <div className="relative w-20 h-16 bg-blue-100 rounded-lg shadow-sm border border-blue-200/50 flex items-center justify-center group-hover:scale-105 transition-transform">
                                                 <Briefcase size={20} className="text-blue-500" />
@@ -124,7 +124,7 @@ const JobPilotDashboard = () => {
                                         </div>
 
                                         {/* Item 2: Free AI Cover Letter */}
-                                        <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-white hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
+                                        <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-[#f5f6f7] hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
                                             <div className="z-10 flex flex-col items-start">
                                                 <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Free AI<br />Cover Letter</span>
                                                 <span className="bg-[#FF4D4D] text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase shadow-sm">New</span>
@@ -143,7 +143,7 @@ const JobPilotDashboard = () => {
                                         </div>
 
                                         {/* Item 3: Interview Coach */}
-                                        <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-white hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
+                                        <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-[#f5f6f7] hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
                                             <div className="z-10 flex flex-col items-start">
                                                 <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Interview<br />Coach</span>
                                                 <span className="bg-purple-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase shadow-sm">Beta</span>
@@ -159,7 +159,7 @@ const JobPilotDashboard = () => {
                                         </div>
 
                                         {/* Item 4: Career Path Ideas */}
-                                        <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-white hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
+                                        <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-[#f5f6f7] hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
                                             <div className="z-10 flex flex-col items-start">
                                                 <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Find Career<br />Paths AI</span>
                                             </div>
@@ -186,7 +186,7 @@ const JobPilotDashboard = () => {
                                 {/* Card 1: JOP-1 Scraper */}
                                 <div
                                     onClick={() => handleModeChange('jop1_scrape')}
-                                    className={`relative overflow-hidden bg-white rounded-[2rem] p-7 cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group border ${activeMode === 'jop1_scrape' ? 'border-purple-400 ring-4 ring-purple-50 shadow-xl' : 'border-gray-100 shadow-sm'}`}
+                                    className={`relative overflow-hidden bg-white rounded-[2rem] p-7 cursor-pointer transition-all duration-300 hover:-translate-y-1 group border ${activeMode === 'jop1_scrape' ? 'border-purple-400 ring-4 ring-purple-50 shadow-xl' : 'border-gray-100 shadow-sm'}`}
                                 >
                                     <div className="absolute -right-6 -top-6 w-24 h-24 bg-purple-50 rounded-full blur-2xl group-hover:bg-purple-100 transition-colors"></div>
 
@@ -205,7 +205,7 @@ const JobPilotDashboard = () => {
                                 {/* Card 2: AI Resume Opt */}
                                 <div
                                     onClick={() => handleModeChange('resume_opt')}
-                                    className={`relative overflow-hidden bg-white rounded-[2rem] p-7 cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group border ${activeMode === 'resume_opt' ? 'border-pink-400 ring-4 ring-pink-50 shadow-xl' : 'border-gray-100 shadow-sm'}`}
+                                    className={`relative overflow-hidden bg-white rounded-[2rem] p-7 cursor-pointer transition-all duration-300 hover:-translate-y-1 group border ${activeMode === 'resume_opt' ? 'border-pink-400 ring-4 ring-pink-50 shadow-xl' : 'border-gray-100 shadow-sm'}`}
                                 >
                                     <div className="absolute -right-6 -top-6 w-24 h-24 bg-pink-50 rounded-full blur-2xl group-hover:bg-pink-100 transition-colors"></div>
 
@@ -222,7 +222,7 @@ const JobPilotDashboard = () => {
                                 </div>
 
                                 {/* Card 3: ACTION CARD (Auto Apply) */}
-                                <div className="bg-gradient-to-br from-[#ffb6e6] to-[#ff9ecd] rounded-[2rem] p-7 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group border border-pink-300 cursor-pointer relative overflow-hidden">
+                                <div className="bg-gradient-to-br from-[#ffb6e6] to-[#ff9ecd] rounded-[2rem] p-7 transition-all duration-300 hover:-translate-y-1 group border border-pink-300 cursor-pointer relative overflow-hidden">
                                     <div className="absolute top-0 right-0 w-40 h-40 bg-white opacity-20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-400 opacity-30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
 
