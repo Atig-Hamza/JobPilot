@@ -59,23 +59,12 @@ const JobPilotDashboard = () => {
 
     return (
         <div className="flex h-screen w-screen bg-[#FAFAFA] font-sans text-gray-900 overflow-hidden selection:bg-pink-200 selection:text-pink-900">
-
-            {/* ================= SIDEBAR ================= */}
             <Sidebar />
-
-            {/* ================= MAIN CONTENT ================= */}
             <main className="flex-1 flex flex-col relative h-full">
-
-                {/* Scrollable Container */}
                 <div className="flex-1 overflow-y-auto w-full scroll-smooth">
                     <div className="min-h-full flex flex-col items-center p-6 md:p-8 pb-44">
-                        {/* Widened Container */}
                         <div className="w-full max-w-[1600px] space-y-8">
-
-                            {/* ================= ENHANCED HEADER & CREDITS ================= */}
                             <header className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-2">
-
-                                {/* Left: Greeting & Date */}
                                 <div>
                                     <div className="flex items-center gap-2 text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">
                                         <Calendar size={12} />
@@ -85,9 +74,7 @@ const JobPilotDashboard = () => {
                                         Welcome back, Sam.
                                     </h2>
                                 </div>
-
-                                {/* Right: Credit Balance Widget */}
-                                <div className="group flex items-center gap-3 bg-white p-2 pr-4 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all cursor-pointer">
+                                <div className="group flex items-center gap-3 bg-white p-2 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all cursor-pointer">
                                     <div className="flex flex-col">
                                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none mb-1">Available Credits</span>
                                         <div className="flex justify-center items-center gap-2">
@@ -107,12 +94,8 @@ const JobPilotDashboard = () => {
                                     <Sparkles size={16} className="text-yellow-500" />
                                     <h3 className="text-lg font-bold text-gray-900">You might want to try</h3>
                                 </div>
-
                                 <div className="relative w-full">
-                                    {/* Horizontal Scroll Container */}
                                     <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
-
-                                        {/* Item 1: New Application */}
                                         <div className="min-w-[240px] h-[100px] bg-[#F2F4F7] hover:bg-[#f5f6f7] hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
                                             <span className="font-bold text-sm text-gray-900 z-10">New<br />Application</span>
                                             <div className="relative w-20 h-16 bg-blue-100 rounded-lg shadow-sm border border-blue-200/50 flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -122,8 +105,6 @@ const JobPilotDashboard = () => {
                                                 </div>
                                             </div>
                                         </div>
-
-                                        {/* Item 2: Free AI Cover Letter */}
                                         <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-[#f5f6f7] hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
                                             <div className="z-10 flex flex-col items-start">
                                                 <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Free AI<br />Cover Letter</span>
@@ -141,8 +122,6 @@ const JobPilotDashboard = () => {
                                             </div>
                                             <ArrowRight className="absolute text-gray-400 w-4 h-4 left-[45%] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                                         </div>
-
-                                        {/* Item 3: Interview Coach */}
                                         <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-[#f5f6f7] hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
                                             <div className="z-10 flex flex-col items-start">
                                                 <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Interview<br />Coach</span>
@@ -157,8 +136,6 @@ const JobPilotDashboard = () => {
                                                 <div className="absolute bottom-0 inset-x-0 bg-purple-600/90 text-white text-[8px] text-center py-0.5">Enhance Audio</div>
                                             </div>
                                         </div>
-
-                                        {/* Item 4: Career Path Ideas */}
                                         <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-[#f5f6f7] hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
                                             <div className="z-10 flex flex-col items-start">
                                                 <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Find Career<br />Paths AI</span>
@@ -170,8 +147,6 @@ const JobPilotDashboard = () => {
                                                 <div className="absolute top-4 left-10 w-4 h-[1px] bg-blue-300"></div>
                                             </div>
                                         </div>
-
-                                        {/* Item 5: View All Button */}
                                         <div className="min-w-[60px] h-[100px] bg-white border border-dashed border-gray-300 rounded-xl flex items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-all group">
                                             <ChevronRight size={20} className="text-gray-400 group-hover:text-gray-900" />
                                         </div>
@@ -179,11 +154,7 @@ const JobPilotDashboard = () => {
                                     </div>
                                 </div>
                             </section>
-
-                            {/* ================= EXISTING GRID SECTION ================= */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-                                {/* Card 1: JOP-1 Scraper */}
                                 <div
                                     onClick={() => handleModeChange('jop1_scrape')}
                                     className={`relative overflow-hidden bg-white rounded-[2rem] p-7 cursor-pointer transition-all duration-300 hover:-translate-y-1 group border ${activeMode === 'jop1_scrape' ? 'border-purple-400 ring-4 ring-purple-50 shadow-xl' : 'border-gray-100 shadow-sm'}`}
@@ -201,8 +172,6 @@ const JobPilotDashboard = () => {
                                         <p className="text-sm text-gray-500 leading-relaxed font-medium">Paste a job URL. I'll parse requirements & generate tailored application assets.</p>
                                     </div>
                                 </div>
-
-                                {/* Card 2: AI Resume Opt */}
                                 <div
                                     onClick={() => handleModeChange('resume_opt')}
                                     className={`relative overflow-hidden bg-white rounded-[2rem] p-7 cursor-pointer transition-all duration-300 hover:-translate-y-1 group border ${activeMode === 'resume_opt' ? 'border-pink-400 ring-4 ring-pink-50 shadow-xl' : 'border-gray-100 shadow-sm'}`}
@@ -220,8 +189,6 @@ const JobPilotDashboard = () => {
                                         <p className="text-sm text-gray-500 leading-relaxed font-medium">Upload PDF. I'll rewrite bullets to match JD keywords instantly using AI.</p>
                                     </div>
                                 </div>
-
-                                {/* Card 3: ACTION CARD (Auto Apply) */}
                                 <div className="bg-gradient-to-br from-[#ffb6e6] to-[#ff9ecd] rounded-[2rem] p-7 transition-all duration-300 hover:-translate-y-1 group border border-pink-300 cursor-pointer relative overflow-hidden">
                                     <div className="absolute top-0 right-0 w-40 h-40 bg-white opacity-20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-400 opacity-30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
@@ -244,8 +211,6 @@ const JobPilotDashboard = () => {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Company Email List */}
                             <div className="bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -258,17 +223,13 @@ const JobPilotDashboard = () => {
                                         <button className="text-xs font-bold text-pink-600 bg-pink-50 px-3 py-1.5 rounded-lg hover:bg-pink-100 transition-colors">Refresh List</button>
                                     </div>
                                 </div>
-
                                 <div className="space-y-1">
-                                    {/* Header Row */}
                                     <div className="grid grid-cols-12 gap-4 px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 mb-2">
                                         <div className="col-span-4">Company</div>
                                         <div className="col-span-4">Target Email</div>
                                         <div className="col-span-2">Source</div>
                                         <div className="col-span-2 text-right">Action</div>
                                     </div>
-
-                                    {/* List Items */}
                                     <CompanyRow
                                         name="Linear"
                                         logo="https://upload.wikimedia.org/wikipedia/commons/9/95/Linear_logo.svg"
@@ -299,16 +260,11 @@ const JobPilotDashboard = () => {
                                     />
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
-
-                {/* ================= INPUT AREA (Fixed Bottom) ================= */}
                 <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#FAFAFA] via-[#FAFAFA]/90 to-transparent pt-16 pb-8 px-6 z-30 pointer-events-none">
                     <div className="max-w-3xl mx-auto pointer-events-auto">
-
-                        {/* Mode Indicators */}
                         <div className="flex justify-center gap-2 mb-4">
                             <ModeBadge
                                 active={activeMode === 'general'}
@@ -328,15 +284,9 @@ const JobPilotDashboard = () => {
                                 onClick={() => handleModeChange('jop1_scrape')}
                             />
                         </div>
-
-                        {/* Main Input Component */}
                         <div className={`bg-white/80 backdrop-blur-xl shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)] rounded-[1.5rem] transition-all duration-300 relative overflow-hidden border ${activeMode === 'resume_opt' ? 'border-pink-200 ring-4 ring-pink-50/50' : 'border-gray-200 ring-4 ring-white/50'}`}>
-
-                            {/* --- RESUME UPLOAD UI --- */}
                             {activeMode === 'resume_opt' ? (
                                 <div className="p-2.5 flex items-center gap-3 h-[76px]">
-
-                                    {/* Hidden File Input */}
                                     <input
                                         type="file"
                                         ref={fileInputRef}
@@ -344,13 +294,11 @@ const JobPilotDashboard = () => {
                                         className="hidden"
                                         accept=".pdf,.doc,.docx"
                                     />
-
-                                    {/* Drop Zone / Uploaded State */}
                                     <div
                                         onClick={!uploadedFile ? handleUploadClick : undefined}
                                         className={`flex-1 h-full rounded-2xl flex items-center px-4 gap-4 transition-all duration-200 ${uploadedFile
-                                                ? 'bg-green-50 border border-green-200 cursor-default'
-                                                : 'bg-gray-50 border border-dashed border-gray-300 hover:border-pink-300 hover:bg-pink-50/50 cursor-pointer group'
+                                            ? 'bg-green-50 border border-green-200 cursor-default'
+                                            : 'bg-gray-50 border border-dashed border-gray-300 hover:border-pink-300 hover:bg-pink-50/50 cursor-pointer group'
                                             }`}
                                     >
                                         {uploadedFile ? (
@@ -381,13 +329,11 @@ const JobPilotDashboard = () => {
                                             </>
                                         )}
                                     </div>
-
-                                    {/* Action Button */}
                                     <button
                                         disabled={!uploadedFile}
                                         className={`h-full px-6 rounded-2xl font-bold text-sm flex items-center gap-2 transition-all shadow-sm shrink-0 ${uploadedFile
-                                                ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:shadow-lg hover:scale-105 active:scale-95'
-                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                            ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:shadow-lg hover:scale-105 active:scale-95'
+                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                             }`}
                                     >
                                         <Sparkles size={16} className={uploadedFile ? "animate-pulse" : ""} />
@@ -395,19 +341,16 @@ const JobPilotDashboard = () => {
                                     </button>
                                 </div>
                             ) : (
-                                /* --- CHAT / SCRAPER UI --- */
                                 <div className="flex items-center gap-2 p-2.5 h-[76px]">
                                     <button className="w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-colors shrink-0">
                                         <Plus size={24} />
                                     </button>
-
                                     <input
                                         type="text"
                                         autoFocus
                                         placeholder={activeMode === 'jop1_scrape' ? "Paste job keyword here..." : "Ask JobPilot to find leads..."}
                                         className="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-400 h-full text-lg font-medium px-2"
                                     />
-
                                     <button className={`h-12 px-6 rounded-2xl flex items-center gap-2 font-bold text-sm transition-all shadow-sm group shrink-0 ${activeMode === 'jop1_scrape' ? 'bg-black text-white hover:bg-gray-800' : 'bg-[#ffb6e6] hover:bg-pink-300 text-gray-900'}`}>
                                         <span>{activeMode === 'jop1_scrape' ? 'Scrape' : 'Send'}</span>
                                         <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -415,24 +358,20 @@ const JobPilotDashboard = () => {
                                 </div>
                             )}
                         </div>
-
-                        {/* Footer hint */}
                         <div className="text-center mt-3">
                             <p className="text-[10px] font-bold text-gray-400 flex items-center justify-center gap-1.5">
                                 <AlertCircle size={10} />
                                 AI can make mistakes. Verify important info.
                             </p>
                         </div>
-
                     </div>
                 </div>
-
             </main>
         </div>
     );
 };
 
-/* --- Sub Components --- */
+
 
 const ModeBadge = ({ active, label, icon, onClick }) => (
     <button
@@ -446,26 +385,18 @@ const ModeBadge = ({ active, label, icon, onClick }) => (
 
 const CompanyRow = ({ name, logo, email, source, status }) => (
     <div className="grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-gray-50 rounded-2xl transition-colors cursor-pointer group">
-
-        {/* Company Info */}
         <div className="col-span-4 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-white border border-gray-100 p-1 flex items-center justify-center shrink-0 shadow-sm">
                 <img src={logo} alt={name} className="w-full h-full object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.classList.add('bg-gray-100'); }} />
             </div>
             <span className="text-sm font-bold text-gray-900">{name}</span>
         </div>
-
-        {/* Email */}
         <div className="col-span-4">
             <span className="text-xs font-semibold text-gray-500 group-hover:text-gray-900 transition-colors font-mono bg-gray-50 px-2 py-1 rounded border border-gray-100">{email}</span>
         </div>
-
-        {/* Source */}
         <div className="col-span-2">
             <span className="text-xs font-bold text-gray-400">{source}</span>
         </div>
-
-        {/* Action/Status */}
         <div className="col-span-2 text-right">
             {status === 'sent' ? (
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-100">
