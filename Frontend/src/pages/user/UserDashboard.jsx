@@ -22,6 +22,7 @@ import {
     CreditCard
 } from 'lucide-react';
 import JopBg from '../../assets/User/JOP.png';
+import ResumeBg from '../../assets/User/CVOP.png';
 
 const JobPilotDashboard = () => {
     const [activeMode, setActiveMode] = useState('general');
@@ -177,31 +178,27 @@ const JobPilotDashboard = () => {
                                 <div
                                     onClick={() => handleModeChange('resume_opt')}
                                     className={`relative overflow-hidden bg-white rounded-[2rem] p-7 cursor-pointer transition-all duration-300 hover:-translate-y-1 group border ${activeMode === 'resume_opt' ? 'border-pink-400 ring-4 ring-pink-50 shadow-xl' : 'border-gray-100 shadow-sm'}`}
+                                    style={{
+                                        backgroundImage: `url(${ResumeBg})`,
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: 'center',
+                                    }}
                                 >
                                     <div className="absolute -right-6 -top-6 w-24 h-24 bg-pink-50 rounded-full blur-2xl group-hover:bg-pink-100 transition-colors"></div>
 
                                     <div className="relative z-10">
                                         <div className="flex justify-between items-start mb-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-50 to-white border border-pink-100 flex items-center justify-center text-pink-600 shadow-sm group-hover:scale-110 transition-transform">
-                                                <Sparkles size={22} />
-                                            </div>
-                                            <span className="bg-pink-100 text-pink-700 px-2 py-1 rounded-md text-[10px] font-bold uppercase">Popular</span>
+                                            <span className="bg-white text-pink-700 px-2 py-1 border border-pink-700 rounded-md text-[10px] font-bold uppercase">Popular</span>
                                         </div>
                                         <h3 className="text-xl font-bold text-gray-900 mb-2">Resume Optimizer</h3>
                                         <p className="text-sm text-gray-500 leading-relaxed font-medium">Upload PDF. I'll rewrite bullets to match JD keywords instantly using AI.</p>
                                     </div>
                                 </div>
-                                <div className="bg-gradient-to-br from-[#ffb6e6] to-[#ff9ecd] rounded-[2rem] p-7 transition-all duration-300 hover:-translate-y-1 group border border-pink-300 cursor-pointer relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-40 h-40 bg-white opacity-20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-400 opacity-30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-
+                                <div className="bg-white rounded-[2rem] p-7 transition-all duration-300 hover:-translate-y-1 group border border-pink-300 cursor-pointer relative overflow-hidden">
                                     <div className="relative z-10 flex flex-col h-full justify-between">
                                         <div>
                                             <div className="flex items-center justify-between mb-6">
-                                                <div className="w-12 h-12 rounded-2xl bg-white/30 backdrop-blur-md flex items-center justify-center text-gray-900 shadow-inner">
-                                                    <Send size={22} />
-                                                </div>
-                                                <span className="bg-white/40 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-gray-900 border border-white/20">Action</span>
+                                                <span className="bg-white backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-orange-400 border border-orange-400">Action</span>
                                             </div>
                                             <h3 className="text-xl font-bold text-gray-900 mb-1">Auto-Apply Sequence</h3>
                                             <p className="text-sm text-gray-900/80 font-semibold leading-relaxed">Launch targeted emails to the 12 leads found below.</p>
