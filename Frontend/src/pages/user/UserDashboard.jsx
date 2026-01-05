@@ -19,7 +19,8 @@ import {
     FileText,
     Calendar,
     Zap,
-    CreditCard
+    CreditCard,
+    Crown
 } from 'lucide-react';
 import JopBg from '../../assets/User/JOP.png';
 import ResumeBg from '../../assets/User/CVOP.png';
@@ -203,7 +204,7 @@ const JobPilotDashboard = () => {
                                     <div className="relative z-10 flex flex-col h-full justify-between">
                                         <div>
                                             <div className="flex items-center justify-between mb-6">
-                                                <span className="bg-white backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-orange-400 border border-orange-400">Master</span>
+                                                <span className="flex flex-row align-center justify-center gap-1 bg-white backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-orange-400 border border-orange-400"><span><Crown size={16} /></span> Master</span>
                                             </div>
                                             <h3 className="text-xl font-bold text-gray-900 mb-1">Poli-1 Sequence</h3>
                                             <p className="text-sm text-gray-900/80 font-semibold leading-relaxed">Launch targeted emails to the 12 leads found below.</p>
