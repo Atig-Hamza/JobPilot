@@ -1,17 +1,8 @@
 import React, { useState, useRef } from 'react';
-import MainLogo from '../../assets/Main/logo-without-bg.png'; 
+import Sidebar from '../../components/Sidebar';
 import { 
-  LayoutGrid, 
-  CheckSquare, 
-  Calendar, 
-  FileText, 
-  Settings, 
   Plus, 
   ArrowRight,
-  Bot,
-  Code2,
-  Users,
-  Briefcase,
   Sparkles,
   UploadCloud,
   Globe,
@@ -22,7 +13,13 @@ import {
   CheckCircle2,
   FileCheck,
   Trash2,
-  AlertCircle
+  AlertCircle,
+  Play,
+  Mic,
+  Search,
+  ChevronRight,
+  Briefcase,
+  FileText
 } from 'lucide-react';
 
 const JobPilotDashboard = () => {
@@ -41,7 +38,6 @@ const JobPilotDashboard = () => {
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
-      
       setUploadedFile({
         name: file.name,
         size: (file.size / 1024 / 1024).toFixed(2) + ' MB', 
@@ -50,7 +46,6 @@ const JobPilotDashboard = () => {
     }
   };
 
-  
   const removeFile = (e) => {
     e.stopPropagation();
     setUploadedFile(null);
@@ -61,88 +56,104 @@ const JobPilotDashboard = () => {
     <div className="flex h-screen w-screen bg-[#FAFAFA] font-sans text-gray-900 overflow-hidden selection:bg-pink-200 selection:text-pink-900">
       
       {/* ================= SIDEBAR ================= */}
-      <aside className="w-[260px] bg-[#FDFDFD] border-r border-gray-100 flex flex-col justify-between shrink-0 z-20 hidden md:flex">
-        <div className="p-5 flex flex-col h-full">
-          
-          {/* Logo Section */}
-          <div className="flex items-center gap-2 mb-10 pl-2 select-none cursor-pointer">
-            <img 
-              src={MainLogo} 
-              alt="JobPilot Logo" 
-              className='w-6 h-6 object-contain' 
-              onError={(e) => {e.target.src='https://via.placeholder.com/24'}}
-            />
-            <span className="font-bold text-gray-900 tracking-tight text-lg">JOBPILOT</span>
-          </div>
-
-          {/* Navigation */}
-          <div className="space-y-8 flex-1 overflow-y-auto scrollbar-hide">
-            <nav className="space-y-1">
-              <NavItem icon={<LayoutGrid size={18} />} label="Dashboard" active />
-              <NavItem icon={<Bot size={18} />} label="AutoPilot Agent" />
-              <NavItem icon={<CheckSquare size={18} />} label="Applications" />
-              <NavItem icon={<Calendar size={18} />} label="Interviews" />
-              <NavItem icon={<FileText size={18} />} label="Cover Letters" />
-            </nav>
-
-            {/* Tools List */}
-            <div className="px-3">
-              <h3 className="text-[10px] font-bold text-gray-400 mb-4 uppercase tracking-widest">Power Tools</h3>
-              <div className="space-y-4">
-                <ToolItem icon={<Code2 size={16} />} label="Tech Interview Lab" />
-                <ToolItem icon={<Users size={16} />} label="Behavioral Sim" />
-                <ToolItem icon={<Briefcase size={16} />} label="Lead Finder" />
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar Footer */}
-          <div className="mt-auto pt-6 border-t border-gray-100 space-y-2">
-            <div className="space-y-1 mb-4">
-                <button className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-black rounded-xl transition-colors">
-                    <Newspaper size={16} className="text-gray-400"/>
-                    <span>View News</span>
-                </button>
-                <button 
-                    onClick={() => window.location.href='/user/redeem-code'}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-pink-50 hover:text-pink-600 rounded-xl transition-colors group"
-                >
-                    <Gift size={16} className="text-pink-400 group-hover:text-pink-600"/>
-                    <span>Redeem Credit</span>
-                </button>
-            </div>
-
-            <div className="flex items-center justify-between px-3 py-2 text-gray-500 hover:text-gray-900 cursor-pointer rounded-xl hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-100 to-purple-100 border border-white shadow-sm flex items-center justify-center text-xs font-bold text-gray-700">JS</div>
-                <div className="flex flex-col">
-                    <span className="text-xs font-bold text-gray-900">Sam Smith</span>
-                    <span className="text-[10px] text-gray-400">Pro Plan</span>
-                </div>
-              </div>
-              <Settings size={14} />
-            </div>
-          </div>
-        </div>
-      </aside>
+      <Sidebar />
 
       {/* ================= MAIN CONTENT ================= */}
       <main className="flex-1 flex flex-col relative h-full">
         
         {/* Scrollable Container */}
         <div className="flex-1 overflow-y-auto w-full scroll-smooth">
-            <div className="min-h-full flex flex-col items-center justify-center p-6 md:p-12 pb-44">
-                <div className="w-full max-w-5xl space-y-8">
+            <div className="min-h-full flex flex-col items-center p-6 md:p-8 pb-44">
+                {/* Widened Container to take full space as requested */}
+                <div className="w-full max-w-[1600px] space-y-8">
                     
                     {/* Header */}
-                    <header>
-                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight leading-[1.1]">
-                            Welcome back, Sam. <br />
-                            <span className="text-gray-400 font-medium">You have <span className="text-gray-900 underline decoration-pink-300 decoration-4 underline-offset-4">12 companies</span> ready for outreach.</span>
+                    <header className="mb-6">
+                        <h2 className="text-4xl font-bold text-gray-900 tracking-tight">
+                            Welcome back, Sam.
                         </h2>
                     </header>
 
-                    {/* Cards Grid */}
+                    {/* ================= NEW UPDATES SECTION (From Image) ================= */}
+                    <section className="space-y-3">
+                        <h3 className="text-lg font-bold text-gray-900">You might want to try</h3>
+                        
+                        <div className="relative w-full">
+                            {/* Horizontal Scroll Container */}
+                            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
+                                
+                                {/* Item 1: New Application (Matches "Nouvelle vidéo") */}
+                                <div className="min-w-[240px] h-[100px] bg-[#F2F4F7] hover:bg-[#E4E7EB] transition-colors rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group">
+                                    <span className="font-bold text-sm text-gray-900 z-10">New<br/>Application</span>
+                                    <div className="relative w-20 h-16 bg-blue-100 rounded-lg shadow-sm border border-blue-200/50 flex items-center justify-center group-hover:scale-105 transition-transform">
+                                        <Briefcase size={20} className="text-blue-500" />
+                                        <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-black rounded-full flex items-center justify-center text-white border-2 border-[#F2F4F7]">
+                                            <Plus size={12} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Item 2: Free AI Cover Letter (Matches "Outil gratuit...") */}
+                                <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-[#E4E7EB] transition-colors rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group">
+                                    <div className="z-10 flex flex-col items-start">
+                                        <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Free AI<br/>Cover Letter</span>
+                                        <span className="bg-[#FF4D4D] text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">New</span>
+                                    </div>
+                                    {/* Mini UI Graphic */}
+                                    <div className="w-24 h-16 bg-white rounded-lg shadow-sm border border-gray-200 flex overflow-hidden group-hover:translate-x-1 transition-transform">
+                                        <div className="w-8 bg-blue-100 h-full border-r border-gray-100 flex items-center justify-center">
+                                            <FileText size={14} className="text-blue-400"/>
+                                        </div>
+                                        <div className="flex-1 p-2 space-y-1">
+                                            <div className="w-full h-1 bg-gray-200 rounded"></div>
+                                            <div className="w-2/3 h-1 bg-gray-200 rounded"></div>
+                                            <div className="w-3/4 h-1 bg-gray-200 rounded"></div>
+                                        </div>
+                                    </div>
+                                    <ArrowRight className="absolute text-gray-400 w-4 h-4 left-[45%] top-1/2 -translate-y-1/2" />
+                                </div>
+
+                                {/* Item 3: Interview Coach (Matches "Légendes IA") */}
+                                <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-[#E4E7EB] transition-colors rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group">
+                                    <div className="z-10 flex flex-col items-start">
+                                        <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Interview<br/>Coach</span>
+                                        <span className="bg-[#FF4D4D] text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">New</span>
+                                    </div>
+                                    <div className="w-28 h-16 bg-purple-100 rounded-lg overflow-hidden relative group-hover:scale-105 transition-transform">
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center">
+                                                <Mic size={14} className="text-purple-600"/>
+                                            </div>
+                                        </div>
+                                        <div className="absolute bottom-1 left-2 bg-black/70 text-white text-[6px] px-1 rounded">Enhance answers</div>
+                                    </div>
+                                </div>
+
+                                {/* Item 4: Career Path Ideas (Matches "Trouver des idées...") */}
+                                <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-[#E4E7EB] transition-colors rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group">
+                                     <div className="z-10 flex flex-col items-start">
+                                        <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Find Career<br/>Paths AI</span>
+                                        <span className="bg-[#FF4D4D] text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">New</span>
+                                    </div>
+                                    <div className="w-24 h-16 bg-blue-50 rounded-lg border border-blue-100 p-1 relative group-hover:translate-x-1 transition-transform">
+                                        <div className="absolute top-2 left-2 w-8 h-4 bg-blue-200 rounded"></div>
+                                        <div className="absolute top-2 right-2 w-8 h-8 bg-blue-300 rounded shadow-sm flex items-center justify-center"><Search size={10} text-white/></div>
+                                        <div className="absolute bottom-2 left-2 w-16 h-4 bg-blue-200 rounded"></div>
+                                        {/* Connector lines */}
+                                        <div className="absolute top-4 left-10 w-4 h-[1px] bg-blue-300"></div>
+                                    </div>
+                                </div>
+
+                                 {/* Item 5: View All Button */}
+                                 <div className="min-w-[60px] h-[100px] bg-white border border-dashed border-gray-300 rounded-xl flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors">
+                                    <ChevronRight size={20} className="text-gray-400"/>
+                                </div>
+
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* ================= EXISTING GRID SECTION ================= */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     
                         {/* Card 1: JOP-1 Scraper */}
@@ -397,20 +408,6 @@ const JobPilotDashboard = () => {
 };
 
 /* --- Sub Components --- */
-
-const NavItem = ({ icon, label, active }) => (
-  <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 group ${active ? 'bg-pink-50 text-gray-900' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
-    <div className={`transition-colors ${active ? "text-pink-600" : "text-gray-400 group-hover:text-gray-900"}`}>{icon}</div>
-    <span className={`text-sm font-bold ${active ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'}`}>{label}</span>
-  </div>
-);
-
-const ToolItem = ({ icon, label }) => (
-    <div className="flex items-center gap-3 text-sm font-medium text-gray-500 hover:text-pink-600 cursor-pointer group py-1">
-        <div className="text-gray-300 group-hover:text-pink-400 transition-colors">{icon}</div>
-        <span>{label}</span>
-    </div>
-);
 
 const ModeBadge = ({ active, label, icon, onClick }) => (
     <button 
