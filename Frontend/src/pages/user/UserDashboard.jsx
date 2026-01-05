@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import JopBg from '../../assets/User/JOP.png';
 import ResumeBg from '../../assets/User/CVOP.png';
+import PoliBg from '../../assets/User/POLI.png';
 
 const JobPilotDashboard = () => {
     const [activeMode, setActiveMode] = useState('general');
@@ -184,8 +185,6 @@ const JobPilotDashboard = () => {
                                         backgroundPosition: 'center',
                                     }}
                                 >
-                                    <div className="absolute -right-6 -top-6 w-24 h-24 bg-pink-50 rounded-full blur-2xl group-hover:bg-pink-100 transition-colors"></div>
-
                                     <div className="relative z-10">
                                         <div className="flex justify-between items-start mb-4">
                                             <span className="bg-white text-pink-700 px-2 py-1 border border-pink-700 rounded-md text-[10px] font-bold uppercase">Popular</span>
@@ -194,7 +193,13 @@ const JobPilotDashboard = () => {
                                         <p className="text-sm text-gray-500 leading-relaxed font-medium">Upload PDF. I'll rewrite bullets to match JD keywords instantly using AI.</p>
                                     </div>
                                 </div>
-                                <div className="bg-white rounded-[2rem] p-7 transition-all duration-300 hover:-translate-y-1 group border border-pink-300 cursor-pointer relative overflow-hidden">
+                                <div className="bg-white rounded-[2rem] p-7 transition-all duration-300 hover:-translate-y-1 group border border-pink-300 cursor-pointer relative overflow-hidden"
+                                    style={{
+                                        backgroundImage: `url(${PoliBg})`,
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: 'center',
+                                    }}
+                                >
                                     <div className="relative z-10 flex flex-col h-full justify-between">
                                         <div>
                                             <div className="flex items-center justify-between mb-6">
