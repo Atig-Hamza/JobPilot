@@ -21,6 +21,7 @@ import {
     Zap,
     CreditCard
 } from 'lucide-react';
+import JopBg from '../../assets/User/JOP.png';
 
 const JobPilotDashboard = () => {
     const [activeMode, setActiveMode] = useState('general');
@@ -157,19 +158,20 @@ const JobPilotDashboard = () => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div
                                     onClick={() => handleModeChange('jop1_scrape')}
-                                    className={`relative overflow-hidden bg-white rounded-[2rem] p-7 cursor-pointer transition-all duration-300 hover:-translate-y-1 group border ${activeMode === 'jop1_scrape' ? 'border-purple-400 ring-4 ring-purple-50 shadow-xl' : 'border-gray-100 shadow-sm'}`}
+                                    className={`relative overflow-hidden rounded-[2rem] p-7 cursor-pointer transition-all duration-300 hover:-translate-y-1 group border ${activeMode === 'jop1_scrape' ? 'border-purple-400 ring-4 ring-purple-50 shadow-xl' : 'border-gray-100 shadow-sm'}`}
+                                    style={{
+                                        backgroundImage: `url(${JopBg})`,
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: 'center',
+                                    }}
                                 >
-                                    <div className="absolute -right-6 -top-6 w-24 h-24 bg-purple-50 rounded-full blur-2xl group-hover:bg-purple-100 transition-colors"></div>
 
                                     <div className="relative z-10">
                                         <div className="flex justify-between items-start mb-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-50 to-white border border-purple-100 flex items-center justify-center text-purple-600 shadow-sm group-hover:scale-110 transition-transform">
-                                                <Globe size={22} />
-                                            </div>
-                                            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-md text-[10px] font-bold uppercase">Scraper</span>
+                                            <span className="bg-white text-purple-700 px-2 py-1 border border-purple-700 rounded-md text-[10px] font-bold uppercase">Scraper</span>
                                         </div>
                                         <h3 className="text-xl font-bold text-gray-900 mb-2">JOP-1 Assistant</h3>
-                                        <p className="text-sm text-gray-500 leading-relaxed font-medium">Paste a job URL. I'll parse requirements & generate tailored application assets.</p>
+                                        <p className="text-sm text-gray-600 leading-relaxed font-medium">Paste a job URL. I'll parse requirements & generate tailored application assets.</p>
                                     </div>
                                 </div>
                                 <div
