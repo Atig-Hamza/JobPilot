@@ -218,13 +218,12 @@ const JobPilotDashboard = () => {
                             <div className="bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                        <Mail size={18} className="text-pink-500" />
                                         Identified Companies
                                         <span className="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">12</span>
                                     </h3>
                                     <div className="flex gap-2">
-                                        <button className="text-xs font-bold text-gray-500 hover:text-black px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">Select All</button>
-                                        <button className="text-xs font-bold text-pink-600 bg-pink-50 px-3 py-1.5 rounded-lg hover:bg-pink-100 transition-colors">Refresh List</button>
+                                        <button className="text-xs font-bold text-gray-500 hover:text-black px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">Get More</button>
+                                        <button className="text-xs font-bold text-pink-600 bg-pink-50 px-3 py-1.5 rounded-lg hover:bg-pink-100 transition-colors">View All</button>
                                     </div>
                                 </div>
                                 <div className="space-y-1">
@@ -234,13 +233,6 @@ const JobPilotDashboard = () => {
                                         <div className="col-span-2">Source</div>
                                         <div className="col-span-2 text-right">Action</div>
                                     </div>
-                                    <CompanyRow
-                                        name="Linear"
-                                        logo="https://upload.wikimedia.org/wikipedia/commons/9/95/Linear_logo.svg"
-                                        email="careers@linear.app"
-                                        source="Website"
-                                        status="ready"
-                                    />
                                     <CompanyRow
                                         name="Vercel"
                                         logo="https://assets.vercel.com/image/upload/front/favicon/vercel/180x180.png"
@@ -254,13 +246,6 @@ const JobPilotDashboard = () => {
                                         email="recruiting@stripe.com"
                                         source="Referral"
                                         status="sent"
-                                    />
-                                    <CompanyRow
-                                        name="Airbnb"
-                                        logo="https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_B%C3%A9lo.svg"
-                                        email="talent@airbnb.com"
-                                        source="Website"
-                                        status="ready"
                                     />
                                 </div>
                             </div>
