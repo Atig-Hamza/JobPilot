@@ -100,7 +100,7 @@ const JobPilotDashboard = () => {
                                 </div>
                                 <div className="relative w-full">
                                     <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
-                                        <div className="min-w-[240px] h-[100px] bg-[#F2F4F7] hover:bg-[#f5f6f7] hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
+                                        <div className="min-w-[240px] h-[100px] bg-[#f5f6f7] hover:bg-[#F2F4F7] hover:border-gray-200 border border-gray-150 transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm">
                                             <span className="font-bold text-sm text-gray-900 z-10">New<br />Application</span>
                                             <div className="relative w-20 h-16 bg-blue-100 rounded-lg shadow-sm border border-blue-200/50 flex items-center justify-center group-hover:scale-105 transition-transform">
                                                 <Briefcase size={20} className="text-blue-500" />
@@ -109,7 +109,7 @@ const JobPilotDashboard = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-[#f5f6f7] hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
+                                        <div className="min-w-[280px] h-[100px] bg-[#f5f6f7] hover:bg-[#F2F4F7] hover:border-gray-200 border border-gray-150 transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm">
                                             <div className="z-10 flex flex-col items-start">
                                                 <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Free AI<br />Cover Letter</span>
                                                 <span className="bg-[#FF4D4D] text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase shadow-sm">New</span>
@@ -126,7 +126,7 @@ const JobPilotDashboard = () => {
                                             </div>
                                             <ArrowRight className="absolute text-gray-400 w-4 h-4 left-[45%] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                                         </div>
-                                        <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-[#f5f6f7] hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
+                                        <div className="min-w-[280px] h-[100px] bg-[#f5f6f7] hover:bg-[#F2F4F7] hover:border-gray-200 border border-gray-150 transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm">
                                             <div className="z-10 flex flex-col items-start">
                                                 <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Interview<br />Coach</span>
                                                 <span className="bg-purple-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase shadow-sm">Beta</span>
@@ -140,7 +140,7 @@ const JobPilotDashboard = () => {
                                                 <div className="absolute bottom-0 inset-x-0 bg-purple-600/90 text-white text-[8px] text-center py-0.5">Enhance Audio</div>
                                             </div>
                                         </div>
-                                        <div className="min-w-[280px] h-[100px] bg-[#F2F4F7] hover:bg-[#f5f6f7] hover:border-gray-200 border border-transparent transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm hover:shadow-md">
+                                        <div className="min-w-[280px] h-[100px] bg-[#f5f6f7] hover:bg-[#F2F4F7] hover:border-gray-200 border border-gray-150 transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm">
                                             <div className="z-10 flex flex-col items-start">
                                                 <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Find Career<br />Paths AI</span>
                                             </div>
