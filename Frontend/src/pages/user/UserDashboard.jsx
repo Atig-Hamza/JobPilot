@@ -159,7 +159,7 @@ const JobPilotDashboard = () => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div
                                     onClick={() => handleModeChange('jop1_scrape')}
-                                    className={`relative overflow-hidden rounded-[2rem] p-7 cursor-pointer transition-all duration-300 hover:-translate-y-1 group border ${activeMode === 'jop1_scrape' ? 'border-purple-400 ring-4 ring-purple-50 shadow-xl' : 'border-gray-100 shadow-sm'}`}
+                                    className={`relative overflow-hidden rounded-[2rem] p-7 h-[250px] cursor-pointer transition-all duration-300 hover:-translate-y-1 group border ${activeMode === 'jop1_scrape' ? 'border-purple-400 ring-4 ring-purple-50 shadow-xl' : 'border-gray-100 shadow-sm'}`}
                                     style={{
                                         backgroundImage: `url(${JopBg})`,
                                         backgroundSize: 'cover',
@@ -198,9 +198,9 @@ const JobPilotDashboard = () => {
                                     <div className="relative z-10 flex flex-col h-full justify-between">
                                         <div>
                                             <div className="flex items-center justify-between mb-6">
-                                                <span className="bg-white backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-orange-400 border border-orange-400">Action</span>
+                                                <span className="bg-white backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-orange-400 border border-orange-400">Master</span>
                                             </div>
-                                            <h3 className="text-xl font-bold text-gray-900 mb-1">Auto-Apply Sequence</h3>
+                                            <h3 className="text-xl font-bold text-gray-900 mb-1">Poli-1 Sequence</h3>
                                             <p className="text-sm text-gray-900/80 font-semibold leading-relaxed">Launch targeted emails to the 12 leads found below.</p>
                                         </div>
 
