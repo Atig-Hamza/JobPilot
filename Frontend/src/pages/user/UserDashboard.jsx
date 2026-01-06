@@ -277,26 +277,88 @@ const JobPilotDashboard = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="bg-white rounded-[2rem] p-7 transition-all duration-300 hover:-translate-y-1 group border border-pink-300 cursor-pointer relative overflow-hidden"
-                                    style={{
-                                        backgroundImage: `url(${PoliBg})`,
-                                        backgroundSize: 'cover',
-                                        backgroundPosition: 'center',
-                                    }}
+                                <div
+                                    className="bg-white rounded-[2rem] p-7 transition-all duration-300 hover:-translate-y-1 group border border-orange-200 hover:border-orange-400 hover:shadow-[0_20px_60px_-15px_rgba(249,115,22,0.3)] cursor-pointer relative overflow-hidden h-full flex flex-col justify-between"
                                 >
-                                    <div className="relative z-10 flex flex-col h-full justify-between">
-                                        <div>
-                                            <div className="flex items-center justify-between mb-6">
-                                                <span className="flex flex-row align-center justify-center gap-1 bg-white backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-orange-400 border border-orange-400"><span><Crown size={16} /></span> Master</span>
-                                            </div>
-                                            <h3 className="text-xl font-bold text-gray-900 mb-1">Poli-1 Sequence</h3>
-                                            <p className="text-sm text-gray-900/80 font-semibold leading-relaxed">Launch targeted emails to the 12 leads found below.</p>
-                                        </div>
+                                    <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(249,115,22,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(249,115,22,0.05)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
 
-                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-900 bg-white/30 self-start px-4 py-2 rounded-xl backdrop-blur-sm group-hover:bg-white/50 transition-colors mt-4">
-                                            Start Campaign <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                                    <div className="relative z-20 pointer-events-none">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="flex flex-row align-center justify-center gap-1 bg-white backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-orange-400 border border-orange-400"><span><Crown size={16} /></span> Master</span>
+                                            <div className="flex items-center gap-1.5 bg-orange-50 border border-orange-100 px-2 py-1 rounded-md">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></div>
+                                                <span className="text-[10px] font-bold text-orange-700 font-mono">
+                                                    <span className="group-hover:hidden">READY</span>
+                                                    <span className="hidden group-hover:inline">PROCESSING...</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-orange-600 transition-colors">Poli-1 Automation</h3>
+                                        <p className="text-sm text-gray-500 font-medium leading-relaxed max-w-[240px]">
+                                            Launch targeted emails to the <span className="text-gray-900 font-bold border-b-2 border-orange-200">12 leads</span> found below.
+                                        </p>
+                                    </div>
+                                    <div className="absolute bottom-0 left-0 w-full h-[180px] overflow-hidden pointer-events-none">
+                                        <div className="absolute top-1/2 left-0 w-full h-[2px] bg-gray-100"></div>
+                                        <div className="absolute top-1/2 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-orange-400 to-transparent transform -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
+                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+                                            <div className="relative w-16 h-16 bg-white rounded-2xl border border-gray-100 shadow-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                                <div className="absolute inset-0 bg-orange-100/50 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 animate-pulse"></div>
+                                                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center shadow-inner relative overflow-hidden">
+                                                    <Zap size={20} className="text-white fill-white relative z-10" />
+                                                    <div className="absolute inset-0 bg-white/30 skew-x-12 -translate-x-10 group-hover:animate-[shine_1.5s_infinite]"></div>
+                                                </div>
+                                                <div className="absolute -top-4 -bottom-4 w-[2px] bg-orange-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                            </div>
+                                        </div>
+                                        <div className="absolute top-1/2 left-4 -translate-y-1/2 w-12 h-16 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col items-center justify-center gap-1 z-10 opacity-60 group-hover:animate-[slideRight_2s_linear_infinite]">
+                                            <div className="w-6 h-6 bg-gray-100 rounded-full"></div>
+                                            <div className="w-8 h-1 bg-gray-100 rounded-full"></div>
+                                        </div>
+                                        <div className="absolute top-1/2 -left-12 -translate-y-1/2 w-12 h-16 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col items-center justify-center gap-1 z-10 opacity-60 group-hover:animate-[slideRight_2s_linear_infinite_0.7s]">
+                                            <div className="w-6 h-6 bg-gray-100 rounded-full"></div>
+                                            <div className="w-8 h-1 bg-gray-100 rounded-full"></div>
+                                        </div>
+                                        <div className="absolute top-1/2 right-12 -translate-y-1/2 z-10 opacity-0 group-hover:animate-[flyOut_2s_linear_infinite_1s]">
+                                            <div className="bg-green-500 p-2 rounded-full shadow-lg shadow-green-200 border-2 border-white transform rotate-45">
+                                                <Send size={16} className="text-white fill-white" />
+                                            </div>
+                                            <div className="absolute top-1/2 right-full w-12 h-[2px] bg-gradient-to-l from-green-400 to-transparent"></div>
+                                        </div>
+                                        <div className="absolute top-1/2 right-4 -translate-y-1/2 z-10 opacity-0 group-hover:animate-[flyOut_2s_linear_infinite_1.7s]">
+                                            <div className="bg-green-500 p-2 rounded-full shadow-lg shadow-green-200 border-2 border-white transform rotate-45">
+                                                <Send size={16} className="text-white fill-white" />
+                                            </div>
                                         </div>
                                     </div>
+                                    <div className="relative z-30 flex items-center gap-2 text-xs font-bold text-gray-900 bg-white/80 border border-gray-100 hover:border-orange-200 self-start px-5 py-3 rounded-xl backdrop-blur-md shadow-sm group-hover:shadow-lg transition-all mt-8 group/btn w-fit">
+                                        Start Auto-Sequence
+                                        <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-orange-500 transition-colors">
+                                            <ArrowRight size={10} className="text-gray-500 group-hover:text-white transition-colors" />
+                                        </div>
+                                    </div>
+                                    <style jsx>{`
+                                        @keyframes slideRight {
+                                            0% { transform: translate(0, -50%); opacity: 0; }
+                                            10% { opacity: 1; }
+                                            45% { transform: translate(calc(50vw - 120px), -50%); opacity: 1; scale: 1; }
+                                            50% { transform: translate(calc(50vw - 100px), -50%); opacity: 0; scale: 0.5; }
+                                            100% { opacity: 0; }
+                                        }
+                                        @keyframes flyOut {
+                                           0% { transform: translate(0, -50%) scale(0.5); opacity: 0; }
+                                           5% { opacity: 1; transform: translate(10px, -50%) scale(1); }
+                                           100% { transform: translate(150px, -80%) scale(1); opacity: 0; }
+                                        }
+                                        @keyframes shimmer {
+                                            0% { transform: translateX(-100%); }
+                                            100% { transform: translateX(100%); }
+                                        }
+                                        @keyframes shine {
+                                            0% { transform: translateX(-150%) skewX(12deg); }
+                                            100% { transform: translateX(150%) skewX(12deg); }
+                                        }
+                                    `}</style>
                                 </div>
                             </div>
                             <div className="bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
