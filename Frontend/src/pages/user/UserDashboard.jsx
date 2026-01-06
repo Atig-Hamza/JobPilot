@@ -23,8 +23,6 @@ import {
     Crown
 } from 'lucide-react';
 import JopBg from '../../assets/User/JOP.png';
-import ResumeBg from '../../assets/User/CVOP.png';
-import PoliBg from '../../assets/User/POLI.png';
 
 const JobPilotDashboard = () => {
     const [activeMode, setActiveMode] = useState('general');
@@ -331,9 +329,9 @@ const JobPilotDashboard = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="relative z-30 flex items-center gap-2 text-xs font-bold text-gray-900 bg-white/80 border border-gray-100 hover:border-orange-200 self-start px-5 py-3 rounded-xl backdrop-blur-md shadow-sm group-hover:shadow-lg transition-all mt-8 group/btn w-fit">
+                                    <div className="relative z-30 flex items-center gap-2 text-xs font-bold text-gray-900 bg-white/80 border border-gray-100 self-start px-5 py-3 rounded-xl backdrop-blur-md shadow-sm w-fit">
                                         Start Auto-Sequence
-                                        <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-orange-500 transition-colors">
+                                        <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center transition-colors">
                                             <ArrowRight size={10} className="text-gray-500 group-hover:text-white transition-colors" />
                                         </div>
                                     </div>
