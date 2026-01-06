@@ -93,66 +93,93 @@ const JobPilotDashboard = () => {
                                 </div>
                             </header>
 
-                            <section className="space-y-4 pt-4 border-t border-dashed border-gray-200">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Sparkles size={16} className="text-yellow-500" />
-                                    <h3 className="text-lg font-bold text-gray-900">You might want to try</h3>
+                            <section className="space-y-4 pt-6 border-t border-dashed border-gray-200">
+                                <div className="flex items-center gap-2 mb-2 px-1">
+                                    <Sparkles size={16} className="text-yellow-500 fill-yellow-500" />
+                                    <h3 className="text-lg font-bold text-gray-900 tracking-tight">You might want to try</h3>
                                 </div>
+                                
                                 <div className="relative w-full">
-                                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
-                                        <div className="min-w-[240px] h-[100px] bg-[#f5f6f7] hover:bg-[#F2F4F7] hover:border-gray-200 border border-gray-150 transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm">
-                                            <span className="font-bold text-sm text-gray-900 z-10">New<br />Application</span>
-                                            <div className="relative w-20 h-16 bg-blue-100 rounded-lg shadow-sm border border-blue-200/50 flex items-center justify-center group-hover:scale-105 transition-transform">
-                                                <Briefcase size={20} className="text-blue-500" />
-                                                <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-black rounded-full flex items-center justify-center text-white border-2 border-[#F2F4F7] group-hover:border-white transition-colors">
-                                                    <Plus size={12} />
-                                                </div>
+                                    <div className="flex gap-4 overflow-x-auto pb-6 pt-2 px-1 scrollbar-hide snap-x">
+                                        <div className="min-w-[260px] h-[85px] bg-white border border-gray-200 hover:border-blue-300 hover:shadow-[0_4px_20px_-10px_rgba(59,130,246,0.3)] transition-all rounded-2xl flex items-center justify-between p-5 cursor-pointer snap-start relative overflow-hidden group">
+                                            <div className="z-10 flex flex-col justify-center h-full">
+                                                <span className="font-bold text-[15px] text-gray-900 leading-tight group-hover:text-blue-600 transition-colors">New<br />Application</span>
+                                                <span className="text-[10px] text-gray-400 font-medium mt-2 group-hover:text-blue-400 transition-colors">Start from scratch</span>
                                             </div>
-                                        </div>
-                                        <div className="min-w-[280px] h-[100px] bg-[#f5f6f7] hover:bg-[#F2F4F7] hover:border-gray-200 border border-gray-150 transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm">
-                                            <div className="z-10 flex flex-col items-start">
-                                                <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Free AI<br />Cover Letter</span>
-                                                <span className="bg-[#FF4D4D] text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase shadow-sm">New</span>
-                                            </div>
-                                            <div className="w-24 h-16 bg-white rounded-lg shadow-sm border border-gray-200 flex overflow-hidden group-hover:translate-x-1 transition-transform">
-                                                <div className="w-8 bg-blue-50 h-full border-r border-gray-100 flex items-center justify-center">
-                                                    <FileText size={14} className="text-blue-400" />
-                                                </div>
-                                                <div className="flex-1 p-2 space-y-1.5">
-                                                    <div className="w-full h-1 bg-gray-100 rounded"></div>
-                                                    <div className="w-2/3 h-1 bg-gray-100 rounded"></div>
-                                                    <div className="w-3/4 h-1 bg-gray-100 rounded"></div>
-                                                </div>
-                                            </div>
-                                            <ArrowRight className="absolute text-gray-400 w-4 h-4 left-[45%] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                                        </div>
-                                        <div className="min-w-[280px] h-[100px] bg-[#f5f6f7] hover:bg-[#F2F4F7] hover:border-gray-200 border border-gray-150 transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm">
-                                            <div className="z-10 flex flex-col items-start">
-                                                <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Interview<br />Coach</span>
-                                                <span className="bg-purple-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase shadow-sm">Beta</span>
-                                            </div>
-                                            <div className="w-28 h-16 bg-purple-50 rounded-lg overflow-hidden relative group-hover:scale-105 transition-transform border border-purple-100">
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center animate-pulse">
-                                                        <Mic size={14} className="text-purple-600" />
+                                            <div className="relative w-[70px] h-full flex items-center justify-center">
+                                                <div className="absolute w-14 h-16 bg-blue-50 border border-blue-100 rounded-lg rotate-[-6deg] group-hover:rotate-[-12deg] transition-transform duration-300 origin-bottom-right"></div>
+                                                <div className="absolute w-14 h-16 bg-blue-100 border border-blue-200 rounded-lg rotate-[6deg] group-hover:rotate-[12deg] transition-transform duration-300 origin-bottom-left"></div>
+                                                <div className="relative w-14 h-16 bg-white border border-blue-200 rounded-lg shadow-sm flex flex-col items-center justify-center gap-2 z-10 group-hover:-translate-y-1 transition-transform duration-300">
+                                                    <Briefcase size={20} className="text-blue-500" />
+                                                    <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-md shadow-blue-200">
+                                                        <Plus size={12} strokeWidth={3} />
                                                     </div>
                                                 </div>
-                                                <div className="absolute bottom-0 inset-x-0 bg-purple-600/90 text-white text-[8px] text-center py-0.5">Enhance Audio</div>
                                             </div>
                                         </div>
-                                        <div className="min-w-[280px] h-[100px] bg-[#f5f6f7] hover:bg-[#F2F4F7] hover:border-gray-200 border border-gray-150 transition-all rounded-xl flex items-center justify-between p-4 cursor-pointer snap-start relative overflow-hidden group shadow-sm">
-                                            <div className="z-10 flex flex-col items-start">
-                                                <span className="font-bold text-sm text-gray-900 leading-tight mb-1">Find Career<br />Paths AI</span>
+                                        <div className="min-w-[280px] h-[85px] bg-white border border-gray-200 hover:border-orange-300 hover:shadow-[0_4px_20px_-10px_rgba(251,146,60,0.3)] transition-all rounded-2xl flex items-center justify-between p-5 cursor-pointer snap-start relative overflow-hidden group">
+                                            <div className="z-10 flex flex-col items-start h-full justify-center">
+                                                <span className="bg-orange-100 text-orange-600 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wide mb-1.5 border border-orange-200">New</span>
+                                                <span className="font-bold text-[15px] text-gray-900 leading-tight">Free AI<br />Cover Letter</span>
                                             </div>
-                                            <div className="w-24 h-16 bg-blue-50 rounded-lg border border-blue-100 p-1 relative group-hover:translate-x-1 transition-transform">
-                                                <div className="absolute top-2 left-2 w-8 h-4 bg-blue-200 rounded"></div>
-                                                <div className="absolute top-2 right-2 w-8 h-8 bg-blue-300 rounded shadow-sm flex items-center justify-center z-10"><Search size={10} className="text-white" /></div>
-                                                <div className="absolute bottom-2 left-2 w-16 h-4 bg-blue-200 rounded"></div>
-                                                <div className="absolute top-4 left-10 w-4 h-[1px] bg-blue-300"></div>
+                                            <div className="relative w-24 h-16 group-hover:scale-105 transition-transform duration-300">
+                                                <div className="absolute inset-0 bg-orange-50 rounded-xl border border-orange-100 overflow-hidden">
+                                                    <div className="absolute top-0 right-0 p-1.5">
+                                                        <div className="w-2 h-2 rounded-full bg-orange-200"></div>
+                                                    </div>
+                                                    <div className="p-3 space-y-1.5 mt-2">
+                                                        <div className="w-3/4 h-1.5 bg-orange-200/50 rounded-full"></div>
+                                                        <div className="w-full h-1.5 bg-gray-100 rounded-full"></div>
+                                                        <div className="w-5/6 h-1.5 bg-gray-100 rounded-full"></div>
+                                                        <div className="w-full h-1.5 bg-gray-100 rounded-full"></div>
+                                                    </div>
+                                                    <div className="absolute bottom-2 right-2 w-6 h-6 bg-white rounded-full shadow-md border border-orange-100 flex items-center justify-center z-20 group-hover:rotate-12 transition-transform">
+                                                        <Sparkles size={12} className="text-orange-500 fill-orange-500" />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="min-w-[60px] h-[100px] bg-white border border-dashed border-gray-300 rounded-xl flex items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-all group">
-                                            <ChevronRight size={20} className="text-gray-400 group-hover:text-gray-900" />
+                                        <div className="min-w-[280px] h-[85px] bg-white border border-gray-200 hover:border-purple-300 hover:shadow-[0_4px_20px_-10px_rgba(168,85,247,0.3)] transition-all rounded-2xl flex items-center justify-between p-5 cursor-pointer snap-start relative overflow-hidden group">
+                                            <div className="z-10 flex flex-col items-start h-full justify-center">
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <span className="bg-purple-100 text-purple-600 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wide border border-purple-200">Beta</span>
+                                                </div>
+                                                <span className="font-bold text-[15px] text-gray-900 leading-tight">Interview<br />Coach</span>
+                                            </div>
+                                            <div className="w-24 h-16 bg-purple-50 rounded-xl border border-purple-100 relative overflow-hidden flex items-center justify-center gap-1 group-hover:gap-1.5 transition-all">
+                                                <div className="w-1.5 h-4 bg-purple-300 rounded-full animate-pulse"></div>
+                                                <div className="w-1.5 h-8 bg-purple-500 rounded-full animate-[pulse_1s_ease-in-out_infinite]"></div>
+                                                <div className="w-1.5 h-5 bg-purple-400 rounded-full animate-[pulse_1.5s_ease-in-out_infinite]"></div>
+                                                <div className="w-1.5 h-10 bg-purple-600 rounded-full animate-[pulse_0.8s_ease-in-out_infinite]"></div>
+                                                <div className="w-1.5 h-6 bg-purple-400 rounded-full animate-[pulse_1.2s_ease-in-out_infinite]"></div>
+                                                
+                                                <div className="absolute bottom-0 inset-x-0 h-6 bg-gradient-to-t from-purple-100 to-transparent opacity-50"></div>
+                                            </div>
+                                        </div>
+                                        <div className="min-w-[280px] h-[85px] bg-white border border-gray-200 hover:border-emerald-300 hover:shadow-[0_4px_20px_-10px_rgba(16,185,129,0.3)] transition-all rounded-2xl flex items-center justify-between p-5 cursor-pointer snap-start relative overflow-hidden group">
+                                            <div className="z-10 flex flex-col justify-center h-full">
+                                                <span className="font-bold text-[15px] text-gray-900 leading-tight group-hover:text-emerald-700 transition-colors">Find Career<br />Paths AI</span>
+                                                <span className="text-[10px] text-gray-400 font-medium mt-2">Explore roadmaps</span>
+                                            </div>
+                                            <div className="w-24 h-16 bg-emerald-50 rounded-xl border border-emerald-100 relative overflow-hidden group-hover:scale-105 transition-transform">
+                                                <div className="absolute top-3 left-3 w-2.5 h-2.5 bg-emerald-400 rounded-full z-10 ring-2 ring-white"></div>
+                                                <div className="absolute top-8 left-10 w-2.5 h-2.5 bg-emerald-300 rounded-full z-10 ring-2 ring-white"></div>
+                                                <div className="absolute bottom-3 right-4 w-3 h-3 bg-emerald-500 rounded-full z-10 ring-2 ring-white shadow-sm flex items-center justify-center">
+                                                    <div className="w-1 h-1 bg-white rounded-full"></div>
+                                                </div>
+                                                <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                                                    <path d="M15 15 Q 35 15, 42 32 T 80 50" fill="none" stroke="#6ee7b7" strokeWidth="2" strokeDasharray="4 2" />
+                                                </svg>
+                                                
+                                                <div className="absolute top-2 right-2 p-1 bg-white rounded shadow-sm border border-emerald-100">
+                                                    <Search size={10} className="text-emerald-500" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="min-w-[60px] h-[85px] bg-gray-50 border border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-gray-400 transition-all group">
+                                            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                                                <ChevronRight size={18} className="text-gray-400 group-hover:text-gray-900" />
+                                            </div>
                                         </div>
 
                                     </div>
