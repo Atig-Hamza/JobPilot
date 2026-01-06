@@ -98,7 +98,7 @@ const JobPilotDashboard = () => {
                                     <Sparkles size={16} className="text-yellow-500 fill-yellow-500" />
                                     <h3 className="text-lg font-bold text-gray-900 tracking-tight">You might want to try</h3>
                                 </div>
-                                
+
                                 <div className="relative w-full">
                                     <div className="flex gap-4 overflow-x-auto pb-6 pt-2 px-1 scrollbar-hide snap-x">
                                         <div className="min-w-[260px] h-[85px] bg-white border border-gray-200 hover:border-blue-300 hover:shadow-[0_4px_20px_-10px_rgba(59,130,246,0.3)] transition-all rounded-2xl flex items-center justify-between p-5 cursor-pointer snap-start relative overflow-hidden group">
@@ -152,7 +152,7 @@ const JobPilotDashboard = () => {
                                                 <div className="w-1.5 h-5 bg-purple-400 rounded-full animate-[pulse_1.5s_ease-in-out_infinite]"></div>
                                                 <div className="w-1.5 h-10 bg-purple-600 rounded-full animate-[pulse_0.8s_ease-in-out_infinite]"></div>
                                                 <div className="w-1.5 h-6 bg-purple-400 rounded-full animate-[pulse_1.2s_ease-in-out_infinite]"></div>
-                                                
+
                                                 <div className="absolute bottom-0 inset-x-0 h-6 bg-gradient-to-t from-purple-100 to-transparent opacity-50"></div>
                                             </div>
                                         </div>
@@ -170,7 +170,7 @@ const JobPilotDashboard = () => {
                                                 <svg className="absolute inset-0 w-full h-full pointer-events-none">
                                                     <path d="M15 15 Q 35 15, 42 32 T 80 50" fill="none" stroke="#6ee7b7" strokeWidth="2" strokeDasharray="4 2" />
                                                 </svg>
-                                                
+
                                                 <div className="absolute top-2 right-2 p-1 bg-white rounded shadow-sm border border-emerald-100">
                                                     <Search size={10} className="text-emerald-500" />
                                                 </div>
@@ -206,19 +206,75 @@ const JobPilotDashboard = () => {
                                 </div>
                                 <div
                                     onClick={() => handleModeChange('resume_opt')}
-                                    className={`relative overflow-hidden bg-white rounded-[2rem] p-7 cursor-pointer transition-all duration-300 hover:-translate-y-1 group border ${activeMode === 'resume_opt' ? 'border-pink-400 ring-4 ring-pink-50 shadow-xl' : 'border-gray-100 shadow-sm'}`}
-                                    style={{
-                                        backgroundImage: `url(${ResumeBg})`,
-                                        backgroundSize: 'cover',
-                                        backgroundPosition: 'center',
-                                    }}
+                                    className={`relative overflow-hidden rounded-[2rem] p-7 cursor-pointer transition-all duration-300 hover:-translate-y-1 group border ${activeMode === 'resume_opt'
+                                        ? 'bg-white border-pink-400 ring-4 ring-pink-50 shadow-2xl'
+                                        : 'bg-white border-gray-100 shadow-sm'
+                                        }`}
                                 >
-                                    <div className="relative z-10">
+                                    <div className="relative z-10 flex flex-col h-full">
                                         <div className="flex justify-between items-start mb-4">
                                             <span className="bg-white text-pink-700 px-2 py-1 border border-pink-700 rounded-md text-[10px] font-bold uppercase">Popular</span>
                                         </div>
-                                        <h3 className="text-xl font-bold text-gray-900 mb-2">Resume Optimizer</h3>
-                                        <p className="text-sm text-gray-500 leading-relaxed font-medium">Upload PDF. I'll rewrite bullets to match JD keywords instantly using AI.</p>
+                                        <h3 className="text-xl font-bold text-gray-900 mb-2 relative z-20">Resume Optimizer</h3>
+                                        <p className="text-sm text-gray-500 leading-relaxed font-medium max-w-[220px] relative z-20">
+                                            Upload PDF. I'll rewrite bullets to match JD keywords instantly using AI.
+                                        </p>
+                                        <div className="absolute bottom-[-40px] right-[-65px] w-[320px] h-[160px] pointer-events-none perspective-[1000px]">
+                                            <div className="absolute bottom-[35px] left-8 w-24 h-20 bg-white/90 backdrop-blur-md border border-pink-100 rounded-xl shadow-lg z-10 transform rotate-[-6deg] translate-x-4 group-hover:-translate-x-6 group-hover:rotate-[-12deg] transition-all duration-500 ease-out flex flex-col p-2 gap-1.5">
+                                                <div className="text-[8px] font-bold text-gray-400 uppercase">Missing Keywords</div>
+                                                <div className="flex flex-wrap gap-1">
+                                                    <div className="h-1.5 w-8 bg-pink-100 rounded-full"></div>
+                                                    <div className="h-1.5 w-5 bg-gray-100 rounded-full"></div>
+                                                    <div className="h-1.5 w-10 bg-gray-100 rounded-full"></div>
+                                                    <div className="h-1.5 w-6 bg-pink-100 rounded-full"></div>
+                                                </div>
+                                                <div className="mt-auto flex items-center gap-1 text-[9px] font-bold text-pink-500">
+                                                    <AlertCircle size={10} /> 4 Found
+                                                </div>
+                                            </div>
+                                            <div className="absolute bottom-12 right-12 w-24 h-24 bg-white/90 backdrop-blur-md border border-pink-100 rounded-xl shadow-lg z-10 transform rotate-[6deg] -translate-x-4 group-hover:translate-x-4 group-hover:rotate-[12deg] transition-all duration-500 ease-out flex flex-col items-center justify-center p-2">
+                                                <div className="relative w-10 h-10 mb-1">
+                                                    <svg className="w-full h-full rotate-[-90deg]">
+                                                        <circle cx="20" cy="20" r="16" stroke="#f3f4f6" strokeWidth="4" fill="none" />
+                                                        <circle cx="20" cy="20" r="16" stroke="#ec4899" strokeWidth="4" fill="none" strokeDasharray="100" strokeDashoffset="100" className="group-hover:stroke-dashoffset-10 transition-all duration-1000 ease-out" />
+                                                    </svg>
+                                                    <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-gray-900">98%</div>
+                                                </div>
+                                                <div className="text-[8px] font-bold text-gray-400 uppercase text-center">ATS Score</div>
+                                            </div>
+                                            <div className="absolute bottom-[-40px] left-1/2 -translate-x-1/2 w-40 h-52 bg-gradient-to-b from-white to-gray-50 rounded-t-2xl border border-gray-200 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] z-20 group-hover:-translate-y-6 transition-transform duration-500 ease-out">
+                                                <div className="p-4 border-b border-dashed border-gray-200 flex gap-3 items-center">
+                                                    <div className="w-8 h-8 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center">
+                                                        <span className="text-[10px] font-bold text-pink-500">CV</span>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <div className="w-16 h-2 bg-gray-800 rounded-full"></div>
+                                                        <div className="w-10 h-1.5 bg-gray-300 rounded-full"></div>
+                                                    </div>
+                                                </div>
+                                                <div className="p-4 space-y-3">
+                                                    <div className="flex gap-2">
+                                                        <div className="w-1 h-1 rounded-full bg-gray-300 mt-1"></div>
+                                                        <div className="space-y-1.5 flex-1">
+                                                            <div className="w-full h-1.5 bg-gray-100 rounded-full"></div>
+                                                            <div className="w-5/6 h-1.5 bg-gray-100 rounded-full"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <div className="w-1 h-1 rounded-full bg-pink-500 mt-1 shadow-[0_0_8px_rgba(236,72,153,0.8)]"></div>
+                                                        <div className="space-y-1.5 flex-1">
+                                                            <div className="w-full h-1.5 bg-gray-100 rounded-full relative overflow-hidden">
+                                                                <div className="absolute inset-0 bg-gradient-to-r from-pink-200 to-transparent w-full -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
+                                                            </div>
+                                                            <div className="w-4/5 h-1.5 bg-gray-100 rounded-full"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="absolute -top-3 -right-3 bg-white p-1.5 rounded-full shadow-md border border-pink-100 opacity-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300 delay-200">
+                                                    <Sparkles size={14} className="text-pink-500 fill-pink-500 animate-pulse" />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="bg-white rounded-[2rem] p-7 transition-all duration-300 hover:-translate-y-1 group border border-pink-300 cursor-pointer relative overflow-hidden"
