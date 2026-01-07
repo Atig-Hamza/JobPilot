@@ -34,10 +34,10 @@ const JobPilotDashboard = () => {
 
     const handleSendMessage = async () => {
         if (!inputValue.trim()) return;
-        
+
         let userMsg = inputValue;
         if (activeMode === 'jop1_scrape') {
-             userMsg = `Scrape Request:\nKeywords: ${inputValue}\nCountry Code: ${selectedCountry.toUpperCase()}`;
+            userMsg = `Scrape Request:\nKeywords: ${inputValue}\nCountry Code: ${selectedCountry.toUpperCase()}`;
         }
 
         setChatStarted(true);
@@ -45,16 +45,16 @@ const JobPilotDashboard = () => {
         setInputValue("");
         setIsLoading(true);
 
-        let aiText = ''; 
+        let aiText = '';
         let isResponseStarted = false;
 
         if (activeMode === 'jop1_scrape') {
-             // Mock response for scraper since backend is building
-             setTimeout(() => {
-                 setIsLoading(false);
-                 setMessages(prev => [...prev, { role: 'ai', content: "Backend is under building." }]);
-             }, 1500);
-             return;
+            // Mock response for scraper since backend is building
+            setTimeout(() => {
+                setIsLoading(false);
+                setMessages(prev => [...prev, { role: 'ai', content: "Backend is under building." }]);
+            }, 1500);
+            return;
         }
 
         try {
@@ -70,7 +70,7 @@ const JobPilotDashboard = () => {
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-                
+
                 if (!isResponseStarted) {
                     setIsLoading(false);
                     isResponseStarted = true;
@@ -91,12 +91,12 @@ const JobPilotDashboard = () => {
         } catch (error) {
             console.error("Error fetching AI response:", error);
             setIsLoading(false);
-            
+
             setMessages(prev => {
                 if (isResponseStarted) {
-                     const newMessages = [...prev];
-                     newMessages[newMessages.length - 1] = { role: 'ai', content: aiText + "\n\n[System Error: Response interrupted]" };
-                     return newMessages;
+                    const newMessages = [...prev];
+                    newMessages[newMessages.length - 1] = { role: 'ai', content: aiText + "\n\n[System Error: Response interrupted]" };
+                    return newMessages;
                 } else {
                     return [...prev, { role: 'ai', content: "Sorry, I encountered an error. Please check your connection and try again." }];
                 }
@@ -148,32 +148,32 @@ const JobPilotDashboard = () => {
                 <div className="flex-1 overflow-y-auto w-full scroll-smooth">
                     <div className="min-h-full flex flex-col items-center p-6 md:p-8 pb-44">
                         {!chatStarted ? (
-                        <DashboardHome 
-                                activeMode={activeMode} 
+                            <DashboardHome
+                                activeMode={activeMode}
                                 handleModeChange={handleModeChange}
                                 todayDate={todayDate}
                                 creditBalance={creditBalance}
                             />
                         ) : (
-                             <>
+                            <>
                                 <ChatInterface messages={messages} isLoading={isLoading} />
                                 <div ref={messagesEndRef} />
-                             </>
+                            </>
                         )}
                     </div>
                 </div>
-                <ChatInput 
-                    activeMode={activeMode} 
-                    handleModeChange={handleModeChange} 
-                    uploadedFile={uploadedFile} 
-                    fileInputRef={fileInputRef} 
-                    handleFileChange={handleFileChange} 
-                    handleUploadClick={handleUploadClick} 
-                    removeFile={removeFile} 
-                    inputValue={inputValue} 
-                    setInputValue={setInputValue} 
-                    handleKeyDown={handleKeyDown} 
-                    handleSendMessage={handleSendMessage} 
+                <ChatInput
+                    activeMode={activeMode}
+                    handleModeChange={handleModeChange}
+                    uploadedFile={uploadedFile}
+                    fileInputRef={fileInputRef}
+                    handleFileChange={handleFileChange}
+                    handleUploadClick={handleUploadClick}
+                    removeFile={removeFile}
+                    inputValue={inputValue}
+                    setInputValue={setInputValue}
+                    handleKeyDown={handleKeyDown}
+                    handleSendMessage={handleSendMessage}
                     selectedCountry={selectedCountry}
                     setSelectedCountry={setSelectedCountry}
                 />

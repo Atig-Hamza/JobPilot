@@ -2,17 +2,17 @@ import React from 'react';
 import { Sparkles, Globe, FileCheck, Trash2, UploadCloud, Plus, ArrowRight, AlertCircle } from 'lucide-react';
 import ModeBadge from './ModeBadge';
 
-const ChatInput = ({ 
-    activeMode, 
-    handleModeChange, 
-    uploadedFile, 
-    fileInputRef, 
-    handleFileChange, 
-    handleUploadClick, 
-    removeFile, 
-    inputValue, 
-    setInputValue, 
-    handleKeyDown, 
+const ChatInput = ({
+    activeMode,
+    handleModeChange,
+    uploadedFile,
+    fileInputRef,
+    handleFileChange,
+    handleUploadClick,
+    removeFile,
+    inputValue,
+    setInputValue,
+    handleKeyDown,
     handleSendMessage,
     selectedCountry,
     setSelectedCountry
@@ -131,7 +131,7 @@ const ChatInput = ({
                                         </select>
                                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                                             <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M1 1L5 5L9 1" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                <path d="M1 1L5 5L9 1" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                             </svg>
                                         </div>
                                     </div>
@@ -153,7 +153,7 @@ const ChatInput = ({
                                 placeholder={activeMode === 'jop1_scrape' ? "Paste job keyword here..." : "Ask JobPilot to find leads..."}
                                 className="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-400 h-full text-lg font-medium px-2"
                             />
-                            <button 
+                            <button
                                 onClick={handleSendMessage}
                                 className={`h-12 px-6 rounded-2xl flex items-center gap-2 font-bold text-sm transition-all shadow-sm group shrink-0 ${activeMode === 'jop1_scrape' ? 'bg-black text-white hover:bg-gray-800' : 'bg-[#ffb6e6] hover:bg-pink-300 text-gray-900'}`}>
                                 <span>{activeMode === 'jop1_scrape' ? 'Scrape' : 'Send'}</span>
