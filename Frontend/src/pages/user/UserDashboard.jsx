@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -45,6 +45,15 @@ const JobPilotDashboard = () => {
     const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [roomId] = useState(() => generateRoomId());
+    const messagesEndRef = useRef(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, isLoading]);
 
     const handleSendMessage = async () => {
         if (!inputValue.trim()) return;
@@ -54,8 +63,8 @@ const JobPilotDashboard = () => {
         setInputValue("");
         setIsLoading(true);
 
-        // Placeholder for AI response
-        setMessages(prev => [...prev, { role: 'ai', content: '' }]);
+        let aiText = ''; 
+        let isResponseStarted = false;
 
         try {
             const response = await fetch('http://localhost:5000/api/llm/generate', {
@@ -66,16 +75,15 @@ const JobPilotDashboard = () => {
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-            let aiText = '';
-            let isFirstChunk = true;
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
                 
-                if (isFirstChunk) {
+                if (!isResponseStarted) {
                     setIsLoading(false);
-                    isFirstChunk = false;
+                    isResponseStarted = true;
+                    setMessages(prev => [...prev, { role: 'ai', content: '' }]);
                 }
 
                 const text = decoder.decode(value, { stream: true });
@@ -83,18 +91,25 @@ const JobPilotDashboard = () => {
 
                 setMessages(prev => {
                     const newMessages = [...prev];
-                    newMessages[newMessages.length - 1] = { role: 'ai', content: aiText };
+                    if (newMessages.length > 0 && newMessages[newMessages.length - 1].role === 'ai') {
+                        newMessages[newMessages.length - 1] = { role: 'ai', content: aiText };
+                    }
                     return newMessages;
                 });
             }
         } catch (error) {
             console.error("Error fetching AI response:", error);
-            setMessages(prev => {
-                const newMessages = [...prev];
-                newMessages[newMessages.length - 1] = { role: 'ai', content: "Sorry, I encountered an error. Please try again." };
-                return newMessages;
-            });
             setIsLoading(false);
+            
+            setMessages(prev => {
+                if (isResponseStarted) {
+                     const newMessages = [...prev];
+                     newMessages[newMessages.length - 1] = { role: 'ai', content: aiText + "\n\n[System Error: Response interrupted]" };
+                     return newMessages;
+                } else {
+                    return [...prev, { role: 'ai', content: "Sorry, I encountered an error. Please check your connection and try again." }];
+                }
+            });
         }
     };
 
@@ -472,7 +487,10 @@ const JobPilotDashboard = () => {
                             </div>
                         </div>
                         ) : (
-                             <ChatInterface messages={messages} isLoading={isLoading} />
+                             <>
+                                <ChatInterface messages={messages} isLoading={isLoading} />
+                                <div ref={messagesEndRef} />
+                             </>
                         )}
                     </div>
                 </div>
@@ -711,14 +729,17 @@ const ChatInterface = ({ messages, isLoading }) => (
         
         {isLoading && (
              <div className="flex items-start gap-5 w-full">
-                <div className="w-8 h-8 mt-1 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-gray-100 overflow-hidden relative">
-                    <img src={AiLogo} alt="AI" className="w-full h-full object-contain p-1 opacity-80" />
-                    <div className="absolute inset-0 bg-white/40 animate-pulse"></div>
+                <div className="w-8 h-8 mt-1 rounded-xl flex items-center justify-center shrink-0 overflow-hidden">
+                    <img src={AiLogo} alt="AI" className="w-full h-full object-contain p-0.5 opacity-80" />
                 </div>
                  <div className="flex-1 min-w-0">
-                     <div className="flex items-center gap-1.5 mt-3">
+                    <div className="flex items-center gap-3 mb-2 px-1">
+                        <span className="text-xs font-bold text-gray-900 tracking-tight">JobPilot AI</span>
+                        <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200 uppercase tracking-wider font-bold">Bot</span>
+                    </div>
+                     <div className="flex items-center gap-1.5 px-1">
                         <span className="text-xs font-bold text-gray-400 animate-pulse">Thinking</span>
-                        <div className="flex gap-0.5">
+                        <div className="flex gap-0.5 pt-1">
                             <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></div>
                             <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce delay-75"></div>
                             <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce delay-150"></div>
