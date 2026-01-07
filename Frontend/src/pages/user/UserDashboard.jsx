@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import Sidebar from '../../components/Sidebar';
 import {
     Plus,
@@ -48,7 +49,6 @@ const JobPilotDashboard = () => {
                 prompt: userMsg 
             });
             
-            // The backend returns a stream of text, which axios collects into response.data string
             const aiText = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
             
             setMessages(prev => [...prev, { role: 'ai', content: aiText }]);
@@ -617,6 +617,7 @@ const ChatInterface = ({ messages, isLoading }) => (
 
                             <div className="space-y-6 text-[#2D2D2D] text-[16px] leading-7">
                                  <ReactMarkdown
+                                    remarkPlugins={[remarkGfm]}
                                     components={{
                                         code({node, inline, className, children, ...props}) {
                                             const match = /language-(\w+)/.exec(className || '')
@@ -637,20 +638,28 @@ const ChatInterface = ({ messages, isLoading }) => (
                                                 </code>
                                             )
                                         },
-                                        p: ({children}) => <p className="mb-4 last:mb-0">{children}</p>,
-                                        ul: ({children}) => <ul className="list-disc pl-5 mb-4 space-y-2">{children}</ul>,
-                                        ol: ({children}) => <ol className="list-decimal pl-5 mb-4 space-y-2">{children}</ol>,
+                                        p: ({children}) => <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>,
+                                        ul: ({children}) => <ul className="list-disc pl-5 mb-4 space-y-1 marker:text-gray-400">{children}</ul>,
+                                        ol: ({children}) => <ol className="list-decimal pl-5 mb-4 space-y-1 marker:text-gray-400">{children}</ol>,
                                         li: ({children}) => <li className="pl-1">{children}</li>,
-                                        h1: ({children}) => <h1 className="text-2xl font-bold mb-4 mt-6 border-b pb-2">{children}</h1>,
-                                        h2: ({children}) => <h2 className="text-xl font-bold mb-3 mt-5">{children}</h2>,
-                                        h3: ({children}) => <h3 className="text-lg font-bold mb-2 mt-4">{children}</h3>,
+                                        h1: ({children}) => <h1 className="text-3xl font-bold mb-6 mt-8 tracking-tight text-gray-900">{children}</h1>,
+                                        h2: ({children}) => <h2 className="text-2xl font-bold mb-4 mt-8 tracking-tight text-gray-900">{children}</h2>,
+                                        h3: ({children}) => <h3 className="text-xl font-bold mb-3 mt-6 text-gray-900">{children}</h3>,
+                                        h4: ({children}) => <h4 className="text-lg font-bold mb-2 mt-4 text-gray-900">{children}</h4>,
                                         div: ({children}) => <div className="mb-4">{children}</div>,
                                         blockquote: ({children}) => (
-                                            <div className="flex gap-4 p-4 rounded-lg bg-amber-50 border border-amber-100 my-4">
-                                                <div className="text-sm text-amber-800 leading-snug">{children}</div>
+                                            <div className="flex gap-4 p-4 rounded-lg bg-amber-50 border border-amber-100 my-4 border-l-4 border-l-amber-300">
+                                                <div className="text-sm text-amber-900 leading-relaxed italic">{children}</div>
                                             </div>
                                         ),
-                                        a: ({href, children}) => <a href={href} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                                        a: ({href, children}) => <a href={href} className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 underline-offset-2 transition-colors" target="_blank" rel="noopener noreferrer">{children}</a>,
+                                        table: ({children}) => <div className="overflow-x-auto my-8 rounded-xl border border-gray-200 shadow-sm"><table className="min-w-full divide-y divide-gray-200 text-sm table-fixed">{children}</table></div>,
+                                        thead: ({children}) => <thead className="bg-gray-50">{children}</thead>,
+                                        tbody: ({children}) => <tbody className="bg-white divide-y divide-gray-100">{children}</tbody>,
+                                        tr: ({children}) => <tr className="group hover:bg-gray-50/50 transition-colors">{children}</tr>,
+                                        th: ({children}) => <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">{children}</th>,
+                                        td: ({children}) => <td className="px-6 py-4 text-gray-600 align-top leading-relaxed">{children}</td>,
+                                        hr: () => <hr className="my-8 border-gray-100" />,
                                     }}
                                  >
                                     {msg.content}
