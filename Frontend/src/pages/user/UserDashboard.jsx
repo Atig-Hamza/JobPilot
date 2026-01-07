@@ -54,19 +54,46 @@ const JobPilotDashboard = () => {
         setInputValue("");
         setIsLoading(true);
 
+        // Placeholder for AI response
+        setMessages(prev => [...prev, { role: 'ai', content: '' }]);
+
         try {
-            const response = await axios.post('http://localhost:5000/api/llm/generate', {
-                prompt: userMsg,
-                roomId: roomId
+            const response = await fetch('http://localhost:5000/api/llm/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: userMsg, roomId: roomId })
             });
-            
-            const aiText = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
-            
-            setMessages(prev => [...prev, { role: 'ai', content: aiText }]);
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let aiText = '';
+            let isFirstChunk = true;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                if (isFirstChunk) {
+                    setIsLoading(false);
+                    isFirstChunk = false;
+                }
+
+                const text = decoder.decode(value, { stream: true });
+                aiText += text;
+
+                setMessages(prev => {
+                    const newMessages = [...prev];
+                    newMessages[newMessages.length - 1] = { role: 'ai', content: aiText };
+                    return newMessages;
+                });
+            }
         } catch (error) {
             console.error("Error fetching AI response:", error);
-            setMessages(prev => [...prev, { role: 'ai', content: "Sorry, I encountered an error. Please try again." }]);
-        } finally {
+            setMessages(prev => {
+                const newMessages = [...prev];
+                newMessages[newMessages.length - 1] = { role: 'ai', content: "Sorry, I encountered an error. Please try again." };
+                return newMessages;
+            });
             setIsLoading(false);
         }
     };
@@ -605,27 +632,28 @@ const CompanyRow = ({ name, logo, email, source, status }) => (
 const ChatInterface = ({ messages, isLoading }) => (
     <div className="w-full max-w-3xl px-6 flex flex-col gap-12 pt-12 pb-44">
         {messages.map((msg, idx) => (
-            <div key={idx} className={msg.role === 'user' ? "flex justify-end w-full group" : "flex items-start gap-5 w-full"}>
+            <div key={idx} className={msg.role === 'user' ? "flex justify-end w-full group" : "flex items-start gap-5 w-full animate-in fade-in slide-in-from-bottom-2 duration-500"}>
                 {msg.role === 'user' ? (
                     <div className="flex flex-col items-end gap-2 max-w-[85%]">
-                        <div className="bg-[#212121] text-[#FAFAFA] px-5 py-3.5 rounded-xl rounded-tr-none shadow-sm">
-                            <p className="text-[15px] leading-relaxed whitespace-pre-wrap text-left">
+                        <div className="bg-gradient-to-br from-gray-900 via-[#2A2A2A] to-[#1A1A1A] text-white px-5 py-3.5 rounded-2xl rounded-tr-sm shadow-lg border border-gray-800/50">
+                            <p className="text-[15px] leading-relaxed whitespace-pre-wrap text-left font-medium tracking-wide">
                                 {msg.content}
                             </p>
                         </div>
                     </div>
                 ) : (
                     <>
-                        <div className="w-7 h-7 mt-1 bg-white rounded-md flex items-center justify-center shrink-0 shadow-sm border border-gray-100 overflow-hidden">
-                             <img src={AiLogo} alt="AI" className="w-full h-full object-contain" />
+                        <div className="w-8 h-8 mt-1 rounded-xl flex items-center justify-center shrink-0 overflow-hidden">
+                             <img src={AiLogo} alt="AI" className="w-full h-full object-contain p-0.5" />
                         </div>
 
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-3">
-                                <span className="text-xs font-semibold text-gray-900">JobPilot AI</span>
+                        <div className="flex-1 min-w-0 backdrop-blur-sm rounded-2xl p-0.5 sm:p-0">
+                            <div className="flex items-center gap-3 mb-2 px-1">
+                                <span className="text-xs font-bold text-gray-900 tracking-tight">JobPilot AI</span>
+                                <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200 uppercase tracking-wider font-bold">Bot</span>
                             </div>
 
-                            <div className="space-y-6 text-[#2D2D2D] text-[16px] leading-7">
+                            <div className="space-y-6 text-[#1A1A1A] text-[16px] leading-8 font-[450]">
                                  <ReactMarkdown
                                     remarkPlugins={[remarkGfm]}
                                     components={{
@@ -683,14 +711,18 @@ const ChatInterface = ({ messages, isLoading }) => (
         
         {isLoading && (
              <div className="flex items-start gap-5 w-full">
-                <div className="w-7 h-7 mt-1 bg-white rounded-md flex items-center justify-center shrink-0 shadow-sm border border-gray-100 overflow-hidden">
-                    <img src={AiLogo} alt="AI" className="w-full h-full object-contain animate-pulse" />
+                <div className="w-8 h-8 mt-1 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-gray-100 overflow-hidden relative">
+                    <img src={AiLogo} alt="AI" className="w-full h-full object-contain p-1 opacity-80" />
+                    <div className="absolute inset-0 bg-white/40 animate-pulse"></div>
                 </div>
                  <div className="flex-1 min-w-0">
-                     <div className="flex items-center gap-2 mt-2 h-7">
-                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></div>
-                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></div>
+                     <div className="flex items-center gap-1.5 mt-3">
+                        <span className="text-xs font-bold text-gray-400 animate-pulse">Thinking</span>
+                        <div className="flex gap-0.5">
+                            <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></div>
+                            <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce delay-75"></div>
+                            <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce delay-150"></div>
+                        </div>
                      </div>
                  </div>
              </div>
