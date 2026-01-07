@@ -28,6 +28,15 @@ import {
 import JopBg from '../../assets/User/JOP.png';
 import AiLogo from '../../assets/Main/logo-without-bg.png';
 
+const generateRoomId = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = 'CROM-';
+    for (let i = 0; i < 16; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+};
+
 const JobPilotDashboard = () => {
     const [activeMode, setActiveMode] = useState('general');
     const [uploadedFile, setUploadedFile] = useState(null);
@@ -35,6 +44,7 @@ const JobPilotDashboard = () => {
     const [inputValue, setInputValue] = useState("");
     const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [roomId] = useState(() => generateRoomId());
 
     const handleSendMessage = async () => {
         if (!inputValue.trim()) return;
@@ -46,7 +56,8 @@ const JobPilotDashboard = () => {
 
         try {
             const response = await axios.post('http://localhost:5000/api/llm/generate', {
-                prompt: userMsg 
+                prompt: userMsg,
+                roomId: roomId
             });
             
             const aiText = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
@@ -612,7 +623,6 @@ const ChatInterface = ({ messages, isLoading }) => (
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-3">
                                 <span className="text-xs font-semibold text-gray-900">JobPilot AI</span>
-                                <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200">Just now</span>
                             </div>
 
                             <div className="space-y-6 text-[#2D2D2D] text-[16px] leading-7">
