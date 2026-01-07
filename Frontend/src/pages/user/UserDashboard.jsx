@@ -21,15 +21,15 @@ const JobPilotDashboard = () => {
     const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [roomId] = useState(() => generateRoomId());
-    const [selectedCountry, setSelectedCountry] = useState('all'); // Default country
+    const [selectedCountry, setSelectedCountry] = useState('all');
     const messagesEndRef = useRef(null);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const scrollToBottom = (behavior = "smooth") => {
+        messagesEndRef.current?.scrollIntoView({ behavior: behavior });
     };
 
     useEffect(() => {
-        scrollToBottom();
+        scrollToBottom(isLoading ? "smooth" : "auto");
     }, [messages, isLoading]);
 
     const handleSendMessage = async () => {
@@ -49,7 +49,6 @@ const JobPilotDashboard = () => {
         let isResponseStarted = false;
 
         if (activeMode === 'jop1_scrape') {
-            // Mock response for scraper since backend is building
             setTimeout(() => {
                 setIsLoading(false);
                 setMessages(prev => [...prev, { role: 'ai', content: "Backend is under building." }]);
@@ -145,7 +144,7 @@ const JobPilotDashboard = () => {
         <div className="flex h-screen w-screen bg-[#FAFAFA] font-sans text-gray-900 overflow-hidden selection:bg-pink-200 selection:text-pink-900">
             <Sidebar />
             <main className="flex-1 flex flex-col relative h-full">
-                <div className="flex-1 overflow-y-auto w-full scroll-smooth">
+                <div className="flex-1 overflow-y-auto w-full">
                     <div className="min-h-full flex flex-col items-center p-6 md:p-8 pb-44">
                         {!chatStarted ? (
                             <DashboardHome
