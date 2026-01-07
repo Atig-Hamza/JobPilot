@@ -1,4 +1,6 @@
 import React, { useState, useRef } from 'react';
+import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
 import Sidebar from '../../components/Sidebar';
 import {
     Plus,
@@ -23,10 +25,46 @@ import {
     Crown
 } from 'lucide-react';
 import JopBg from '../../assets/User/JOP.png';
+import AiLogo from '../../assets/Main/logo-without-bg.png';
 
 const JobPilotDashboard = () => {
     const [activeMode, setActiveMode] = useState('general');
     const [uploadedFile, setUploadedFile] = useState(null);
+    const [chatStarted, setChatStarted] = useState(false);
+    const [inputValue, setInputValue] = useState("");
+    const [messages, setMessages] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSendMessage = async () => {
+        if (!inputValue.trim()) return;
+        const userMsg = inputValue;
+        setChatStarted(true);
+        setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+        setInputValue("");
+        setIsLoading(true);
+
+        try {
+            const response = await axios.post('http://localhost:5000/api/llm/generate', {
+                prompt: userMsg 
+            });
+            
+            // The backend returns a stream of text, which axios collects into response.data string
+            const aiText = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+            
+            setMessages(prev => [...prev, { role: 'ai', content: aiText }]);
+        } catch (error) {
+            console.error("Error fetching AI response:", error);
+            setMessages(prev => [...prev, { role: 'ai', content: "Sorry, I encountered an error. Please try again." }]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleSendMessage();
+        }
+    };
 
     const creditBalance = 1250;
     const todayDate = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -65,6 +103,7 @@ const JobPilotDashboard = () => {
             <main className="flex-1 flex flex-col relative h-full">
                 <div className="flex-1 overflow-y-auto w-full scroll-smooth">
                     <div className="min-h-full flex flex-col items-center p-6 md:p-8 pb-44">
+                        {!chatStarted ? (
                         <div className="w-full max-w-[1600px] space-y-8">
                             <header className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-2">
                                 <div>
@@ -394,6 +433,9 @@ const JobPilotDashboard = () => {
                                 </div>
                             </div>
                         </div>
+                        ) : (
+                             <ChatInterface messages={messages} isLoading={isLoading} />
+                        )}
                     </div>
                 </div>
                 <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#FAFAFA] via-[#FAFAFA]/90 to-transparent pt-16 pb-8 px-6 z-30 pointer-events-none">
@@ -481,10 +523,15 @@ const JobPilotDashboard = () => {
                                     <input
                                         type="text"
                                         autoFocus
+                                        value={inputValue}
+                                        onChange={(e) => setInputValue(e.target.value)}
+                                        onKeyDown={handleKeyDown}
                                         placeholder={activeMode === 'jop1_scrape' ? "Paste job keyword here..." : "Ask JobPilot to find leads..."}
                                         className="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-400 h-full text-lg font-medium px-2"
                                     />
-                                    <button className={`h-12 px-6 rounded-2xl flex items-center gap-2 font-bold text-sm transition-all shadow-sm group shrink-0 ${activeMode === 'jop1_scrape' ? 'bg-black text-white hover:bg-gray-800' : 'bg-[#ffb6e6] hover:bg-pink-300 text-gray-900'}`}>
+                                    <button 
+                                        onClick={handleSendMessage}
+                                        className={`h-12 px-6 rounded-2xl flex items-center gap-2 font-bold text-sm transition-all shadow-sm group shrink-0 ${activeMode === 'jop1_scrape' ? 'bg-black text-white hover:bg-gray-800' : 'bg-[#ffb6e6] hover:bg-pink-300 text-gray-900'}`}>
                                         <span>{activeMode === 'jop1_scrape' ? 'Scrape' : 'Send'}</span>
                                         <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                                     </button>
@@ -541,6 +588,94 @@ const CompanyRow = ({ name, logo, email, source, status }) => (
                 </button>
             )}
         </div>
+    </div>
+);
+
+const ChatInterface = ({ messages, isLoading }) => (
+    <div className="w-full max-w-3xl px-6 flex flex-col gap-12 pt-12 pb-44">
+        {messages.map((msg, idx) => (
+            <div key={idx} className={msg.role === 'user' ? "flex justify-end w-full group" : "flex items-start gap-5 w-full"}>
+                {msg.role === 'user' ? (
+                    <div className="flex flex-col items-end gap-2 max-w-[85%]">
+                        <div className="bg-[#212121] text-[#FAFAFA] px-5 py-3.5 rounded-xl rounded-tr-none shadow-sm">
+                            <p className="text-[15px] leading-relaxed whitespace-pre-wrap text-left">
+                                {msg.content}
+                            </p>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        <div className="w-7 h-7 mt-1 bg-white rounded-md flex items-center justify-center shrink-0 shadow-sm border border-gray-100 overflow-hidden">
+                             <img src={AiLogo} alt="AI" className="w-full h-full object-contain" />
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-3">
+                                <span className="text-xs font-semibold text-gray-900">JobPilot AI</span>
+                                <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200">Just now</span>
+                            </div>
+
+                            <div className="space-y-6 text-[#2D2D2D] text-[16px] leading-7">
+                                 <ReactMarkdown
+                                    components={{
+                                        code({node, inline, className, children, ...props}) {
+                                            const match = /language-(\w+)/.exec(className || '')
+                                            return !inline ? (
+                                                 <div className="border border-gray-200 rounded-lg overflow-hidden bg-white my-4">
+                                                    <div className="bg-gray-50 px-4 py-2 flex justify-between items-center border-b border-gray-200">
+                                                        <span className="text-xs font-mono text-gray-500">{match ? match[1] : 'Code'}</span>
+                                                    </div>
+                                                    <div className="p-5 bg-[#FBFBFB] overflow-x-auto">
+                                                        <code className={className} {...props}>
+                                                            {children}
+                                                        </code>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-pink-600" {...props}>
+                                                    {children}
+                                                </code>
+                                            )
+                                        },
+                                        p: ({children}) => <p className="mb-4 last:mb-0">{children}</p>,
+                                        ul: ({children}) => <ul className="list-disc pl-5 mb-4 space-y-2">{children}</ul>,
+                                        ol: ({children}) => <ol className="list-decimal pl-5 mb-4 space-y-2">{children}</ol>,
+                                        li: ({children}) => <li className="pl-1">{children}</li>,
+                                        h1: ({children}) => <h1 className="text-2xl font-bold mb-4 mt-6 border-b pb-2">{children}</h1>,
+                                        h2: ({children}) => <h2 className="text-xl font-bold mb-3 mt-5">{children}</h2>,
+                                        h3: ({children}) => <h3 className="text-lg font-bold mb-2 mt-4">{children}</h3>,
+                                        div: ({children}) => <div className="mb-4">{children}</div>,
+                                        blockquote: ({children}) => (
+                                            <div className="flex gap-4 p-4 rounded-lg bg-amber-50 border border-amber-100 my-4">
+                                                <div className="text-sm text-amber-800 leading-snug">{children}</div>
+                                            </div>
+                                        ),
+                                        a: ({href, children}) => <a href={href} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                                    }}
+                                 >
+                                    {msg.content}
+                                 </ReactMarkdown>
+                            </div>
+                        </div>
+                    </>
+                )}
+            </div>
+        ))}
+        
+        {isLoading && (
+             <div className="flex items-start gap-5 w-full">
+                <div className="w-7 h-7 mt-1 bg-white rounded-md flex items-center justify-center shrink-0 shadow-sm border border-gray-100 overflow-hidden">
+                    <img src={AiLogo} alt="AI" className="w-full h-full object-contain animate-pulse" />
+                </div>
+                 <div className="flex-1 min-w-0">
+                     <div className="flex items-center gap-2 mt-2 h-7">
+                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></div>
+                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></div>
+                     </div>
+                 </div>
+             </div>
+         )}
     </div>
 );
 
