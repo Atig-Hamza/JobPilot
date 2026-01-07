@@ -13,8 +13,28 @@ const ChatInput = ({
     inputValue, 
     setInputValue, 
     handleKeyDown, 
-    handleSendMessage 
+    handleSendMessage,
+    selectedCountry,
+    setSelectedCountry
 }) => {
+    const countries = [
+        { code: 'all', name: 'Worldwide', flag: '🌐' },
+        { code: 'us', name: 'United States', flag: '🇺🇸' },
+        { code: 'gb', name: 'United Kingdom', flag: '🇬🇧' },
+        { code: 'ca', name: 'Canada', flag: '🇨🇦' },
+        { code: 'de', name: 'Germany', flag: '🇩🇪' },
+        { code: 'fr', name: 'France', flag: '🇫🇷' },
+        { code: 'au', name: 'Australia', flag: '🇦🇺' },
+        { code: 'ma', name: 'Morocco', flag: '🇲🇦' },
+        { code: 'es', name: 'Spain', flag: '🇪🇸' },
+        { code: 'it', name: 'Italy', flag: '🇮🇹' },
+        { code: 'nl', name: 'Netherlands', flag: '🇳🇱' },
+        { code: 'br', name: 'Brazil', flag: '🇧🇷' },
+        { code: 'in', name: 'India', flag: '🇮🇳' },
+        { code: 'jp', name: 'Japan', flag: '🇯🇵' },
+        { code: 'cn', name: 'China', flag: '🇨🇳' },
+    ];
+
     return (
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#FAFAFA] via-[#FAFAFA]/90 to-transparent pt-16 pb-8 px-6 z-30 pointer-events-none">
             <div className="max-w-3xl mx-auto pointer-events-auto">
@@ -95,9 +115,35 @@ const ChatInput = ({
                         </div>
                     ) : (
                         <div className="flex items-center gap-2 p-2.5 h-[76px]">
-                            <button className="w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-colors shrink-0">
-                                <Plus size={24} />
-                            </button>
+                            {activeMode === 'jop1_scrape' && (
+                                <div className="h-full pl-2 transition-all animate-in fade-in slide-in-from-left-4 duration-300">
+                                    <div className="relative h-full">
+                                        <select
+                                            value={selectedCountry}
+                                            onChange={(e) => setSelectedCountry(e.target.value)}
+                                            className="h-full appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm font-bold rounded-2xl pl-4 pr-8 hover:bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-black/5 cursor-pointer transition-all"
+                                        >
+                                            {countries.map(country => (
+                                                <option key={country.code} value={country.code}>
+                                                    {country.flag} {country.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M1 1L5 5L9 1" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeMode !== 'jop1_scrape' && (
+                                <button className="w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-colors shrink-0">
+                                    <Plus size={24} />
+                                </button>
+                            )}
+
                             <input
                                 type="text"
                                 autoFocus
