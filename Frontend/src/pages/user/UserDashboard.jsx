@@ -21,6 +21,7 @@ const JobPilotDashboard = () => {
     const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [roomId] = useState(() => generateRoomId());
+    const [selectedCountry, setSelectedCountry] = useState('all'); // Default country
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -33,7 +34,12 @@ const JobPilotDashboard = () => {
 
     const handleSendMessage = async () => {
         if (!inputValue.trim()) return;
-        const userMsg = inputValue;
+        
+        let userMsg = inputValue;
+        if (activeMode === 'jop1_scrape') {
+             userMsg = `Scrape Request:\nKeywords: ${inputValue}\nCountry Code: ${selectedCountry.toUpperCase()}`;
+        }
+
         setChatStarted(true);
         setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
         setInputValue("");
@@ -41,6 +47,15 @@ const JobPilotDashboard = () => {
 
         let aiText = ''; 
         let isResponseStarted = false;
+
+        if (activeMode === 'jop1_scrape') {
+             // Mock response for scraper since backend is building
+             setTimeout(() => {
+                 setIsLoading(false);
+                 setMessages(prev => [...prev, { role: 'ai', content: "Backend is under building." }]);
+             }, 1500);
+             return;
+        }
 
         try {
             const response = await fetch('http://localhost:5000/api/llm/generate', {
@@ -159,6 +174,8 @@ const JobPilotDashboard = () => {
                     setInputValue={setInputValue} 
                     handleKeyDown={handleKeyDown} 
                     handleSendMessage={handleSendMessage} 
+                    selectedCountry={selectedCountry}
+                    setSelectedCountry={setSelectedCountry}
                 />
             </main>
         </div>
