@@ -9,6 +9,7 @@ import PasswordRecovery from './pages/PasswordRecovery';
 import ComingSoon from './pages/ComingSoon';
 import NotFound from './pages/404';
 import UserDashboard from './pages/user/UserDashboard';
+import AutoPilotAgent from './pages/user/AutoPilotAgent';
 
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
         <Route path="/soon" element={<ComingSoon />} />
         {/* user */}
         <Route path="/user/dashboard" element={<UserDashboard />} />
+        <Route path="/user/autopilot" element={<AutoPilotAgent />} />
         {/* admin */}
       </Routes>
     </Router>
