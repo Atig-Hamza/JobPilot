@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import MainLogo from '../assets/Main/logo-without-bg.png';
 import {
     Home,
@@ -17,9 +18,9 @@ import {
     ChevronRight
 } from 'lucide-react';
 
-const NavItem = ({ icon, label, active, badge, isPro }) => (
-    <div className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 group mb-1 ${active
-            ? 'bg-[#F1F5F9] text-gray-900 font-semibold' // Matches the "Accueil" style in image
+const NavItem = ({ icon, label, active, badge, isPro, onClick }) => (
+    <div onClick={onClick} className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 group mb-1 ${active
+            ? 'bg-[#F1F5F9] text-gray-900 font-semibold'
             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-medium'
         }`}>
         <div className="flex items-center gap-3">
@@ -39,7 +40,8 @@ const NavItem = ({ icon, label, active, badge, isPro }) => (
     </div>
 );
 
-const Sidebar = () => {
+const Sidebar = ({ activePage = 'dashboard' }) => {
+    const navigate = useNavigate();
     return (
         <aside className="w-[260px] bg-white border-r border-gray-100 flex flex-col h-full shrink-0 z-20 hidden md:flex font-sans">
             <div className="p-5 pb-2">
@@ -49,8 +51,18 @@ const Sidebar = () => {
                 </div>
 
                 <div className="space-y-1">
-                    <NavItem icon={<Home size={18} />} label="Dashboard" active />
-                    <NavItem icon={<Sparkles size={18} />} label="AutoPilot Agent" />
+                    <NavItem 
+                        icon={<Home size={18} />} 
+                        label="Dashboard" 
+                        active={activePage === 'dashboard'} 
+                        onClick={() => navigate('/user/dashboard')}
+                    />
+                    <NavItem 
+                        icon={<Sparkles size={18} />} 
+                        label="AutoPilot Agent" 
+                        active={activePage === 'autopilot'} 
+                        onClick={() => navigate('/user/autopilot')}
+                    />
                 </div>
             </div>
 
