@@ -15,7 +15,8 @@ const ChatInput = ({
     handleKeyDown,
     handleSendMessage,
     selectedCountry,
-    setSelectedCountry
+    setSelectedCountry,
+    isGenerating
 }) => {
     const countries = [
         { code: 'all', name: 'Worldwide', flag: '🌐' },
@@ -150,14 +151,28 @@ const ChatInput = ({
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyDown={handleKeyDown}
+                                disabled={isGenerating}
                                 placeholder={activeMode === 'jop1_scrape' ? "Paste job keyword here..." : "Ask JobPilot to find leads..."}
-                                className="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-400 h-full text-lg font-medium px-2"
+                                className="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-400 h-full text-lg font-medium px-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <button
                                 onClick={handleSendMessage}
-                                className={`h-12 px-6 rounded-2xl flex items-center gap-2 font-bold text-sm transition-all shadow-sm group shrink-0 ${activeMode === 'jop1_scrape' ? 'bg-black text-white hover:bg-gray-800' : 'bg-[#ffb6e6] hover:bg-pink-300 text-gray-900'}`}>
-                                <span>{activeMode === 'jop1_scrape' ? 'Scrape' : 'Send'}</span>
-                                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                disabled={isGenerating || (!inputValue.trim() && activeMode !== 'resume_opt')}
+                                className={`h-12 px-6 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm transition-all shadow-sm group shrink-0 min-w-[100px] ${
+                                    isGenerating || !inputValue.trim()
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : activeMode === 'jop1_scrape'
+                                            ? 'bg-black text-white hover:bg-gray-800'
+                                            : 'bg-[#ffb6e6] hover:bg-pink-300 text-gray-900'
+                                }`}>
+                                {isGenerating ? (
+                                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <>
+                                        <span>{activeMode === 'jop1_scrape' ? 'Scrape' : 'Send'}</span>
+                                        <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                    </>
+                                )}
                             </button>
                         </div>
                     )}
