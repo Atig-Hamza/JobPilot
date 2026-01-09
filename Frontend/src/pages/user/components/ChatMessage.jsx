@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ThumbsUp, ThumbsDown, Check, Copy, MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import AiLogo from '../../../assets/Main/logo-without-bg.png';
 
-const ChatMessage = ({ msg }) => {
+const ChatMessage = ({ msg, isStreaming }) => {
     const [feedback, setFeedback] = useState(null);
     const [isCopied, setIsCopied] = useState(false);
     const [showProcess, setShowProcess] = useState(false);
@@ -49,7 +50,19 @@ const ChatMessage = ({ msg }) => {
                                     onClick={() => setShowProcess(!showProcess)}
                                     className="group relative overflow-hidden flex items-center gap-2 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded px-3 py-1.5 w-full text-left"
                                 >
-                                    <div className="absolute inset-0 translate-x-[-100%] group-hover:animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-gray-200/50 to-transparent z-0" />
+                                    {isStreaming && (
+                                        <motion.div 
+                                            className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-300/40 to-transparent z-0"
+                                            initial={{ x: '-100%' }}
+                                            animate={{ x: '100%' }}
+                                            transition={{ 
+                                                repeat: Infinity, 
+                                                duration: 1.5, 
+                                                ease: "linear",
+                                                repeatDelay: 0.5 
+                                            }}
+                                        />
+                                    )}
                                     
                                     <div className="relative z-10 flex items-center gap-2 w-full">
                                         {showProcess ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -58,18 +71,34 @@ const ChatMessage = ({ msg }) => {
                                     </div>
                                 </button>
                                 
-                                {showProcess && (
-                                    <div className="mt-2 pl-2 border-l-2 border-gray-200 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                        {msg.processLogs.map((log, i) => (
-                                            <div key={i} className="flex items-start gap-2 text-xs text-gray-500 font-mono leading-relaxed animate-in slide-in-from-left-1 fade-in fill-mode-backwards" style={{ animationDelay: `${i * 30}ms` }}>
-                                                <span className="mt-1.5 w-1 h-1 rounded-full bg-gray-400 shrink-0" />
-                                                <div className="flex-1">
-                                                    <ReactMarkdown>{log}</ReactMarkdown>
-                                                </div>
+                                <AnimatePresence>
+                                    {showProcess && (
+                                        <motion.div 
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.3 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="mt-2 pl-2 border-l-2 border-gray-200 space-y-2">
+                                                {msg.processLogs.map((log, i) => (
+                                                    <motion.div 
+                                                        key={i} 
+                                                        initial={{ x: -10, opacity: 0 }}
+                                                        animate={{ x: 0, opacity: 1 }}
+                                                        transition={{ delay: i * 0.05 }}
+                                                        className="flex items-start gap-2 text-xs text-gray-500 font-mono leading-relaxed"
+                                                    >
+                                                        <span className="mt-1.5 w-1 h-1 rounded-full bg-gray-400 shrink-0" />
+                                                        <div className="flex-1">
+                                                            <ReactMarkdown>{log}</ReactMarkdown>
+                                                        </div>
+                                                    </motion.div>
+                                                ))}
                                             </div>
-                                        ))}
-                                    </div>
-                                )}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         )}
 
