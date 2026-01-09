@@ -208,7 +208,7 @@ const JobPilotDashboard = () => {
                             />
                         ) : (
                             <>
-                                <ChatInterface messages={messages} isLoading={isLoading} />
+                                <ChatInterface messages={messages} isLoading={isLoading} isGenerating={isGenerating} />
                                 <div ref={messagesEndRef} />
                             </>
                         )}
