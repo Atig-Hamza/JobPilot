@@ -20,6 +20,7 @@ const JobPilotDashboard = () => {
     const [inputValue, setInputValue] = useState("");
     const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
     const [roomId] = useState(() => generateRoomId());
     const [selectedCountry, setSelectedCountry] = useState('all');
     const messagesEndRef = useRef(null);
@@ -35,40 +36,47 @@ const JobPilotDashboard = () => {
     const handleSendMessage = async () => {
         if (!inputValue.trim()) return;
 
-        let userMsg = inputValue;
+        setMessages(prev => [...prev, { role: 'user', content: inputValue }]);
+
+        let apiPrompt = inputValue;
         if (activeMode === 'jop1_scrape') {
-            userMsg = `Scrape Request:\nKeywords: ${inputValue}\nCountry Code: ${selectedCountry.toUpperCase()}`;
+            apiPrompt = `Scrape Request:\nKeywords: ${inputValue}\nCountry Code: ${selectedCountry.toUpperCase()}`;
         }
 
         setChatStarted(true);
-        setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
         setInputValue("");
         setIsLoading(true);
+        setIsGenerating(true);
 
         let aiText = '';
         let isResponseStarted = false;
 
-        if (activeMode === 'jop1_scrape') {
-            setTimeout(() => {
-                setIsLoading(false);
-                setMessages(prev => [...prev, { role: 'ai', content: "Backend is under building." }]);
-            }, 1500);
-            return;
-        }
-
         try {
-            const response = await fetch('http://localhost:5000/api/llm/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: userMsg, roomId: roomId })
-            });
+            let response;
+            
+            if (activeMode === 'jop1_scrape') {
+                response = await fetch('http://localhost:5000/api/crawl', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keywords: inputValue, country: selectedCountry, limit: 5 })
+                });
+            } else {
+                response = await fetch('http://localhost:5000/api/llm/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: apiPrompt, roomId: roomId })
+                });
+            }
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
+            let buffer = '';
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
+
+                const text = decoder.decode(value, { stream: true });
 
                 if (!isResponseStarted) {
                     setIsLoading(false);
@@ -76,20 +84,65 @@ const JobPilotDashboard = () => {
                     setMessages(prev => [...prev, { role: 'ai', content: '' }]);
                 }
 
-                const text = decoder.decode(value, { stream: true });
-                aiText += text;
+                if (activeMode === 'jop1_scrape') {
+                    buffer += text;
+                    const parts = buffer.split('\n\n');
+                    buffer = parts.pop();
 
-                setMessages(prev => {
-                    const newMessages = [...prev];
-                    if (newMessages.length > 0 && newMessages[newMessages.length - 1].role === 'ai') {
-                        newMessages[newMessages.length - 1] = { role: 'ai', content: aiText };
+                    for (const part of parts) {
+                        if (part.startsWith('data: ')) {
+                            try {
+                                const jsonStr = part.slice(6);
+                                const data = JSON.parse(jsonStr);
+                                
+                                if (data.type === 'process') {
+                                    setMessages(prev => {
+                                        const newMessages = [...prev];
+                                        if (newMessages.length > 0) {
+                                            const lastMsg = newMessages[newMessages.length - 1];
+                                            const currentProcess = lastMsg.processLogs || [];
+                                            newMessages[newMessages.length - 1] = { 
+                                                ...lastMsg, 
+                                                processLogs: [...currentProcess, data.content] 
+                                            };
+                                        }
+                                        return newMessages;
+                                    });
+                                } else if (data.type === 'markdown') {
+                                    aiText += data.content + '\n\n';
+                                    setMessages(prev => {
+                                        const newMessages = [...prev];
+                                        if (newMessages.length > 0) {
+                                            const lastMsg = newMessages[newMessages.length - 1];
+                                            newMessages[newMessages.length - 1] = { 
+                                                ...lastMsg, 
+                                                content: aiText 
+                                            };
+                                        }
+                                        return newMessages;
+                                    });
+                                }
+                            } catch (e) {
+                                console.error('Stream parse error:', e);
+                            }
+                        }
                     }
-                    return newMessages;
-                });
+                } else {
+                    aiText += text;
+                    setMessages(prev => {
+                        const newMessages = [...prev];
+                        if (newMessages.length > 0) {
+                            newMessages[newMessages.length - 1] = { role: 'ai', content: aiText };
+                        }
+                        return newMessages;
+                    });
+                }
             }
+            setIsGenerating(false);
         } catch (error) {
             console.error("Error fetching AI response:", error);
             setIsLoading(false);
+            setIsGenerating(false);
 
             setMessages(prev => {
                 if (isResponseStarted) {
@@ -173,6 +226,7 @@ const JobPilotDashboard = () => {
                     setInputValue={setInputValue}
                     handleKeyDown={handleKeyDown}
                     handleSendMessage={handleSendMessage}
+                    isGenerating={isGenerating}
                     selectedCountry={selectedCountry}
                     setSelectedCountry={setSelectedCountry}
                 />
