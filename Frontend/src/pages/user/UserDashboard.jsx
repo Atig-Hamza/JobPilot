@@ -53,15 +53,16 @@ const JobPilotDashboard = () => {
 
         try {
             let response;
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
 
             if (activeMode === 'jop1_scrape') {
-                response = await fetch('http://localhost:5000/api/crawl', {
+                response = await fetch(`${API_URL}/crawl`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ keywords: inputValue, country: selectedCountry, limit: 5 })
                 });
             } else {
-                response = await fetch('http://localhost:5000/api/llm/generate', {
+                response = await fetch(`${API_URL}/llm/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: apiPrompt, roomId: roomId })
