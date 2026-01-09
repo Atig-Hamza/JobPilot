@@ -52,7 +52,7 @@ const ChatInput = ({
                     />
                     <ModeBadge
                         active={activeMode === 'jop1_scrape'}
-                        label="JOP-1 Scraper"
+                        label="JOP-1 Search"
                         icon={<Globe size={10} />}
                         onClick={() => handleModeChange('jop1_scrape')}
                     />

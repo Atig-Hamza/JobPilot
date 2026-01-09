@@ -148,11 +148,11 @@ const DashboardHome = ({ activeMode, handleModeChange, todayDate, creditBalance 
                 >
 
                     <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-4">
-                            <span className="bg-white text-purple-700 px-2 py-1 border border-purple-700 rounded-md text-[10px] font-bold uppercase">Scraper</span>
+                        <div className="flex flex-row gap-2 items-start mb-4">
+                            <span className="bg-white text-purple-700 px-2 py-1 border border-purple-700 rounded-md text-[10px] font-bold uppercase">Web Search</span>
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-2">JOP-1 Assistant</h3>
-                        <p className="text-sm text-gray-600 leading-relaxed font-medium">Paste a job URL. I'll parse requirements & generate tailored application assets.</p>
+                        <p className="text-sm text-gray-600 leading-relaxed font-medium">An advanced AI model for intelligent company discovery and job contact search.</p>
                     </div>
                 </div>
                 <div
