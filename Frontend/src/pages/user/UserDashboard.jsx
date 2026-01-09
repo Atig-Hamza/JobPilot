@@ -53,7 +53,7 @@ const JobPilotDashboard = () => {
 
         try {
             let response;
-            
+
             if (activeMode === 'jop1_scrape') {
                 response = await fetch('http://localhost:5000/api/crawl', {
                     method: 'POST',
@@ -94,16 +94,16 @@ const JobPilotDashboard = () => {
                             try {
                                 const jsonStr = part.slice(6);
                                 const data = JSON.parse(jsonStr);
-                                
+
                                 if (data.type === 'process') {
                                     setMessages(prev => {
                                         const newMessages = [...prev];
                                         if (newMessages.length > 0) {
                                             const lastMsg = newMessages[newMessages.length - 1];
                                             const currentProcess = lastMsg.processLogs || [];
-                                            newMessages[newMessages.length - 1] = { 
-                                                ...lastMsg, 
-                                                processLogs: [...currentProcess, data.content] 
+                                            newMessages[newMessages.length - 1] = {
+                                                ...lastMsg,
+                                                processLogs: [...currentProcess, data.content]
                                             };
                                         }
                                         return newMessages;
@@ -114,9 +114,9 @@ const JobPilotDashboard = () => {
                                         const newMessages = [...prev];
                                         if (newMessages.length > 0) {
                                             const lastMsg = newMessages[newMessages.length - 1];
-                                            newMessages[newMessages.length - 1] = { 
-                                                ...lastMsg, 
-                                                content: aiText 
+                                            newMessages[newMessages.length - 1] = {
+                                                ...lastMsg,
+                                                content: aiText
                                             };
                                         }
                                         return newMessages;
@@ -194,7 +194,7 @@ const JobPilotDashboard = () => {
     };
 
     return (
-        <div className="flex h-screen w-screen bg-[#FAFAFA] font-sans text-gray-900 overflow-hidden selection:bg-pink-200 selection:text-pink-900">
+        <div className="flex h-screen w-screen bg-[#FAFAFA] font-sans text-gray-900 overflow-hidden selection:bg-pink-200 selection:text-pink-900 dark:bg-[#090909] dark:text-gray-100 dark:selection:bg-pink-900 dark:selection:text-pink-100 transition-colors duration-300">
             <Sidebar />
             <main className="flex-1 flex flex-col relative h-full">
                 <div className="flex-1 overflow-y-auto w-full">
