@@ -2,10 +2,14 @@ import React from 'react';
 import ChatMessage from './ChatMessage';
 import AiLogo from '../../../assets/Main/logo-without-bg.png';
 
-const ChatInterface = ({ messages, isLoading }) => (
+const ChatInterface = ({ messages, isLoading, isGenerating }) => (
     <div className="w-full max-w-3xl px-6 flex flex-col gap-12 pt-12 pb-44">
         {messages.map((msg, idx) => (
-            <ChatMessage key={idx} msg={msg} />
+            <ChatMessage 
+                key={idx} 
+                msg={msg} 
+                isStreaming={isGenerating && idx === messages.length - 1}
+            />
         ))}
 
         {isLoading && (
