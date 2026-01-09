@@ -1,343 +1,308 @@
-import { generateText } from './LLMService.js';
+import { generateText } from './LLMService.js'
 
 const processSearchWithAI = async function* ({ keywords, country, limit }) {
-    const allResults = [];
-    const seenUrls = new Set();
-    const tld = getCountryTld(country);
-    const countryName = getCountryName(country);
+    const runId = crypto.randomUUID()
+    const results = []
+    const visitedDomains = new Set()
+    const usedQueries = new Set()
+    const countryName = getCountryName(country)
+    let phase = 0
+    let entropy = Math.random().toString(36).slice(2)
 
-    yield { type: 'process', content: `**Agent Status**: Analyzing intent and generating targeted search strategies for "${keywords}" in ${countryName}...` };
+    yield { type: 'process', content: `**Agent Status**: Initializing autonomous intelligence run ${runId.slice(0, 8)} for "${keywords}" in ${countryName}...` }
 
-    let searchQueries = [];
-    try {
-        const queryPrompt = `
-        You are a search expert.
-        User wants to find OFFICIAL COMPANY WEBSITES for: "${keywords}" in "${countryName}".
-        Generate 5 specific Google/DuckDuckGo search queries.
-        Rules:
-        - Do NOT use negative keywords like -jobs or -careers as valid companies have them.
-        - Exclude "Top 10" lists or generic blog posts.
-        - Prioritize "contact us" or "about us" pages.
-        - Use country-specific TLD syntax (site:.${tld}) where helpful.
-        Format: Return ONLY a valid JSON array of strings. Example: ["query 1", "query 2"]
-        `;
-        
-        const generatedQueries = await generateText(queryPrompt, `qgen-${Date.now()}`, () => {}, "You are a search query generator.");
-        searchQueries = JSON.parse(generatedQueries.replace(/```json|```/g, '').trim());
-        
-        if (!Array.isArray(searchQueries)) throw new Error("Invalid format");
-    } catch (e) {
-        searchQueries = [
-             `${keywords} companies in ${countryName} official website`,
-             `site:.${tld} ${keywords} "contact us"`,
-             `${keywords} service providers ${countryName}`,
-             `${keywords} business directory ${countryName}`
-        ];
+    while (results.length < limit && phase < 7) {
+        phase++
+
+        const queries = await generateQueries({
+            keywords,
+            countryName,
+            runId,
+            entropy,
+            phase,
+            context: results.map(r => r.company).join(', ')
+        })
+
+        for (const query of shuffle(queries)) {
+            if (results.length >= limit) break
+            if (usedQueries.has(query)) continue
+            usedQueries.add(query)
+
+            yield { type: 'process', content: `**Search Vector**: ${query}` }
+
+            const urls = await performWebSearch(query, limit * 6)
+
+            for (const url of shuffle(urls)) {
+                if (results.length >= limit) break
+
+                let domain
+                try { domain = new URL(url).hostname.replace(/^www\./, '') } catch { continue }
+                if (visitedDomains.has(domain)) continue
+                visitedDomains.add(domain)
+
+                const html = await fetchWithTimeout(url, 12000)
+                if (!html) continue
+
+                const score = await scoreDomain(domain, html, runId, entropy)
+                if (score < 0.58) continue
+
+                yield { type: 'process', content: `**Inspection**: ${domain} (${Math.round(score * 100)}% confidence)` }
+
+                const company = await processSingleCompany(url, score < 0.78, runId, entropy)
+                if (!company) continue
+
+                results.push(company)
+                yield { type: 'json', data: company }
+                yield { type: 'process', content: `**Confirmed**: ${company.company}` }
+            }
+        }
+
+        entropy = Math.random().toString(36).slice(2)
     }
 
-    try {
-        for (const query of searchQueries) {
-            if (allResults.length >= limit) break;
-
-            yield { type: 'process', content: `**Action**: Executing search vector: *${query}*...` };
-            
-            const candidateUrls = await performWebSearch(query, limit * 4);
-            const targets = candidateUrls
-                .filter(u => !seenUrls.has(u))
-                .filter(u => !u.includes('/blog') && !u.includes('/news') && !u.includes('article') && !u.includes('guide'))
-                .sort(() => Math.random() - 0.5)
-                .slice(0, limit * 2);
-
-            for (const url of targets) {
-                if (allResults.length >= limit) break;
-                
-                const hostname = new URL(url).hostname;
-                if (seenUrls.has(hostname)) continue;
-                seenUrls.add(hostname);
-
-                yield { type: 'process', content: `**Analysis**: Inspecting [${hostname}](${url})...` };
-                
-                const companyData = await processSingleCompany(url, false);
-                
-                if (companyData) {
-                    allResults.push(companyData);
-                    yield { type: 'json', data: companyData };
-                    yield { type: 'process', content: `**Success**: Verified intelligence for **${companyData.company}**` };
-                }
-            }
+    if (results.length) {
+        let summary = ''
+        try {
+            summary = await generateText(
+                `RunID:${runId}
+Entropy:${entropy}
+Summarize market insight in max 50 words.
+Sector:${keywords}
+Country:${countryName}
+Companies:${results.map(r => r.company).join(', ')}`,
+                `sum-${Date.now()}-${entropy}`,
+                () => { },
+                "You are a strategic market analyst."
+            )
+        } catch {
+            summary = 'Verified companies with active operational presence were identified in this sector.'
         }
 
-        if (allResults.length === 0) {
-            yield { type: 'process', content: `**Result**: Strict scan yielded low confidence. Initiating **Broad Spectrum Recovery**...` };
-            
-            const fallbackQuery = `${keywords} companies ${countryName}`;
-            const fallbackUrls = await performWebSearch(fallbackQuery, 10);
-            
-            for (const url of fallbackUrls) {
-                if (allResults.length >= limit) break;
-                if (seenUrls.has(new URL(url).hostname)) continue;
-                
-                yield { type: 'process', content: `**Action**: Broad scan inspecting [${new URL(url).hostname}]...` };
-                const companyData = await processSingleCompany(url, true);
-                
-                if (companyData) {
-                    allResults.push(companyData);
-                    yield { type: 'json', data: companyData };
-                    yield { type: 'process', content: `**Success**: Recovered contact for **${companyData.company}**` };
-                }
-            }
-        } else {
-            yield { type: 'process', content: `**Status**: Scan complete. Synthesizing intelligence report...` };
-            
-            const companiesList = allResults.map(c => `${c.company} (${c.domain}) - ${c.emails[0]?.category}`).join(', ');
-            const summaryReqId = `sum-${Date.now()}`;
-            
-            let summary = "";
-            try {
-                summary = await generateText(
-                    `Write a compact, professional executive summary (max 50 words) about these discovered companies in the ${keywords} sector in ${countryName}: ${companiesList}. Focus on the market presence found.`, 
-                    summaryReqId, 
-                    () => {}, 
-                    "You are a market intelligence analyst."
-                );
-            } catch (e) {
-                summary = "Analysis suggests a diverse range of active entities in this sector.";
-            }
-
-            const tableMd = generateMarkdownTable(allResults, summary);
-            yield { type: 'markdown', content: tableMd };
-        }
-
-        if (allResults.length > 0) {
-           yield { type: 'complete', data: allResults };
-        } else {
-            yield { type: 'markdown', content: `**Result**: No verified contacts found. Try broadening your keywords (e.g. use "Software" instead of "Java").` };
-        }
-
-    } catch (error) {
-        console.error(error);
-        yield { type: 'markdown', content: `**Error**: System execution failure - ${error.message}` };
+        yield { type: 'markdown', content: generateMarkdownTable(results, summary) }
+        yield { type: 'complete', data: results }
+    } else {
+        yield { type: 'markdown', content: `**Result**: No verified companies detected. Expand or rephrase keywords.` }
     }
-};
+}
+
+const generateQueries = async ({ keywords, countryName, runId, entropy, phase, context }) => {
+    try {
+        const raw = await generateText(
+            `
+RunID:${runId}
+Entropy:${entropy}
+Phase:${phase}
+
+Goal: discover real operating companies.
+Keywords:${keywords}
+Country:${countryName}
+Context:${context || 'none'}
+
+Generate 6 NEW business-focused search queries.
+Each must explore a different angle.
+Never repeat previous structure.
+Avoid generic phrasing.
+
+Return JSON array only.
+`,
+            `q-${Date.now()}-${entropy}`,
+            () => { },
+            "You generate adaptive search strategies."
+        )
+        const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim())
+        return Array.isArray(parsed) ? parsed.filter(Boolean) : []
+    } catch {
+        return [
+            `${keywords} business ${countryName} ${entropy}`,
+            `${keywords} services firm ${countryName}`,
+            `enterprise ${keywords} providers ${countryName}`,
+            `${keywords} solution company ${countryName}`,
+            `professional ${keywords} agency ${countryName}`,
+            `${keywords} commercial operations ${countryName}`
+        ]
+    }
+}
+
+const scoreDomain = async (domain, html, runId, entropy) => {
+    try {
+        const r = await generateText(
+            `
+RunID:${runId}
+Entropy:${entropy}
+Evaluate if this domain is a real operating company.
+Return only a number between 0 and 1.
+
+Domain:${domain}
+HTML:${html.slice(0, 1800)}
+`,
+            `score-${Date.now()}-${entropy}`,
+            () => { },
+            "You evaluate website legitimacy."
+        )
+        const n = parseFloat(r)
+        return isNaN(n) ? 0.35 : Math.min(Math.max(n, 0), 1)
+    } catch {
+        return 0.4
+    }
+}
 
 const generateMarkdownTable = (results, summary) => {
-    let md = `\n### 🌍 Market Intelligence Report\n\n`;
-    
-    if (summary) {
-        md += `> *${summary.trim()}*\n\n`;
-    }
+    let md = `\n### 🌍 Market Intelligence Report\n\n`
+    if (summary) md += `> *${summary.trim()}*\n\n`
 
-    md += `| Company | Domain | Contact | Role | Source |\n`;
-    md += `| :--- | :--- | :--- | :--- | :--- |\n`;
-    
+    md += `| Company | Domain | Contact | Role | Description |\n`
+    md += `| :--- | :--- | :--- | :--- | :--- |\n`
+
     results.forEach(r => {
-        const bestEmail = r.emails.sort((a,b) => b.confidence - a.confidence)[0];
-        const emailStr = bestEmail ? `**${bestEmail.address}**` : 'N/A';
-        const role = bestEmail ? `**${bestEmail.category.toUpperCase()}**` : '-';
-        const favicon = r.favicon ? `<img src="${r.favicon}" width="16" height="16" style="display:inline-block; vertical-align:middle; margin-right:8px; border-radius:4px;" />` : ''; 
-        
-        md += `| ${favicon}**${r.company}** | [${r.domain}](https://${r.domain}) | ${emailStr} | ${role} | ${r.source} |\n`;
-    });
-    
-    return md;
-};
+        const best = r.emails.sort((a, b) => b.confidence - a.confidence)[0]
+        const email = best ? `**${best.address}**` : 'N/A'
+        const role = best ? `**${best.category.toUpperCase()}**` : '-'
+        const icon = r.favicon ? `<img src="${r.favicon}" width="16" height="16" style="vertical-align:middle;margin-right:6px;border-radius:4px;" />` : ''
+        const desc = r.description || 'Operational company active in this market'
+        md += `| ${icon}**${r.company}** | [${r.domain}](https://${r.domain}) | ${email} | ${role} | ${desc} |\n`
+    })
+
+    return md
+}
+
+const processSingleCompany = async (url, relaxed, runId, entropy) => {
+    try {
+        const html = await fetchWithTimeout(url, 10000)
+        if (!html) return null
+
+        const domain = new URL(url).hostname.replace(/^www\./, '')
+        let name = getMetaContent(html, 'og:site_name') || getTitleTag(html) || domain.split('.')[0].toUpperCase()
+        const favicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
+        const emails = extractEmails(html)
+
+        const description = await generateCompanyDescription(name, domain, html, runId, entropy)
+
+        if (!emails.length && relaxed) {
+            return {
+                company: name.trim(),
+                domain,
+                favicon,
+                emails: [{ address: 'Contact via Website', category: 'General', confidence: 0.5 }],
+                description,
+                source: 'Broad Recovery'
+            }
+        }
+
+        if (!emails.length) return null
+        const classified = await classifyEmails(emails, domain, runId, entropy)
+        if (!classified.length) return null
+
+        return {
+            company: name.trim(),
+            domain,
+            favicon,
+            emails: classified,
+            description,
+            source: relaxed ? 'Broad Recovery' : 'Deep Scan'
+        }
+    } catch {
+        return null
+    }
+}
+
+const generateCompanyDescription = async (name, domain, html, runId, entropy) => {
+    try {
+        const r = await generateText(
+            `
+RunID:${runId}
+Entropy:${entropy}
+
+Company:${name}
+Domain:${domain}
+
+Write a concise factual business description (max 18 words).
+Avoid marketing language.
+
+HTML:${html.slice(0, 1500)}
+`,
+            `desc-${Date.now()}-${entropy}`,
+            () => { },
+            "You summarize company activities."
+        )
+        return r.replace(/\.$/, '').trim()
+    } catch {
+        return 'Active company operating within this industry'
+    }
+}
 
 const performWebSearch = async (query, limit) => {
     try {
-        const response = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}&kl=wt-wt`, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept-Language': 'en-US,en;q=0.9'
+        const res = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}&kl=wt-wt`, {
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+        })
+        const html = await res.text()
+        const urls = []
+        const rx = /<a[^>]+class="result__a"[^>]+href="([^"]+)"/g
+        let m
+        while ((m = rx.exec(html)) !== null && urls.length < limit) {
+            let u = m[1]
+            if (u.includes('uddg=')) {
+                try { u = decodeURIComponent(new URLSearchParams(u.split('?')[1]).get('uddg')) } catch { }
             }
-        });
-        
-        const text = await response.text();
-        const linkRegex = /<a[^>]+class="result__a"[^>]+href="([^"]+)"/g;
-        const matches = [];
-        let match;
-        
-        while ((match = linkRegex.exec(text)) !== null) {
-            let url = match[1];
-            if (url.includes('uddg=')) {
-                try { url = decodeURIComponent(new URLSearchParams(url.split('?')[1]).get('uddg')); } catch (e) {}
-            }
-            if (isValidUrl(url) && !isBlocklisted(url)) matches.push(url);
+            if (isValidUrl(u) && !isBlocklisted(u)) urls.push(u)
         }
-        
-        return matches;
-    } catch (error) {
-        return [];
+        return urls
+    } catch {
+        return []
     }
-};
+}
 
-const processSingleCompany = async (url, relaxedMode = false) => {
+const fetchWithTimeout = async (url, ms) => {
     try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 12000);
-
-        const response = await fetch(url, {
-            signal: controller.signal,
-            headers: { 'User-Agent': 'JobPilot-Agent/3.0' }
-        });
-        clearTimeout(timeout);
-
-        if (!response.ok) return null;
-        let html = await response.text();
-        
-        let title = getMetaContent(html, 'og:site_name') || getTitleTag(html);
-        const domain = new URL(url).hostname.replace(/^www\./, '');
-        if (!title || title.length < 2) title = domain.split('.')[0].toUpperCase();
-
-        const favicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`; 
-
-        let validEmails = extractEmails(html);
-
-        if (validEmails.length === 0) {
-            const contactLinkRegex = /<a[^>]+href="([^"]*contact[^"]*|[^"]*about[^"]*|[^"]*reach[^"]*)"[^>]*>| <a[^>]+href="([^"]+)"[^>]*>(?:.*contact.*|.*about.*|.*reach.*)<\/a>/i;
-            const contactLinkMatch = html.match(contactLinkRegex);
-            
-            if (contactLinkMatch) {
-                let contactUrl = contactLinkMatch[1] || contactLinkMatch[2];
-                if (contactUrl && !contactUrl.startsWith('mailto:')) {
-                    if (!contactUrl.startsWith('http')) {
-                        if (contactUrl.startsWith('/')) {
-                            contactUrl = new URL(url).origin + contactUrl;
-                        } else {
-                            contactUrl = new URL(url).origin + '/' + contactUrl;
-                        }
-                    }
-
-                    try {
-                        const subController = new AbortController();
-                        const subTimeout = setTimeout(() => subController.abort(), 8000);
-                        const subRes = await fetch(contactUrl, { 
-                            signal: subController.signal,
-                            headers: { 'User-Agent': 'JobPilot-Agent/3.0' } 
-                        });
-                        clearTimeout(subTimeout);
-                        if (subRes.ok) {
-                            const subHtml = await subRes.text();
-                            const subEmails = extractEmails(subHtml);
-                            validEmails = [...validEmails, ...subEmails];
-                        }
-                    } catch(e) {
-                         // Ignore sub-page fetch errors
-                    }
-                }
-            }
-        }
-
-        validEmails = [...new Set(validEmails)];
-
-        if (relaxedMode && validEmails.length > 0) {
-             const simpleEmails = validEmails.map(e => ({
-                address: e,
-                category: heuristicRole(e),
-                confidence: 0.6
-             }));
-             return {
-                company: title.trim(),
-                domain: domain,
-                favicon: favicon,
-                emails: simpleEmails,
-                source: "Broad Recovery"
-             };
-        }
-
-        if (validEmails.length === 0) return null;
-
-        const classifiedEmails = await classifyEmails(validEmails, domain);
-        if (!classifiedEmails.length) return null;
-
-        return {
-            company: title.trim(),
-            domain: domain,
-            favicon: favicon,
-            emails: classifiedEmails,
-            source: "Deep Scan"
-        };
-    } catch (error) {
-        return null;
+        const c = new AbortController()
+        setTimeout(() => c.abort(), ms)
+        const r = await fetch(url, { signal: c.signal, headers: { 'User-Agent': 'JobPilot-Agent/6.0' } })
+        return r.ok ? await r.text() : null
+    } catch {
+        return null
     }
-};
+}
 
-const extractEmails = (text) => {
-    const emailRegex = /[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}/g;
-    const rawEmails = [...new Set(text.match(emailRegex) || [])];
-    
-    return rawEmails.filter(e => 
-        !/\.(png|jpg|css|js|svg|gif|webp)$/i.test(e) && 
-        !/sentry|noreply|domain\.com|email\.com|example|wixpress|sentry/.test(e) &&
-        e.length < 40
-    );
-};
+const extractEmails = t => {
+    const m = [...t.matchAll(/href="mailto:([^"?]+)"/g)].map(x => x[1])
+    const r = [...new Set([...(t.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || []), ...m])]
+    return r.filter(e => e.length < 40 && !/noreply|example|wix|sentry/i.test(e))
+}
 
-const classifyEmails = async (emails, domain) => {
+const classifyEmails = async (emails, domain, runId, entropy) => {
     try {
-        const prompt = `Classify business emails for ${domain} into categories (info, hr, sales, support, management). Input: ${JSON.stringify(emails)}. Return JSON Array [{address, category, confidence}].`;
-        const jsonStr = await generateText(prompt, `cls-${Date.now()}`, () => {}, "You are a JSON data classifier.");
-        const parsed = JSON.parse(jsonStr.replace(/```json|```/g, '').trim());
-        return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-        return emails.slice(0, 3).map(e => ({
-            address: e,
-            category: heuristicRole(e),
-            confidence: 0.7
-        }));
+        const raw = await generateText(
+            `
+RunID:${runId}
+Entropy:${entropy}
+
+Classify business emails for ${domain}.
+Return JSON [{address,category,confidence}].
+
+Emails:${JSON.stringify(emails)}
+`,
+            `cls-${Date.now()}-${entropy}`,
+            () => { },
+            "You classify emails."
+        )
+        const p = JSON.parse(raw.replace(/```json|```/g, '').trim())
+        return Array.isArray(p) ? p : []
+    } catch {
+        return emails.map(e => ({ address: e, category: heuristicRole(e), confidence: 0.7 }))
     }
-};
+}
 
-const heuristicRole = (e) => {
-    if (/hr|job|career/i.test(e)) return 'HR';
-    if (/sales|marketing/i.test(e)) return 'Sales';
-    if (/support|help/i.test(e)) return 'Support';
-    return 'Info';
-};
-
-const isBlocklisted = (url) => {
-    const block = [
-        'facebook.com', 'twitter.com', 'linkedin.com', 'instagram.com', 'youtube.com', 'google.com', 
-        'clutch.co', 'goodfirms.co', 'upwork.com', 'indeed.com', 'yelp.com', 'zoominfo.com', 'g2.com'
-    ];
-    return block.some(b => url.includes(b));
-};
-
-const isValidUrl = (s) => {
-    try { new URL(s); return true; } catch (e) { return false; }
-};
-
-const getCountryTld = (code) => {
-    const tlds = {
-        'us': 'com', 'gb': 'co.uk', 'ca': 'ca', 'de': 'de', 'fr': 'fr',
-        'au': 'com.au', 'ma': 'ma', 'es': 'es', 'it': 'it', 'nl': 'nl',
-        'br': 'com.br', 'in': 'co.in', 'jp': 'co.jp', 'cn': 'cn'
-    };
-    return tlds[code?.toLowerCase()] || 'com';
-};
-
-const getCountryName = (code) => {
-    const names = {
-        'us': 'United States', 'gb': 'United Kingdom', 'ca': 'Canada', 'de': 'Germany',
-        'fr': 'France', 'au': 'Australia', 'ma': 'Morocco', 'es': 'Spain',
-        'it': 'Italy', 'nl': 'Netherlands', 'br': 'Brazil', 'in': 'India',
-        'jp': 'Japan', 'cn': 'China', 'all': 'Global'
-    };
-    return names[code?.toLowerCase()] || code || 'Global';
-};
-
-const getMetaContent = (html, prop) => {
-    const m = html.match(new RegExp(`<meta property="${prop}" content="([^"]+)"`, 'i'));
-    return m ? m[1] : null;
-};
-
-const getTitleTag = (html) => {
-    const m = html.match(/<title>(.*?)<\/title>/i);
-    return m ? m[1].split(/[|-]/)[0].trim() : null;
-};
+const heuristicRole = e => /hr|career/i.test(e) ? 'HR' : /sales|marketing/i.test(e) ? 'Sales' : /support|help/i.test(e) ? 'Support' : 'Info'
+const shuffle = a => a.sort(() => Math.random() - 0.5)
+const isValidUrl = u => { try { new URL(u); return true } catch { return false } }
+const isBlocklisted = u => ['facebook', 'linkedin', 'twitter', 'instagram', 'youtube', 'clutch', 'g2', 'zoominfo'].some(b => u.includes(b))
+const getCountryName = c => ({ us: 'United States', gb: 'United Kingdom', ca: 'Canada', de: 'Germany', fr: 'France', au: 'Australia', es: 'Spain', it: 'Italy', nl: 'Netherlands', br: 'Brazil', in: 'India', jp: 'Japan', cn: 'China', ma: 'Morocco' }[c?.toLowerCase()] || 'Global')
+const getMetaContent = (h, p) => (h.match(new RegExp(`<meta property="${p}" content="([^"]+)"`, 'i')) || [])[1] || null
+const getTitleTag = h => (h.match(/<title>(.*?)<\/title>/i) || [])[1]?.split(/[|-]/)[0]?.trim() || null
 
 export {
     processSearchWithAI,
     performWebSearch,
     processSingleCompany,
     classifyEmails
-};
+}
