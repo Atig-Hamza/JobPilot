@@ -12,6 +12,7 @@ import {
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import MainWhiteLogo from '../assets/Main/logo-white-without-bg.png';
+import MainLogo from '../assets/Main/logo-without-bg.png';
 
 
 const styles = `
@@ -133,7 +134,7 @@ const MinimalInput = ({ label, type, placeholder, icon: Icon }) => (
 
 
 const MinimalSocialButton = ({ icon: Icon, label }) => (
-  <button type="button" className="flex-1 flex items-center justify-center gap-3 bg-gray-50/50 hover:bg-gray-100 py-3 px-4 rounded-lg text-sm font-semibold text-gray-600 transition-all duration-200 active:scale-[0.98]">
+  <button type="button" className="flex-1 flex items-center justify-center gap-3 bg-gray-50/50 hover:bg-gray-100 py-3 px-4 rounded-lg border border-gray-200 text-sm font-semibold text-gray-600 transition-all duration-200 active:scale-[0.98]">
     {Icon && <Icon size={18} />}
     <span>{label}</span>
   </button>
@@ -151,32 +152,26 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col lg:flex-row bg-white font-sans text-gray-900 overflow-hidden">
+    <div className="min-h-screen w-full flex lg:flex-row bg-white font-sans text-gray-900">
       <style>{styles}</style>
 
-      {/* --- LEFT SECTION: Visuals --- */}
-      <div className="relative w-full lg:w-[60%] bg-[#080808] text-white flex flex-col justify-between p-12 lg:p-24 overflow-hidden z-0">
+      <div className="hidden lg:flex relative w-full lg:w-[60%] bg-[#080808] text-white flex-col justify-between p-12 lg:p-24 overflow-hidden z-0">
         <div className="bg-noise"></div>
         
-        {/* COLOR UPDATE: Ambient Glow set to brand pink */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#ffb6e6] opacity-[0.1] blur-[150px] rounded-full pointer-events-none z-0"></div>
 
-        {/* Brand */}
         <div className="relative z-10 flex items-center gap-3">
           <img src={MainWhiteLogo} alt="JobPilot Logo" className='w-5 h-5' />
           <span className="font-semibold tracking-tight text-lg">JobPilot</span>
         </div>
 
-        {/* Headline */}
         <div className="relative z-10 my-auto">
           <h1 className="text-6xl lg:text-8xl font-medium tracking-tighter leading-[1] text-white/90">
             Design your
             <br />
-            {/* Split Text Component */}
             <SplitTextReveal />
           </h1>
           
-          {/* COLOR UPDATE: Divider Line opacity adjusted for pink tint hint */}
           <div className="mt-8 h-px w-24 bg-[#ffb6e6]/30"></div>
           
           <p className="mt-8 text-lg text-gray-400 max-w-md leading-relaxed">
@@ -185,11 +180,10 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* --- RIGHT SECTION: Form --- */}
       <div className="w-full lg:w-[40%] bg-white flex flex-col relative z-10">
         
-        {/* Top Left Navigation (Go Back) */}
-        <div className="absolute top-8 left-8 lg:left-20 z-20">
+        {/* Top Left Navigation (Desktop Only) */}
+        <div className="hidden lg:block absolute top-8 left-20 z-20">
             <Link to="/" className="group flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
                 <div className="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-black transition-colors">
                     <ChevronLeft size={14} className="group-hover:-translate-x-0.5 transition-transform duration-300" />
@@ -197,9 +191,23 @@ const LoginPage = () => {
                 <span>Go Back</span>
             </Link>
         </div>
+
+        {/* Mobile Header: Logo (Left) & Go Back (Right) */}
+        <div className="lg:hidden flex justify-between items-center p-6 z-20">
+             <div className="flex items-center gap-2">
+                <img src={MainLogo} alt="JobPilot Logo" className='w-5 h-5' />
+                <span className="font-bold tracking-tight text-lg text-gray-900">JobPilot</span>
+             </div>
+             
+             <Link to="/" className="group flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
+                <span>Go Back</span>
+                <div className="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-black transition-colors">
+                    <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform duration-300" />
+                </div>
+            </Link>
+        </div>
         
-        {/* Scrollable Container for Form */}
-        <div className="flex-1 flex flex-col justify-center px-8 lg:px-20 py-12">
+        <div className="flex-1 flex flex-col justify-center px-6 md:px-12 lg:px-20 py-12">
           <div className="w-full max-w-sm mx-auto space-y-12">
             
             <div className="space-y-2 mt-8">
@@ -226,7 +234,6 @@ const LoginPage = () => {
 
               <div className="flex items-center justify-between pt-2">
                 <label className="flex items-center gap-2 cursor-pointer group select-none">
-                  {/* COLOR UPDATE: Checkbox active state */}
                   <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all duration-300 ${rememberMe ? 'bg-[#ffb6e6] border-[#ffb6e6]' : 'border-gray-300 group-hover:border-gray-500'}`}>
                     {rememberMe && <Check size={10} className="text-black" strokeWidth={3} />}
                   </div>
@@ -236,7 +243,6 @@ const LoginPage = () => {
                 <a href="/password-recovery" className="text-xs font-bold text-black hover:text-[#ffb6e6] transition-colors">Recover Password</a>
               </div>
 
-              {/* COLOR UPDATE: Button Background set to pink, Text set to Black for premium contrast */}
               <button type="submit" disabled={isLoading} className="w-full bg-[#ffb6e6] text-black h-12 rounded-lg font-bold text-sm tracking-wide flex items-center justify-center gap-2 hover:bg-[#ffb6e6]/90 hover:shadow-lg hover:shadow-[#ffb6e6]/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed">
                 {isLoading ? <Loader2 size={18} className="animate-spin" /> : <>Enter Workspace <ArrowRight size={16} /></>}
               </button>
@@ -248,7 +254,6 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* --- Security Footer --- */}
         <div className="w-full bg-white pb-6 pt-2 px-8 lg:px-20 hidden md:block">
           <div className="flex flex-col items-center gap-3">
             
