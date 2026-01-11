@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  ArrowRight, 
-  Github, 
-  Check, 
+import axios from 'axios';
+import toast, { Toaster } from 'react-hot-toast';
+import {
+  ArrowRight,
+  Github,
+  Check,
   ChevronRight,
   Zap,
   ArrowLeft,
@@ -12,7 +14,7 @@ import {
   MessageSquare,
   User
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import MainLogo from '../assets/Main/logo-without-bg.png';
 
 
@@ -93,8 +95,8 @@ const MinimalInput = ({ type = "text", placeholder, autoFocus, value, onChange, 
   <div className="group relative w-full">
     <div className="relative flex items-center">
       {Icon && <Icon size={18} className="absolute left-0 text-gray-400 group-focus-within:text-[#ffb6e6] transition-colors" />}
-      <input 
-        type={type} 
+      <input
+        type={type}
         placeholder={placeholder}
         autoFocus={autoFocus}
         value={value}
@@ -102,49 +104,59 @@ const MinimalInput = ({ type = "text", placeholder, autoFocus, value, onChange, 
         className={`w-full py-4 bg-transparent border-b border-gray-200 text-lg font-medium text-gray-900 placeholder-gray-400 outline-none transition-colors duration-300 rounded-none focus:border-transparent ${Icon ? 'pl-8' : ''}`}
       />
     </div>
-    {/* Pink underline on focus */}
+
     <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#ffb6e6] group-focus-within:w-full transition-all duration-500 ease-[cubic-bezier(0.2,1,0.3,1)]"></div>
   </div>
 );
 
 
-const SplitDateInput = () => {
+const SplitDateInput = ({ value, onChange }) => {
+  const handleChange = (field, val) => {
+    onChange({ ...value, [field]: val });
+  };
+
   return (
     <div className="group relative w-full">
       <div className="flex items-end gap-3 w-full border-b border-gray-200 py-4">
         <Calendar size={18} className="text-gray-400 mb-1 group-focus-within:text-[#ffb6e6] transition-colors" />
-        
+
         <div className="flex-1 flex gap-2 text-lg font-medium text-gray-900">
-           {/* Day */}
-           <input 
-              type="number" 
-              placeholder="DD" 
-              className="w-8 bg-transparent outline-none placeholder-gray-400 text-center" 
-              min="1" max="31"
-           />
-           <span className="text-gray-300">/</span>
-           {/* Month */}
-           <input 
-              type="number" 
-              placeholder="MM" 
-              className="w-10 bg-transparent outline-none placeholder-gray-400 text-center" 
-              min="1" max="12"
-           />
-           <span className="text-gray-300">/</span>
-           {/* Year */}
-           <input 
-              type="number" 
-              placeholder="YYYY" 
-              className="w-16 bg-transparent outline-none placeholder-gray-400 text-center" 
-              min="1900" max="2025"
-           />
+
+          <input
+            type="number"
+            placeholder="DD"
+            className="w-8 bg-transparent outline-none placeholder-gray-400 text-center"
+            min="1" max="31"
+            value={value.day}
+            onChange={(e) => handleChange('day', e.target.value)}
+          />
+          <span className="text-gray-300">/</span>
+
+          <input
+            type="number"
+            placeholder="MM"
+            className="w-10 bg-transparent outline-none placeholder-gray-400 text-center"
+            min="1" max="12"
+            value={value.month}
+            onChange={(e) => handleChange('month', e.target.value)}
+          />
+          <span className="text-gray-300">/</span>
+
+          <input
+            type="number"
+            placeholder="YYYY"
+            className="w-16 bg-transparent outline-none placeholder-gray-400 text-center"
+            min="1900" max="2025"
+            value={value.year}
+            onChange={(e) => handleChange('year', e.target.value)}
+          />
         </div>
       </div>
-      
-      {/* Pink underline */}
+
+
       <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#ffb6e6] group-focus-within:w-full transition-all duration-500 ease-[cubic-bezier(0.2,1,0.3,1)]"></div>
-      
-      {/* Label */}
+
+
       <span className="absolute -top-2 left-0 text-[10px] font-bold text-gray-400 uppercase tracking-widest group-focus-within:text-[#ffb6e6] transition-colors">
         Date of Birth
       </span>
@@ -153,14 +165,13 @@ const SplitDateInput = () => {
 };
 
 
-const CustomGenderSelect = () => {
+const CustomGenderSelect = ({ value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selected, setSelected] = useState("");
   const dropdownRef = useRef(null);
 
   const options = ["Male", "Female", "Non-binary", "Prefer not to say"];
 
-  
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -173,42 +184,39 @@ const CustomGenderSelect = () => {
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
-      {/* Trigger */}
-      <div 
+
+      <div
         onClick={() => setIsOpen(!isOpen)}
         className="group cursor-pointer relative w-full py-4 border-b border-gray-200 flex items-center justify-between text-lg font-medium"
       >
-        <span className={`${selected ? 'text-gray-900' : 'text-gray-400'}`}>
-          {selected || "Gender"}
+        <span className={`${value ? 'text-gray-900' : 'text-gray-400'}`}>
+          {value || "Gender"}
         </span>
-        <ChevronDown 
-          size={16} 
-          className={`text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-black' : ''}`} 
+        <ChevronDown
+          size={16}
+          className={`text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-black' : ''}`}
         />
-        
-        {/* Underline Animation */}
+
         <div className={`absolute bottom-0 left-0 h-[2px] bg-[#ffb6e6] transition-all duration-500 ease-[cubic-bezier(0.2,1,0.3,1)] ${isOpen ? 'w-full' : 'w-0'}`}></div>
       </div>
 
-      {/* Dropdown Menu */}
-      <div 
-        className={`absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20 transition-all duration-300 origin-top ${
-          isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
-        }`}
+      <div
+        className={`absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20 transition-all duration-300 origin-top ${isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+          }`}
       >
         {options.map((opt) => (
-          <div 
+          <div
             key={opt}
             onClick={() => {
-              setSelected(opt);
+              onChange(opt);
               setIsOpen(false);
             }}
             className="px-5 py-3 hover:bg-[#fff0f8] cursor-pointer flex items-center justify-between group transition-colors"
           >
-            <span className={`text-sm font-medium ${selected === opt ? 'text-black' : 'text-gray-500 group-hover:text-black'}`}>
+            <span className={`text-sm font-medium ${value === opt ? 'text-black' : 'text-gray-500 group-hover:text-black'}`}>
               {opt}
             </span>
-            {selected === opt && <Check size={14} className="text-[#ffb6e6]" strokeWidth={3} />}
+            {value === opt && <Check size={14} className="text-[#ffb6e6]" strokeWidth={3} />}
           </div>
         ))}
       </div>
@@ -224,7 +232,7 @@ const SocialBtn = ({ icon: Icon, component, label }) => (
 );
 
 const OptionRow = ({ title, sub, active, onClick, disabled, badge }) => (
-  <div 
+  <div
     onClick={!disabled ? onClick : undefined}
     className={`flex items-start justify-between py-5 border-b border-gray-100 cursor-pointer group transition-all duration-300 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
   >
@@ -250,10 +258,68 @@ const OptionRow = ({ title, sub, active, onClick, disabled, badge }) => (
 
 
 const SignUpFlow = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loadingText, setLoadingText] = useState({ line1: "Initializing", line2: "workspace..." });
   const [isExiting, setIsExiting] = useState(false);
-  const [accessMode, setAccessMode] = useState('waitlist'); 
+  const [accessMode, setAccessMode] = useState('waitlist');
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    dob: { day: '', month: '', year: '' },
+    gender: '',
+    inviteCode: '',
+    howDidYouFindUs: '',
+    whyJoin: ''
+  });
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const validateForm = () => {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.gender) return false;
+    if (!formData.dob.day || !formData.dob.month || !formData.dob.year) return false;
+    return true;
+  };
+
+
+  const handleJoinWaitlist = async () => {
+    const toastId = toast.loading('Securing your spot...');
+    try {
+      const dateOfBirth = new Date(`${formData.dob.year}-${formData.dob.month}-${formData.dob.day}`);
+
+      const payload = {
+        ...formData,
+        dob: dateOfBirth
+      };
+      
+      const apiUrl = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+      
+      await axios.post(`${apiUrl}/waitlist`, payload);
+
+      toast.success(
+        <div className="flex flex-col gap-1">
+            <span className="font-bold">You're on the list!</span>
+            <span className="text-xs">We'll notify you when you can fly.</span>
+        </div>, 
+        { id: toastId, duration: 5000 }
+      );
+
+      setTimeout(() => {
+        navigate('/');
+      }, 2000);
+    } catch (err) {
+      console.error(err);
+      const message = err.response?.data?.message || "Connection refused. Are engines on?";
+      toast.error(message, { id: toastId });
+    }
+  };
 
   useEffect(() => {
     if (step === 2) {
@@ -261,7 +327,7 @@ const SignUpFlow = () => {
       const t2 = setTimeout(() => {
         setLoadingText({ line1: "Configuring", line2: "preferences..." });
         setIsExiting(false);
-      }, 3100); 
+      }, 3100);
       const t3 = setTimeout(() => setIsExiting(true), 5500);
       const t4 = setTimeout(() => setStep(3), 6100);
       return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
@@ -272,11 +338,11 @@ const SignUpFlow = () => {
     <div className="min-h-screen bg-white text-gray-900 font-sans flex flex-col selection:bg-[#ffb6e6] selection:text-black relative">
       <style>{premiumStyles}</style>
 
-      {/* Navbar */}
+
       <div className={`w-full px-8 py-6 flex justify-between items-center fixed top-0 left-0 z-50 pointer-events-none transition-opacity duration-500 ${step === 2 ? 'opacity-0' : 'opacity-100'}`}>
         <Link to={'/'} className="flex items-center gap-2 font-bold text-gray-900 tracking-tight text-lg select-none pointer-events-auto">
-            <img src={MainLogo} alt="JobPilot" className='w-5 h-5' />
-            JOBPILOT
+          <img src={MainLogo} alt="JobPilot" className='w-5 h-5' />
+          JOBPILOT
         </Link>
         {step === 1 && (
           <Link to={'/login'} className="text-sm font-medium text-gray-500 pointer-events-auto cursor-pointer hover:text-black transition-colors">
@@ -285,9 +351,28 @@ const SignUpFlow = () => {
         )}
       </div>
 
+      <Toaster position="top-center" toastOptions={{
+        style: {
+           background: '#333',
+           color: '#fff',
+           fontSize: '14px',
+           borderRadius: '8px',
+        },
+        success: {
+            style: {
+                background: 'black',
+                border: '1px solid #222',
+            },
+            iconTheme: {
+                primary: '#ffb6e6',
+                secondary: 'black',
+            },
+        }
+      }} />
+
       <div className="flex-1 flex flex-col items-center justify-center w-full px-6 pt-20 pb-10">
-        
-        {/* --- STEP 1: ACCOUNT DETAILS --- */}
+
+
         {step === 1 && (
           <div className="w-full max-w-[500px] animate-enter">
             <h1 className="text-[2.5rem] font-bold tracking-tighter mb-3 leading-none">Get started</h1>
@@ -304,76 +389,104 @@ const SignUpFlow = () => {
               <div className="h-px bg-gray-200 flex-1"></div>
             </div>
 
-            {/* Inputs Grid */}
+
             <div className="space-y-8 mb-12">
               <div className="grid grid-cols-2 gap-8">
-                 <MinimalInput placeholder="First Name" autoFocus />
-                 <MinimalInput placeholder="Last Name" />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-8 items-end">
-                <SplitDateInput />
-                <CustomGenderSelect />
+                <MinimalInput
+                  placeholder="First Name"
+                  autoFocus
+                  value={formData.firstName}
+                  onChange={(e) => handleInputChange('firstName', e.target.value)}
+                />
+                <MinimalInput
+                  placeholder="Last Name"
+                  value={formData.lastName}
+                  onChange={(e) => handleInputChange('lastName', e.target.value)}
+                />
               </div>
 
-              <MinimalInput placeholder="Email address" type="email" />
-              <MinimalInput placeholder="Password" type="password" />
+              <div className="grid grid-cols-2 gap-8 items-end">
+                <SplitDateInput
+                  value={formData.dob}
+                  onChange={(val) => handleInputChange('dob', val)}
+                />
+                <CustomGenderSelect
+                  value={formData.gender}
+                  onChange={(val) => handleInputChange('gender', val)}
+                />
+              </div>
+
+              <MinimalInput
+                placeholder="Email address"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+              />
+              <MinimalInput
+                placeholder="Password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+              />
             </div>
 
-            <button 
-              onClick={() => setStep(2)}
+            <button
+              onClick={() => {
+                if (validateForm()) setStep(2);
+                else toast.error("Please fill in all required fields.");
+              }}
               className="w-full bg-black text-white h-14 rounded-xl font-bold text-base hover:bg-gray-900 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 group"
             >
               Continue
               <ArrowRight size={18} className="text-[#ffb6e6] group-hover:translate-x-1 transition-transform" />
             </button>
-            
+
             <p className="text-center mt-6 text-xs text-gray-400 font-medium">
               By continuing, you agree to our <a href="/privacy" className="hover:text-black transition-colors">Terms</a> and <a href="/privacy" className="hover:text-black transition-colors">Privacy Policy</a>.
             </p>
           </div>
         )}
 
-        {/* --- STEP 2: LOADING (Dark, Serif, Big) --- */}
+
         {step === 2 && (
           <div className="fixed inset-0 z-50 bg-[#111] flex flex-col items-center justify-center">
             <div className={`text-center transition-all duration-[800ms] ease-in-out px-6 ${isExiting ? 'opacity-0 blur-lg scale-95 translate-y-8' : 'opacity-100 blur-0 scale-100 translate-y-0'}`}>
               <div className="flex flex-col items-center gap-2">
-                 <h2 className="text-4xl md:text-6xl font-serif font-medium tracking-tight text-gray-500 leading-tight">
-                   {loadingText.line1}
-                 </h2>
-                 <h2 className="text-4xl md:text-6xl font-serif font-medium tracking-tight shiny-text-dark leading-tight">
-                   {loadingText.line2}
-                 </h2>
+                <h2 className="text-4xl md:text-6xl font-serif font-medium tracking-tight text-gray-500 leading-tight">
+                  {loadingText.line1}
+                </h2>
+                <h2 className="text-4xl md:text-6xl font-serif font-medium tracking-tight shiny-text-dark leading-tight">
+                  {loadingText.line2}
+                </h2>
               </div>
             </div>
-            
+
             <div className="absolute bottom-0 left-0 h-[2px] bg-[#222] w-full">
               <div className="h-full bg-white animate-[width_6s_ease-in-out_forwards] w-0"></div>
             </div>
           </div>
         )}
 
-        {/* --- STEP 3: ACCESS SELECTION --- */}
+
         {step === 3 && (
           <div className="w-full max-w-[500px] animate-enter">
-            
-            {/* VIEW: MAIN SELECTION */}
+
+
             {accessMode !== 'invite_code_mode' && (
               <>
                 <h1 className="text-[2.5rem] font-bold tracking-tighter mb-3 leading-none">Select access</h1>
                 <p className="text-gray-500 mb-10 text-lg font-medium">Choose how you want to join JobPilot.</p>
 
                 <div className="w-full mb-10">
-                  <OptionRow 
-                    title="Join the Waitlist" 
+                  <OptionRow
+                    title="Join the Waitlist"
                     sub="Secure your spot. Current wait time is approximately 2 weeks."
                     active={accessMode === 'waitlist'}
                     onClick={() => setAccessMode('waitlist')}
                     badge="Free"
                   />
-                  <OptionRow 
-                    title="Priority Access" 
+                  <OptionRow
+                    title="Priority Access"
                     sub="Skip the line (Sold Out)."
                     active={false}
                     disabled={true}
@@ -381,7 +494,7 @@ const SignUpFlow = () => {
                   />
                 </div>
 
-                {/* ENHANCED Waitlist Form */}
+
                 {accessMode === 'waitlist' && (
                   <div className="mb-10 animate-enter space-y-6">
                     <div className="p-1">
@@ -389,27 +502,37 @@ const SignUpFlow = () => {
                         <User size={12} className="text-[#ffb6e6]" /> Tell us about you
                       </label>
                       <div className="space-y-6">
-                        <MinimalInput icon={Search} placeholder="How did you find us?" />
-                        <MinimalInput icon={MessageSquare} placeholder="Why do you want early access?" />
+                        <MinimalInput
+                          icon={Search}
+                          placeholder="How did you find us?"
+                          value={formData.howDidYouFindUs}
+                          onChange={(e) => handleInputChange('howDidYouFindUs', e.target.value)}
+                        />
+                        <MinimalInput
+                          icon={MessageSquare}
+                          placeholder="Why do you want early access?"
+                          value={formData.whyJoin}
+                          onChange={(e) => handleInputChange('whyJoin', e.target.value)}
+                        />
                       </div>
                     </div>
                   </div>
                 )}
 
                 <div className="flex flex-col gap-6">
-                   {/* Invite Code Trigger */}
-                   <div 
-                      onClick={() => setAccessMode('invite_code_mode')}
-                      className="flex items-center justify-between group cursor-pointer py-2 px-1 hover:bg-gray-50 rounded-lg transition-colors"
-                   >
-                      <span className="text-sm font-semibold text-gray-500 group-hover:text-black transition-colors flex items-center gap-2">
-                        <Zap size={16} className="text-[#ffb6e6]" /> I have an invite code
-                      </span>
-                      <ChevronRight size={16} className="text-gray-400 group-hover:text-black transition-colors group-hover:translate-x-1" />
-                   </div>
 
-                  <button 
-                    onClick={() => alert("Application Submitted!")}
+                  <div
+                    onClick={() => setAccessMode('invite_code_mode')}
+                    className="flex items-center justify-between group cursor-pointer py-2 px-1 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <span className="text-sm font-semibold text-gray-500 group-hover:text-black transition-colors flex items-center gap-2">
+                      <Zap size={16} className="text-[#ffb6e6]" /> I have an invite code
+                    </span>
+                    <ChevronRight size={16} className="text-gray-400 group-hover:text-black transition-colors group-hover:translate-x-1" />
+                  </div>
+
+                  <button
+                    onClick={handleJoinWaitlist}
                     className="w-full bg-black text-white h-14 rounded-xl font-bold text-base hover:bg-gray-900 hover:shadow-lg active:scale-[0.98] transition-all duration-200"
                   >
                     {accessMode === 'waitlist' ? 'Join Waitlist' : 'Complete Setup'}
@@ -418,10 +541,10 @@ const SignUpFlow = () => {
               </>
             )}
 
-            {/* VIEW: INVITE CODE INPUT */}
+
             {accessMode === 'invite_code_mode' && (
               <div className="animate-enter">
-                <button 
+                <button
                   onClick={() => setAccessMode('waitlist')}
                   className="mb-8 flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-black transition-colors group"
                 >
@@ -432,22 +555,24 @@ const SignUpFlow = () => {
                 <p className="text-gray-500 mb-12 text-lg font-medium">Please enter your 8-digit access code.</p>
 
                 <div className="mb-12">
-                   <div className="group relative w-full">
-                      <input 
-                        type="text" 
-                        placeholder="JP-XXXX-XXXX"
-                        autoFocus
-                        className="w-full py-6 bg-transparent border-b-2 border-gray-200 text-3xl font-mono font-bold text-gray-900 placeholder-gray-300 outline-none transition-colors duration-300 rounded-none focus:border-[#ffb6e6] uppercase tracking-widest text-center"
-                      />
-                   </div>
+                  <div className="group relative w-full">
+                    <input
+                      type="text"
+                      placeholder="JP-XXXX-XXXX"
+                      autoFocus
+                      className="w-full py-6 bg-transparent border-b-2 border-gray-200 text-3xl font-mono font-bold text-gray-900 placeholder-gray-300 outline-none transition-colors duration-300 rounded-none focus:border-[#ffb6e6] uppercase tracking-widest text-center"
+                      value={formData.inviteCode}
+                      onChange={(e) => handleInputChange('inviteCode', e.target.value)}
+                    />
+                  </div>
                 </div>
 
-                <button 
-                    onClick={() => alert("Code Validated!")}
-                    className="w-full bg-black text-white h-14 rounded-xl font-bold text-base hover:bg-gray-900 hover:shadow-lg active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
-                  >
-                    Validate Code
-                    <ArrowRight size={18} className="text-[#ffb6e6]" />
+                <button
+                  onClick={handleJoinWaitlist}
+                  className="w-full bg-black text-white h-14 rounded-xl font-bold text-base hover:bg-gray-900 hover:shadow-lg active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  Validate Code
+                  <ArrowRight size={18} className="text-[#ffb6e6]" />
                 </button>
               </div>
             )}
