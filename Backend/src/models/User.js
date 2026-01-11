@@ -1,12 +1,7 @@
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
-  firstName: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  lastName: {
+  fullName: {
     type: String,
     required: true,
     trim: true
@@ -22,21 +17,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  dob: {
-    type: Date,
-    required: true
-  },
-  gender: {
-    type: String,
-    enum: ['Male', 'Female', 'Prefer not to say'],
-    required: true
-  },
-  role: {
-    type: String,
-    enum: ['user', 'admin'],
-    default: 'user'
-  },
-  isAccepted: {
+  isBanned: {
     type: Boolean,
     default: false
   },
