@@ -24,7 +24,8 @@ import {
   PlayCircle,
   Cpu,
   Layers,
-  MessageSquare
+  MessageSquare,
+  Menu
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import kimiK2 from '../assets/Secondaire/kimi-k2.png';
@@ -129,136 +130,172 @@ const MenuItem = ({ icon: Icon, title, desc, gradient }) => (
   </a>
 );
 
-const Navbar = () => (
-  <nav className="fixed top-14 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-    <div className="bg-white/80 backdrop-blur-xl border border-white/60 rounded-full px-5 py-3 flex items-center gap-1 shadow-[0_8px_30px_rgb(0,0,0,0.04)] pointer-events-auto max-w-5xl w-full justify-between relative">
+const Navbar = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-      {/* Logo Area */}
-      <div className="flex items-center gap-2 font-bold text-gray-900 tracking-tight text-lg pl-2 select-none cursor-pointer">
-        <img src={MainLogo} alt="JobPilot Logo" className='w-5 h-5' />
-        JOBPILOT
-      </div>
+  return (
+    <nav className="fixed top-14 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+      <div className={`bg-white/80 backdrop-blur-xl border border-white/60 rounded-[2rem] px-5 py-3 flex flex-col md:flex-row items-center gap-1 shadow-[0_8px_30px_rgb(0,0,0,0.04)] pointer-events-auto max-w-5xl w-full justify-between relative transition-all duration-300 ${isMobileMenuOpen ? 'rounded-[2rem]' : 'rounded-full'}`}>
 
-      {/* Navigation Links with Dropdowns */}
-      <div className="hidden md:flex items-center gap-2">
-
-        {/* --- Product Dropdown (Mega Menu) --- */}
-        <div className="nav-item relative px-3 py-2 group cursor-pointer">
-          <button className="flex items-center gap-1.5 text-sm font-bold text-gray-600 hover:text-black transition-colors">
-            Product <ChevronDown size={14} className="chevron transition-transform duration-300 text-gray-400 group-hover:text-black" />
-          </button>
-
-          {/* Bento Dropdown Panel */}
-          <div className="nav-dropdown absolute top-[calc(100%+20px)] left-1/2 w-[700px] bg-white rounded-[2rem] shadow-[0_50px_100px_-20px_rgba(50,50,93,0.15)] border border-gray-100 p-2 opacity-0 invisible z-50 overflow-hidden flex">
-
-            {/* Left Column: Features Grid */}
-            <div className="w-[60%] p-4 grid grid-cols-1 gap-1">
-              <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Core Platform</div>
-              <MenuItem
-                icon={Sparkles}
-                gradient="from-purple-100 to-purple-50"
-                title="Reasoning Engine"
-                desc="Context-aware AI that writes like you."
-              />
-              <MenuItem
-                icon={Globe}
-                gradient="from-blue-100 to-blue-50"
-                title="Browser Extension"
-                desc="Coming soon: Apply directly on job boards."
-              />
-              <MenuItem
-                icon={Shield}
-                gradient="from-pink-100 to-pink-50"
-                title="Privacy Vault"
-                desc="Local-first storage. Zero data egress."
-              />
-            </div>
-
-            {/* Right Column: Spotlight Card */}
-            <div className="w-[40%] bg-gray-50 rounded-[1.5rem] p-6 flex flex-col justify-between border border-gray-100/50 m-2 relative overflow-hidden group/card">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-pink-200 to-purple-200 rounded-full blur-3xl opacity-20 group-hover/card:opacity-40 transition-opacity"></div>
-
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-gray-200 shadow-sm mb-4">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                  <span className="text-[10px] font-bold uppercase tracking-wide">New Release</span>
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 leading-tight mb-2">kimi-k2 is here</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  Our fastest, most reliable agent yet. Tailor applications in half the time with improved context retention.
-                </p>
-              </div>
-
-              <div className="mt-8">
-                <img src={kimiK2} alt="Preview" className="w-full h-32 object-cover rounded-xl shadow-sm opacity-80 grayscale group-hover/card:grayscale-0 transition-all duration-500 mix-blend-multiply" />
-                <div className="flex items-center gap-2 mt-4 text-xs font-bold text-gray-900 group-hover/card:translate-x-1 transition-transform cursor-pointer">
-                  See Changelog <ArrowRight size={12} />
-                </div>
-              </div>
-            </div>
+        <div className="w-full md:w-auto flex justify-between items-center">
+          <div className="flex items-center gap-2 font-bold text-gray-900 tracking-tight text-lg pl-2 select-none cursor-pointer">
+            <img src={MainLogo} alt="JobPilot Logo" className='w-5 h-5' />
+            JOBPILOT
           </div>
+
+          <button
+            className="md:hidden p-2 text-gray-600 hover:text-black hover:bg-gray-100 rounded-full transition-colors"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
 
-        {/* --- Resources Dropdown --- */}
-        <div className="nav-item relative px-3 py-2 group cursor-pointer">
-          <button className="flex items-center gap-1.5 text-sm font-bold text-gray-600 hover:text-black transition-colors">
-            Resources <ChevronDown size={14} className="chevron transition-transform duration-300 text-gray-400 group-hover:text-black" />
-          </button>
+        <div className="hidden md:flex items-center gap-2">
+          <div className="nav-item relative px-3 py-2 group cursor-pointer">
+            <button className="flex items-center gap-1.5 text-sm font-bold text-gray-600 hover:text-black transition-colors">
+              Product <ChevronDown size={14} className="chevron transition-transform duration-300 text-gray-400 group-hover:text-black" />
+            </button>
+            <div className="nav-dropdown absolute top-[calc(100%+20px)] left-1/2 w-[700px] bg-white rounded-[2rem] shadow-[0_50px_100px_-20px_rgba(50,50,93,0.15)] border border-gray-100 p-2 opacity-0 invisible z-50 overflow-hidden flex">
+              <div className="w-[60%] p-4 grid grid-cols-1 gap-1">
+                <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Core Platform</div>
+                <MenuItem
+                  icon={Sparkles}
+                  gradient="from-purple-100 to-purple-50"
+                  title="Reasoning Engine"
+                  desc="Context-aware AI that writes like you."
+                />
+                <MenuItem
+                  icon={Globe}
+                  gradient="from-blue-100 to-blue-50"
+                  title="Browser Extension"
+                  desc="Coming soon: Apply directly on job boards."
+                />
+                <MenuItem
+                  icon={Shield}
+                  gradient="from-pink-100 to-pink-50"
+                  title="Privacy Vault"
+                  desc="Local-first storage. Zero data egress."
+                />
+              </div>
 
-          <div className="nav-dropdown absolute top-[calc(100%+20px)] left-1/2 w-[400px] bg-white rounded-[2rem] shadow-[0_50px_100px_-20px_rgba(50,50,93,0.15)] border border-gray-100 p-2 opacity-0 invisible z-50">
-            <div className="p-2 space-y-1">
-              <MenuItem
-                icon={FileText}
-                gradient="from-orange-100 to-orange-50"
-                title="Success Stories"
-                desc="See how Alex got hired at Stripe."
-              />
-              <MenuItem
-                icon={BookOpen}
-                gradient="from-sky-100 to-sky-50"
-                title="Documentation"
-                desc="Guides for local deployment."
-              />
-              <MenuItem
-                icon={Mail}
-                gradient="from-emerald-100 to-emerald-50"
-                title="Manifesto"
-                desc="Why the hiring market is broken."
-              />
-            </div>
-
-            {/* Footer Link */}
-            <div
-              className="mt-2 p-4 bg-gray-50 rounded-2xl border border-gray-100/50 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer group/link"
-              onClick={() => window.open('https://github.com/Atig-Hamza/JobPilot', '_blank')}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white">
-                  <Github size={16} />
-                </div>
+              <div className="w-[40%] bg-gray-50 rounded-[1.5rem] p-6 flex flex-col justify-between border border-gray-100/50 m-2 relative overflow-hidden group/card">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-pink-200 to-purple-200 rounded-full blur-3xl opacity-20 group-hover/card:opacity-40 transition-opacity"></div>
                 <div>
-                  <div className="text-xs font-bold text-gray-900">Open Source</div>
-                  <div className="text-[10px] text-gray-500">Star us on GitHub</div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-gray-200 shadow-sm mb-4">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    <span className="text-[10px] font-bold uppercase tracking-wide">New Release</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 leading-tight mb-2">kimi-k2 is here</h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    Our fastest, most reliable agent yet. Tailor applications in half the time with improved context retention.
+                  </p>
+                </div>
+                <div className="mt-8">
+                  <img src={kimiK2} alt="Preview" className="w-full h-32 object-cover rounded-xl shadow-sm opacity-80 grayscale group-hover/card:grayscale-0 transition-all duration-500 mix-blend-multiply" />
+                  <div className="flex items-center gap-2 mt-4 text-xs font-bold text-gray-900 group-hover/card:translate-x-1 transition-transform cursor-pointer">
+                    See Changelog <ArrowRight size={12} />
+                  </div>
                 </div>
               </div>
-              <ArrowRight size={14} className="text-gray-400 group-hover/link:text-black group-hover/link:translate-x-1 transition-all" />
             </div>
           </div>
+
+          <div className="nav-item relative px-3 py-2 group cursor-pointer">
+            <button className="flex items-center gap-1.5 text-sm font-bold text-gray-600 hover:text-black transition-colors">
+              Resources <ChevronDown size={14} className="chevron transition-transform duration-300 text-gray-400 group-hover:text-black" />
+            </button>
+
+            <div className="nav-dropdown absolute top-[calc(100%+20px)] left-1/2 w-[400px] bg-white rounded-[2rem] shadow-[0_50px_100px_-20px_rgba(50,50,93,0.15)] border border-gray-100 p-2 opacity-0 invisible z-50">
+              <div className="p-2 space-y-1">
+                <MenuItem
+                  icon={FileText}
+                  gradient="from-orange-100 to-orange-50"
+                  title="Success Stories"
+                  desc="See how Alex got hired at Stripe."
+                />
+                <MenuItem
+                  icon={BookOpen}
+                  gradient="from-sky-100 to-sky-50"
+                  title="Documentation"
+                  desc="Guides for local deployment."
+                />
+                <MenuItem
+                  icon={Mail}
+                  gradient="from-emerald-100 to-emerald-50"
+                  title="Manifesto"
+                  desc="Why the hiring market is broken."
+                />
+              </div>
+
+              <div
+                className="mt-2 p-4 bg-gray-50 rounded-2xl border border-gray-100/50 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer group/link"
+                onClick={() => window.open('https://github.com/Atig-Hamza/JobPilot', '_blank')}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white">
+                    <Github size={16} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-gray-900">Open Source</div>
+                    <div className="text-[10px] text-gray-500">Star us on GitHub</div>
+                  </div>
+                </div>
+                <ArrowRight size={14} className="text-gray-400 group-hover/link:text-black group-hover/link:translate-x-1 transition-all" />
+              </div>
+            </div>
+          </div>
+
+          <a href="#" className="px-3 py-2 text-sm font-bold text-gray-600 hover:text-black transition-colors">Pricing</a>
         </div>
 
-        <a href="#" className="px-3 py-2 text-sm font-bold text-gray-600 hover:text-black transition-colors">Pricing</a>
-      </div>
+        <div className="hidden md:flex items-center gap-4">
+          <Link to="/login" className="text-sm font-bold text-gray-900 hover:text-black hidden sm:block">Login</Link>
+          <Link to="/signup" className="bg-[#ffb6e6] hover:bg-pink-300 text-gray-900 px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm">
+            Get Started
+          </Link>
+        </div>
 
-      {/* Action Buttons */}
-      <div className="flex items-center gap-4">
-        <Link to="/login" className="text-sm font-bold text-gray-900 hover:text-black hidden sm:block">Login</Link>
-        <Link to="/signup" className="bg-[#ffb6e6] hover:bg-pink-300 text-gray-900 px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm">
-          Get Started
-        </Link>
+        {isMobileMenuOpen && (
+          <div className="md:hidden w-full pt-4 pb-2 px-2 flex flex-col gap-2 border-t border-gray-100 mt-2">
+            <div className="flex flex-col gap-1">
+              <div className="px-4 py-2">
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Product</div>
+                <MenuItem icon={Sparkles} gradient="from-purple-100 to-purple-50" title="Reasoning Engine" desc="Context-aware AI." />
+                <MenuItem icon={Globe} gradient="from-blue-100 to-blue-50" title="Browser Extension" desc="Coming soon." />
+                <MenuItem icon={Shield} gradient="from-pink-100 to-pink-50" title="Privacy Vault" desc="Local-first storage." />
+              </div>
+
+              <div className="px-4 py-2 border-t border-gray-50 mt-2">
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Resources</div>
+                <MenuItem icon={FileText} gradient="from-orange-100 to-orange-50" title="Success Stories" desc="" />
+                <MenuItem icon={BookOpen} gradient="from-sky-100 to-sky-50" title="Documentation" desc="" />
+              </div>
+
+              <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-gray-50 transition-all">
+                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                  <Zap size={18} className="text-gray-900" />
+                </div>
+                <div className="text-sm font-bold text-gray-900">Pricing</div>
+              </a>
+            </div>
+
+            <div className="h-px bg-gray-100 my-2"></div>
+
+            <div className="flex flex-col gap-3 p-2">
+              <Link to="/login" className="w-full text-center py-3 text-sm font-bold text-gray-900 hover:bg-gray-50 rounded-xl transition-colors">
+                Login
+              </Link>
+              <Link to="/signup" className="w-full text-center bg-[#ffb6e6] hover:bg-pink-300 text-gray-900 py-3 rounded-xl text-sm font-bold transition-all shadow-sm">
+                Get Started
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
-  </nav>
-);
+    </nav>
+  );
+};
 
 
 
@@ -426,13 +463,13 @@ const App = () => {
         </div>
 
         {/* Hero Content */}
-        <div className="max-w-5xl mx-auto z-10">
+        <div className="max-w-5xl mx-auto z-10 flex flex-col items-center text-center">
           <h1 className="text-6xl md:text-[6.5rem] font-bold tracking-tight text-gray-900 mb-6 leading-[1.05]">
             The career <br />
             agent built for
           </h1>
           <div className="mb-10">
-            <span className="inline-flex items-center gap-2 bg-[#ffb6e6] px-8 py-2 rounded-full text-5xl md:text-[4rem] font-bold italic tracking-tight transform -rotate-2 border border-pink-300">
+            <span className="inline-flex items-center gap-2 bg-[#ffb6e6] px-8 py-2 rounded-full text-5xl md:text-[4rem] max-sm:text-4xl font-bold italic tracking-tight transform -rotate-2 border border-pink-300">
               <Sparkles size={40} className="fill-black text-black" /> privacy first
             </span>
           </div>
