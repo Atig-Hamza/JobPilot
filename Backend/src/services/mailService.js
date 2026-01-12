@@ -76,3 +76,30 @@ export const sendWaitlistEmail = async ({ email, name }) => {
         return false
     }
 }
+
+export const sendNewJoinWaitlistToAdmins = async (fullName) => {
+    try {
+        const adminEmail = process.env.ADMIN_EMAIL
+        if (!adminEmail) throw new Error('Admin email not configured.')
+        const html = generateInlineHtml(`
+            <h1>New Explorer Detected</h1>
+            <p>A new user has requested access to the JobPilot platform.</p>
+            <div style="background-color: #fafafa; border: 1px solid #e4e4e7; border-radius: 8px; padding: 24px; margin: 24px 0;">
+            <p style="margin: 0; font-size: 14px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Full Name</p>
+            <p style="margin: 8px 0 0 0; font-size: 18px; color: #18181b; font-weight: 500;">${fullName}</p>
+            </div>
+            <p>This user has been added to the database and represents another step forward for the community.</p>
+        `)
+        const subject = `New Waitlist Signup: ${fullName}`
+        await transporter.sendMail({
+            from: `"JobPilot Notifications" <${process.env.SMTP_USER}>`,
+            to: adminEmail,
+            subject: subject,
+            html: html
+        })
+        return true
+    } catch (error) {
+        console.error('Admin notification email error:', error)
+        return false
+    }
+}
