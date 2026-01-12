@@ -27,7 +27,7 @@ const Authenticate = ({ allowedRoles }) => {
     }
 
     if (isVerified === null) {
-        return <div>Loading...</div>;
+        return <div className='h-screen w-screen bg-white dark:bg-black'></div>;
     }
 
     if (allowedRoles && !allowedRoles.includes(user.role)) {
