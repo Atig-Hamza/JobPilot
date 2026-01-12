@@ -1,9 +1,10 @@
 import express from 'express';
 import * as waitlistController from '../controllers/waitlistController.js';
+import { protect, restrictTo } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
 router.post('/', waitlistController.joinWaitlist);
-router.get('/', waitlistController.getWaitlist);
+router.get('/', protect, restrictTo('admin'), waitlistController.getWaitlist);
 
 export default router;
