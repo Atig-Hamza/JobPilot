@@ -25,11 +25,11 @@ function App() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/password-recovery" element={<PasswordRecovery />} />
         <Route path="/soon" element={<ComingSoon />} />
-        <Route path="/portal" element={<PortalSelection />} />
         {/* user */}
         <Route path="/user/dashboard" element={<UserDashboard />} />
         <Route path="/user/autopilot" element={<AutoPilotAgent />} />
         {/* admin */}
+        <Route path="/admin/portal" element={<PortalSelection />} />
       </Routes>
     </Router>
   );
