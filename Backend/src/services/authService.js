@@ -38,3 +38,16 @@ export const login = async (email, password) => {
 
     return { token, safeUser };
 };
+
+export const verifyToken = async (token) => {
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+        if (!user) {
+            throw new AppError('User not found', 404);
+        }
+        return true;
+    } catch (err) {
+        throw new AppError('Invalid or expired token', 401);
+    }
+};
