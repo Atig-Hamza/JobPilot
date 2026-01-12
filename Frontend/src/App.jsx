@@ -11,6 +11,7 @@ import NotFound from './pages/404';
 import UserDashboard from './pages/user/UserDashboard';
 import AutoPilotAgent from './pages/user/AutoPilotAgent';
 import PortalSelection from './pages/admin/Portal';
+import Authenticate from './middleware/authenticate';
 
 
 function App() {
@@ -25,11 +26,15 @@ function App() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/password-recovery" element={<PasswordRecovery />} />
         <Route path="/soon" element={<ComingSoon />} />
-        {/* user */}
-        <Route path="/user/dashboard" element={<UserDashboard />} />
-        <Route path="/user/autopilot" element={<AutoPilotAgent />} />
-        {/* admin */}
-        <Route path="/admin/portal" element={<PortalSelection />} />
+
+        <Route element={<Authenticate allowedRoles={['user', 'admin']} />}>
+          <Route path="/user/dashboard" element={<UserDashboard />} />
+          <Route path="/user/autopilot" element={<AutoPilotAgent />} />
+        </Route>
+
+        <Route element={<Authenticate allowedRoles={['admin']} />}>
+          <Route path="/admin/portal" element={<PortalSelection />} />
+        </Route>
       </Routes>
     </Router>
   );
