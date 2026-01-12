@@ -1,6 +1,6 @@
 import Waitlist from '../models/Waitlist.js';
 import { AppError } from '../utils/AppError.js';
-import { sendWaitlistEmail } from './mailService.js';
+import { sendNewJoinWaitlistToAdmins, sendWaitlistEmail } from './mailService.js';
 
 export const addToWaitlist = async (data) => {
     const { email, firstName, lastName } = data;
@@ -18,6 +18,7 @@ export const addToWaitlist = async (data) => {
     const newEntry = await Waitlist.create(data);
     
     sendWaitlistEmail({ email, name });
+    sendNewJoinWaitlistToAdmins(name);
 
     return newEntry;
 };
