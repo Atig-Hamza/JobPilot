@@ -6,6 +6,7 @@ import connectDB from './src/config/database.js';
 import routes from './src/routes/index.js';
 import errorHandler from './src/middlewares/errorHandler.js';
 import { AppError } from './src/utils/AppError.js';
+import { adminAccountInit } from './src/models/User.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,6 +23,8 @@ app.all('*', (req, res, next) => {
 });
 
 app.use(errorHandler);
+
+adminAccountInit();
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on port ${PORT}`);
