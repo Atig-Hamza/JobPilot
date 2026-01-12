@@ -1,12 +1,33 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
+import axios from 'axios';
 
 const Authenticate = ({ allowedRoles }) => {
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-    if (!token) {
+    const [isVerified, setIsVerified] = React.useState(null);
+
+    React.useEffect(() => {
+        if (!token) {
+            setIsVerified(false);
+            return;
+        }
+        axios.post(`${import.meta.env.VITE_BACKEND_API_URL}/auth/verify-token`, { token })
+            .then(res => {
+                setIsVerified(res.status === 200);
+            })
+            .catch(() => {
+                setIsVerified(false);
+            });
+    }, [token]);
+
+    if (!token || isVerified === false) {
         return <Navigate to="/login" replace />;
+    }
+
+    if (isVerified === null) {
+        return <div>Loading...</div>;
     }
 
     if (allowedRoles && !allowedRoles.includes(user.role)) {
@@ -18,6 +39,7 @@ const Authenticate = ({ allowedRoles }) => {
     }
 
     return <Outlet />;
-};
+}
+
 
 export default Authenticate;
