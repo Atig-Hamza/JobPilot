@@ -58,13 +58,20 @@ const JobPilotDashboard = () => {
             if (activeMode === 'jop1_scrape') {
                 response = await fetch(`${API_URL}/crawl`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    },
                     body: JSON.stringify({ keywords: inputValue, country: selectedCountry, limit: 5 })
                 });
             } else {
                 response = await fetch(`${API_URL}/llm/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    },
                     body: JSON.stringify({ prompt: apiPrompt, roomId: roomId })
                 });
             }
