@@ -135,9 +135,17 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-14 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-      <div className={`bg-white/80 backdrop-blur-xl border border-white/60 rounded-[2rem] px-5 py-3 flex flex-col md:flex-row items-center gap-1 shadow-[0_8px_30px_rgb(0,0,0,0.04)] pointer-events-auto max-w-5xl w-full justify-between relative transition-all duration-300 ${isMobileMenuOpen ? 'rounded-[2rem]' : 'rounded-full'}`}>
-
-        <div className="w-full md:w-auto flex justify-between items-center">
+      <div 
+        className={`
+          bg-white/80 backdrop-blur-xl border border-white/60 
+          shadow-[0_8px_30px_rgb(0,0,0,0.04)] pointer-events-auto 
+          max-w-5xl w-full relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]
+          flex flex-col md:flex-row md:items-center justify-between
+          ${isMobileMenuOpen ? 'rounded-[2rem]' : 'rounded-full'}
+          md:rounded-full
+        `}
+      >
+        <div className="flex items-center justify-between px-5 py-3 w-full md:w-auto z-20">
           <div className="flex items-center gap-2 font-bold text-gray-900 tracking-tight text-lg pl-2 select-none cursor-pointer">
             <img src={MainLogo} alt="JobPilot Logo" className='w-5 h-5' />
             JOBPILOT
@@ -154,29 +162,14 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-2">
           <div className="nav-item relative px-3 py-2 group cursor-pointer">
             <button className="flex items-center gap-1.5 text-sm font-bold text-gray-600 hover:text-black transition-colors">
-              Product <ChevronDown size={14} className="chevron transition-transform duration-300 text-gray-400 group-hover:text-black" />
+              Product <ChevronDown size={14} className="chevron transition-transform duration-300 text-gray-400 group-hover:text-black group-hover:rotate-180" />
             </button>
-            <div className="nav-dropdown absolute top-[calc(100%+20px)] left-1/2 w-[700px] bg-white rounded-[2rem] shadow-[0_50px_100px_-20px_rgba(50,50,93,0.15)] border border-gray-100 p-2 opacity-0 invisible z-50 overflow-hidden flex">
+            <div className="nav-dropdown absolute top-[calc(100%+20px)] left-1/2 -translate-x-1/2 w-[700px] bg-white rounded-[2rem] shadow-[0_50px_100px_-20px_rgba(50,50,93,0.15)] border border-gray-100 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden flex">
               <div className="w-[60%] p-4 grid grid-cols-1 gap-1">
                 <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Core Platform</div>
-                <MenuItem
-                  icon={Sparkles}
-                  gradient="from-purple-100 to-purple-50"
-                  title="Reasoning Engine"
-                  desc="Context-aware AI that writes like you."
-                />
-                <MenuItem
-                  icon={Globe}
-                  gradient="from-blue-100 to-blue-50"
-                  title="Browser Extension"
-                  desc="Coming soon: Apply directly on job boards."
-                />
-                <MenuItem
-                  icon={Shield}
-                  gradient="from-pink-100 to-pink-50"
-                  title="Privacy Vault"
-                  desc="Local-first storage. Zero data egress."
-                />
+                <MenuItem icon={Sparkles} gradient="from-purple-100 to-purple-50" title="Reasoning Engine" desc="Context-aware AI that writes like you." />
+                <MenuItem icon={Globe} gradient="from-blue-100 to-blue-50" title="Browser Extension" desc="Coming soon: Apply directly on job boards." />
+                <MenuItem icon={Shield} gradient="from-pink-100 to-pink-50" title="Privacy Vault" desc="Local-first storage. Zero data egress." />
               </div>
 
               <div className="w-[40%] bg-gray-50 rounded-[1.5rem] p-6 flex flex-col justify-between border border-gray-100/50 m-2 relative overflow-hidden group/card">
@@ -203,35 +196,17 @@ const Navbar = () => {
 
           <div className="nav-item relative px-3 py-2 group cursor-pointer">
             <button className="flex items-center gap-1.5 text-sm font-bold text-gray-600 hover:text-black transition-colors">
-              Resources <ChevronDown size={14} className="chevron transition-transform duration-300 text-gray-400 group-hover:text-black" />
+              Resources <ChevronDown size={14} className="chevron transition-transform duration-300 text-gray-400 group-hover:text-black group-hover:rotate-180" />
             </button>
 
-            <div className="nav-dropdown absolute top-[calc(100%+20px)] left-1/2 w-[400px] bg-white rounded-[2rem] shadow-[0_50px_100px_-20px_rgba(50,50,93,0.15)] border border-gray-100 p-2 opacity-0 invisible z-50">
+            <div className="nav-dropdown absolute top-[calc(100%+20px)] left-1/2 -translate-x-1/2 w-[400px] bg-white rounded-[2rem] shadow-[0_50px_100px_-20px_rgba(50,50,93,0.15)] border border-gray-100 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
               <div className="p-2 space-y-1">
-                <MenuItem
-                  icon={FileText}
-                  gradient="from-orange-100 to-orange-50"
-                  title="Success Stories"
-                  desc="See how Alex got hired at Stripe."
-                />
-                <MenuItem
-                  icon={BookOpen}
-                  gradient="from-sky-100 to-sky-50"
-                  title="Documentation"
-                  desc="Guides for local deployment."
-                />
-                <MenuItem
-                  icon={Mail}
-                  gradient="from-emerald-100 to-emerald-50"
-                  title="Manifesto"
-                  desc="Why the hiring market is broken."
-                />
+                <MenuItem icon={FileText} gradient="from-orange-100 to-orange-50" title="Success Stories" desc="See how Alex got hired at Stripe." />
+                <MenuItem icon={BookOpen} gradient="from-sky-100 to-sky-50" title="Documentation" desc="Guides for local deployment." />
+                <MenuItem icon={Mail} gradient="from-emerald-100 to-emerald-50" title="Manifesto" desc="Why the hiring market is broken." />
               </div>
 
-              <div
-                className="mt-2 p-4 bg-gray-50 rounded-2xl border border-gray-100/50 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer group/link"
-                onClick={() => window.open('https://github.com/Atig-Hamza/JobPilot', '_blank')}
-              >
+              <div className="mt-2 p-4 bg-gray-50 rounded-2xl border border-gray-100/50 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer group/link" onClick={() => window.open('https://github.com/Atig-Hamza/JobPilot', '_blank')}>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white">
                     <Github size={16} />
@@ -249,49 +224,49 @@ const Navbar = () => {
           <a href="#" className="px-3 py-2 text-sm font-bold text-gray-600 hover:text-black transition-colors">Pricing</a>
         </div>
 
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-4 px-5">
           <Link to="/login" className="text-sm font-bold text-gray-900 hover:text-black hidden sm:block">Login</Link>
           <Link to="/signup" className="bg-[#ffb6e6] hover:bg-pink-300 text-gray-900 px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm">
             Get Started
           </Link>
         </div>
 
-        {isMobileMenuOpen && (
-          <div className="md:hidden w-full pt-4 pb-2 px-2 flex flex-col gap-2 border-t border-gray-100 mt-2">
-            <div className="flex flex-col gap-1">
-              <div className="px-4 py-2">
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Product</div>
+        <div className={`md:hidden w-full overflow-hidden transition-[max-height,opacity] duration-500 ease-in-out ${isMobileMenuOpen ? 'max-h-[85vh] opacity-100 visible' : 'max-h-0 opacity-0 invisible'}`}>
+          <div className="flex flex-col gap-2 border-t border-gray-100/50 pt-4 pb-4 px-2">
+            <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
+              <div className="px-2">
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Product</div>
                 <MenuItem icon={Sparkles} gradient="from-purple-100 to-purple-50" title="Reasoning Engine" desc="Context-aware AI." />
                 <MenuItem icon={Globe} gradient="from-blue-100 to-blue-50" title="Browser Extension" desc="Coming soon." />
                 <MenuItem icon={Shield} gradient="from-pink-100 to-pink-50" title="Privacy Vault" desc="Local-first storage." />
               </div>
 
-              <div className="px-4 py-2 border-t border-gray-50 mt-2">
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Resources</div>
+              <div className="px-2 border-t border-gray-50 mt-2 pt-2">
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Resources</div>
                 <MenuItem icon={FileText} gradient="from-orange-100 to-orange-50" title="Success Stories" desc="" />
                 <MenuItem icon={BookOpen} gradient="from-sky-100 to-sky-50" title="Documentation" desc="" />
               </div>
 
-              <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-gray-50 transition-all">
-                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-                  <Zap size={18} className="text-gray-900" />
+              <a href="#" className="flex items-center gap-4 p-4 mx-2 rounded-2xl hover:bg-gray-50 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+                  <Zap size={20} className="text-gray-900" />
                 </div>
                 <div className="text-sm font-bold text-gray-900">Pricing</div>
               </a>
             </div>
 
-            <div className="h-px bg-gray-100 my-2"></div>
+            <div className="h-px bg-gray-100 my-2 mx-4"></div>
 
-            <div className="flex flex-col gap-3 p-2">
-              <Link to="/login" className="w-full text-center py-3 text-sm font-bold text-gray-900 hover:bg-gray-50 rounded-xl transition-colors">
+            <div className="flex flex-col gap-3 px-2">
+              <Link to="/login" className="w-full text-center py-4 text-sm font-bold text-gray-900 hover:bg-gray-50 rounded-2xl transition-colors">
                 Login
               </Link>
-              <Link to="/signup" className="w-full text-center bg-[#ffb6e6] hover:bg-pink-300 text-gray-900 py-3 rounded-xl text-sm font-bold transition-all shadow-sm">
+              <Link to="/signup" className="w-full text-center bg-[#ffb6e6] hover:bg-pink-300 text-gray-900 py-4 rounded-2xl text-sm font-bold transition-all shadow-sm">
                 Get Started
               </Link>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </nav>
   );
