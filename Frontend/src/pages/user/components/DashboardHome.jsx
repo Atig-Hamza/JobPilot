@@ -51,7 +51,12 @@ const DashboardHome = ({ activeMode, handleModeChange, todayDate, creditBalance 
                 </div>
 
                 <div className="relative w-full">
-                    <div className="flex gap-4 overflow-x-auto pb-6 pt-2 px-1 scrollbar-hide snap-x">
+                    <div className="flex gap-4 overflow-x-auto pb-6 pt-2 px-1 scrollbar-hide snap-x" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                        <style>{`
+                            .scrollbar-hide::-webkit-scrollbar {
+                                display: none;
+                            }
+                        `}</style>
                         <div className="min-w-[260px] h-[85px] bg-white dark:bg-[#111111] border border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-[0_4px_20px_-10px_rgba(59,130,246,0.3)] transition-all rounded-2xl flex items-center justify-between p-5 cursor-pointer snap-start relative overflow-hidden group">
                             <div className="z-10 flex flex-col justify-center h-full">
                                 <span className="font-bold text-[15px] text-gray-900 dark:text-gray-100 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">New<br />Application</span>
