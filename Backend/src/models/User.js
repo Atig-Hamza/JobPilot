@@ -53,7 +53,8 @@ export const adminAccountInit = async () => {
       email: adminEmail,
       password: adminPassword,
       role: 'admin',
-      isVerified: true
+      isVerified: true,
+      credits: Infinity
     });
     console.log('Admin account created');
   }
