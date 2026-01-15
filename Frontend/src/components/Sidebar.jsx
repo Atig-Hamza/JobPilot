@@ -160,7 +160,15 @@ const Sidebar = ({ activePage = 'dashboard' }) => {
                             />
                             <MenuItem icon={<Settings />} label="Settings" />
                             <div className="h-px bg-gray-100 my-1 dark:bg-[#2A2A2A]"></div>
-                            <MenuItem icon={<LogOut />} label="Log Out" isDanger />
+                            <MenuItem 
+                                onClick={() => {
+                                    localStorage.removeItem('token');
+                                    navigate('/login');
+                                }} 
+                                icon={<LogOut />} 
+                                label="Log Out" 
+                                isDanger 
+                            />
                         </div>
                     </div>
                 )}
