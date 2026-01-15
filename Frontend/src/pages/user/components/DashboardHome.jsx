@@ -17,6 +17,8 @@ import CompanyRow from './CompanyRow';
 import JopBg from '../../../assets/User/JOP.png';
 
 const DashboardHome = ({ activeMode, handleModeChange, todayDate, creditBalance }) => {
+    const username = JSON.parse(localStorage.getItem('user')).fullName || 'User';
+    const role = JSON.parse(localStorage.getItem('user')).role || 'User';
     return (
         <div className="w-full max-w-[1600px] space-y-8">
             <header className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-2">
@@ -25,8 +27,8 @@ const DashboardHome = ({ activeMode, handleModeChange, todayDate, creditBalance 
                         <Calendar size={12} />
                         <span>{todayDate}</span>
                     </div>
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white tracking-tight">
-                        Welcome back, Sam.
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
+                        Welcome Back, {username}
                     </h2>
                 </div>
                 <div className="group flex items-center gap-3 bg-white dark:bg-[#111111] p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md hover:border-gray-300 dark:hover:border-gray-700 transition-all cursor-pointer">
