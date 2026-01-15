@@ -1,8 +1,6 @@
 import { Home, Users, Ticket, FileText, Settings, LogOut, Menu, X, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import MainLogo from '../../../assets/Main/logo-without-bg.png';
-import MainLogoWhite from '../../../assets/Main/logo-white-without-bg.png';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
@@ -18,7 +16,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   return (
     <>
-      {/* Mobile Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/50 lg:hidden"
@@ -26,13 +23,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         />
       )}
 
-      {/* Sidebar Container */}
       <aside
         className={`fixed inset-y-0 left-0 z-30 w-72 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        {/* Header */}
         <div className="flex items-center justify-between p-6">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-purple-600 flex items-center justify-center">
@@ -45,7 +40,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           </button>
         </div>
 
-        {/* CTA Button */}
         <div className="px-6 mb-6">
           <button className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl p-3 flex items-center justify-center gap-2 font-medium shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all">
             <Plus size={20} />
@@ -53,7 +47,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           </button>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
           <p className="px-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Main Menu</p>
           {menuItems.map((item) => (
@@ -84,7 +77,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           </div>
         </nav>
 
-        {/* User Profile */}
         <div className="p-4 border-t border-zinc-200 dark:border-zinc-800">
           <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
             <img
@@ -94,7 +86,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-zinc-900 dark:text-white truncate">Courtney Henry</p>
-              <p className="text-xs text-zinc-500 truncate">admin@jobpilot.com</p>
+              <p className="text-xs text-zinc-500 truncate">hamzaatig@icloud.com</p>
             </div>
             <LogOut size={18} className="text-zinc-400 hover:text-red-500" />
           </div>
