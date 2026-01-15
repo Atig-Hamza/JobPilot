@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { 
     Menu, X, Home, Sparkles, Briefcase, Code2, Users, 
@@ -10,49 +11,76 @@ import MainLogoWhite from '../../../assets/Main/logo-white-without-bg.png';
 import { useTheme } from '../../../context/ThemeContext';
 
 const NavItem = ({ icon, label, onClick, active, badge, isPro, isDanger, autoClose = true, rightElement, collapsed = false, setIsMenuOpen, isMobile }) => {
+    const [hoverCoords, setHoverCoords] = useState(null);
+    
     const handleClick = (e) => {
         if (onClick) onClick(e);
         if (isMobile && autoClose) setIsMenuOpen(false);
     };
 
+    const handleMouseEnter = (e) => {
+        if (collapsed) {
+             const rect = e.currentTarget.getBoundingClientRect();
+             setHoverCoords({
+                 top: rect.top + rect.height / 2,
+                 left: rect.right + 12
+             });
+        }
+    };
+
+    const handleMouseLeave = () => {
+        setHoverCoords(null);
+    };
+
     return (
-        <div 
-            onClick={handleClick}
-            className={`flex items-center gap-4 px-4 py-3.5 rounded-xl cursor-pointer transition-all duration-200 active:scale-95 group relative ${
-                active
-                    ? 'bg-[#F1F5F9] dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 font-semibold'
-                    : isDanger
-                        ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A1A1A] hover:text-gray-900 dark:hover:text-gray-200'
-            } ${collapsed ? 'justify-center px-2' : ''}`}
-            title={collapsed ? label : undefined}
-        >
-            <div className={`${active ? "text-gray-900 dark:text-gray-100" : isDanger ? "text-red-500" : "text-gray-500 dark:text-gray-500"} flex-shrink-0`}>
-                {React.cloneElement(icon, { size: 22 })}
-            </div>
-            
-            {!collapsed && (
-                <>
+        <>
+            <div 
+                onClick={handleClick}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                className={`flex items-center py-3.5 rounded-xl cursor-pointer transition-all duration-500 active:scale-95 group relative ${
+                    active
+                        ? 'bg-[#F1F5F9] dark:bg-[#121111] text-gray-900 dark:text-gray-100 font-semibold'
+                        : isDanger
+                            ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A1A1A] hover:text-gray-900 dark:hover:text-gray-200'
+                } ${collapsed ? 'justify-center px-2' : 'px-4'}`}
+            >
+                <div className={`${active ? "text-gray-900 dark:text-gray-100" : isDanger ? "text-red-500" : "text-gray-500 dark:text-gray-500"} flex-shrink-0 transition-all duration-[400ms]`}>
+                    {React.cloneElement(icon, { size: 22 })}
+                </div>
+                
+                <div className={`flex items-center flex-1 overflow-hidden transition-all duration-[400ms] ease-in-out ${collapsed ? 'max-w-0 opacity-0 ml-0' : 'max-w-[200px] opacity-100 ml-4'}`}>
                     <span className="flex-1 text-[15px] whitespace-nowrap overflow-hidden">{label}</span>
                     {isPro && (
-                        <span className="bg-[#FF7A00] text-white text-[10px] font-bold px-2 py-0.5 rounded-[4px] uppercase tracking-wide">
+                        <span className="ml-2 bg-[#FF7A00] text-white text-[10px] font-bold px-2 py-0.5 rounded-[4px] uppercase tracking-wide">
                             NEW
                         </span>
                     )}
                     {badge && !isPro && (
-                        <span className="bg-gray-100 dark:bg-[#2A2A2A] text-gray-600 dark:text-gray-400 text-xs font-bold px-2 py-0.5 rounded-md">{badge}</span>
+                        <span className="ml-2 bg-gray-100 dark:bg-[#2A2A2A] text-gray-600 dark:text-gray-400 text-xs font-bold px-2 py-0.5 rounded-md">{badge}</span>
                     )}
-                    {rightElement}
-                    {isDanger || (!active && !isDanger && !rightElement && <ChevronRight size={16} className="text-gray-300 dark:text-gray-700" />)}
-                </>
-            )}
-
-            {collapsed && (
-                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
-                    {label}
+                    <div className="ml-auto">
+                        {rightElement}
+                        {!rightElement && (isDanger || (!active && !isDanger)) && <ChevronRight size={16} className="text-gray-300 dark:text-gray-700" />}
+                    </div>
                 </div>
+            </div>
+
+            {collapsed && hoverCoords && createPortal(
+                <div 
+                    className="fixed z-[9999] px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-lg animate-in fade-in zoom-in-95 duration-200 pointer-events-none whitespace-nowrap"
+                    style={{ 
+                        top: hoverCoords.top, 
+                        left: hoverCoords.left,
+                        transform: 'translateY(-50%)' 
+                    }}
+                >
+                    {label}
+                </div>,
+                document.body
             )}
-        </div>
+        </>
     );
 };
 
@@ -82,7 +110,9 @@ const SidebarContent = ({ collapsed = false, activeMode, handleModeChange, navig
         <div className={`h-px bg-gray-100 dark:bg-[#1F1F1F] my-2 ${collapsed ? 'w-8 mx-auto' : 'mx-4'}`}></div>
 
         <div>
-             {!collapsed && <h3 className="text-xs font-bold text-gray-400 dark:text-gray-600 mb-3 px-4 uppercase tracking-wider">AI Tools</h3>}
+             <div className={`overflow-hidden transition-all duration-[400ms] ease-in-out ${collapsed ? 'max-h-0 opacity-0 mb-0' : 'max-h-8 opacity-100 mb-3'}`}>
+                <h3 className="text-xs font-bold text-gray-400 dark:text-gray-600 px-4 uppercase tracking-wider whitespace-nowrap">AI Tools</h3>
+             </div>
              <div className="space-y-1">
                 <NavItem icon={<Briefcase />} label="Lead Finder" isPro={true} collapsed={collapsed} setIsMenuOpen={setIsMenuOpen} isMobile={isMobile} />
                 <NavItem icon={<Code2 />} label="Tech Interview Lab" collapsed={collapsed} setIsMenuOpen={setIsMenuOpen} isMobile={isMobile} />
@@ -91,7 +121,9 @@ const SidebarContent = ({ collapsed = false, activeMode, handleModeChange, navig
         </div>
 
         <div>
-             {!collapsed && <h3 className="text-xs font-bold text-gray-400 dark:text-gray-600 mb-3 px-4 uppercase tracking-wider mt-6">Management</h3>}
+             <div className={`overflow-hidden transition-all duration-[400ms] ease-in-out ${collapsed ? 'max-h-0 opacity-0 mb-0 mt-0' : 'max-h-20 opacity-100 mb-3 mt-6'}`}>
+                <h3 className="text-xs font-bold text-gray-400 dark:text-gray-600 px-4 uppercase tracking-wider whitespace-nowrap">Management</h3>
+             </div>
              <div className="space-y-1">
                 <NavItem icon={<CheckSquare />} label="Applications" badge="12" collapsed={collapsed} setIsMenuOpen={setIsMenuOpen} isMobile={isMobile} />
                 <NavItem icon={<Calendar />} label="Interviews" collapsed={collapsed} setIsMenuOpen={setIsMenuOpen} isMobile={isMobile} />
@@ -164,18 +196,20 @@ const UserLayout = ({ children, activeMode, handleModeChange, isMobile, disableS
     };
 
     return (
-        <div className="flex h-screen w-full bg-[#FAFAFA] font-sans text-gray-900 dark:bg-[#090909] dark:text-gray-100 transition-colors duration-300 overflow-hidden">
-            <aside className={`hidden md:flex flex-col bg-white dark:bg-[#0A0A0A] border-r border-gray-100 dark:border-[#1F1F1F] transition-all duration-300 ease-in-out z-20 ${isMenuOpen ? 'w-[280px]' : 'w-20'}`}>
-                <div className={`h-16 flex items-center ${isMenuOpen ? 'justify-start px-6' : 'justify-center'} border-b border-gray-100 dark:border-[#1F1F1F]`}>
-                    <img src={theme === 'dark' ? MainLogoWhite : MainLogo} alt="JobPilot" className="w-8 h-8 object-contain" />
-                    {isMenuOpen && <span className="font-bold text-gray-900 text-lg dark:text-white tracking-tight ml-2.5 whitespace-nowrap overflow-hidden">JobPilot</span>}
+        <div className="flex h-screen w-full bg-[#FAFAFA] font-sans text-gray-900 dark:bg-[#090909] dark:text-gray-100 transition-colors duration-[400ms] overflow-hidden">
+            <aside className={`hidden md:flex flex-col bg-white dark:bg-[#0A0A0A] border-r border-gray-100 dark:border-[#1F1F1F] transition-all duration-[400ms] ease-in-out z-20 ${isMenuOpen ? 'w-[280px]' : 'w-20'}`}>
+                <div className="h-16 flex items-center px-6 border-b border-gray-100 dark:border-[#1F1F1F]">
+                    <img src={theme === 'dark' ? MainLogoWhite : MainLogo} alt="JobPilot" className="w-8 h-8 object-contain shrink-0 transition-all duration-[400ms]" />
+                    <div className={`overflow-hidden transition-all duration-[400ms] ease-in-out ${isMenuOpen ? 'max-w-[200px] opacity-100 ml-2.5' : 'max-w-0 opacity-0 ml-0'}`}>
+                        <span className="font-bold text-gray-900 text-lg dark:text-white tracking-tight whitespace-nowrap">JobPilot</span>
+                    </div>
                 </div>
                 <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 custom-scrollbar">
                     <SidebarContent collapsed={!isMenuOpen} {...sidebarProps} />
                 </div>
             </aside>
             <div className="flex-1 flex flex-col h-full relative min-w-0">
-                <header className="h-16 bg-white dark:bg-[#0A0A0A]/90 backdrop-blur-md border-b border-gray-100 dark:border-[#1F1F1F] flex items-center justify-between px-5 shrink-0 z-10 transition-colors duration-300">
+                <header className="h-16 bg-white dark:bg-[#0A0A0A]/90 backdrop-blur-md border-b border-gray-100 dark:border-[#1F1F1F] flex items-center justify-between px-5 shrink-0 z-10 transition-colors duration-[400ms]">
                     <div className="flex items-center gap-4">
                         <button 
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
