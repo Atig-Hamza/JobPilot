@@ -1,8 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Sidebar from '../../components/Sidebar';
+import UserLayout from './components/UserLayout';
 import DashboardHome from './components/DashboardHome';
 import ChatInterface from './components/ChatInterface';
 import ChatInput from './components/ChatInput';
+
+const useIsMobile = () => {
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+    return isMobile;
+};
 
 const generateRoomId = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -14,6 +25,8 @@ const generateRoomId = () => {
 };
 
 const JobPilotDashboard = () => {
+    const isMobile = useIsMobile();
+    
     const [activeMode, setActiveMode] = useState('general');
     const [uploadedFile, setUploadedFile] = useState(null);
     const [chatStarted, setChatStarted] = useState(false);
@@ -23,7 +36,9 @@ const JobPilotDashboard = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [roomId] = useState(() => generateRoomId());
     const [selectedCountry, setSelectedCountry] = useState('all');
+    
     const messagesEndRef = useRef(null);
+    const fileInputRef = useRef(null);
 
     const scrollToBottom = (behavior = "smooth") => {
         messagesEndRef.current?.scrollIntoView({ behavior: behavior });
@@ -67,12 +82,11 @@ const JobPilotDashboard = () => {
             } else {
                 response = await fetch(`${API_URL}/llm/generate`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     headers: { 
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
                     },
-                    body: JSON.stringify({ prompt: apiPrompt, roomId: roomId })
+                    body: JSON.stringify({ prompt: apiPrompt, roomId: roomId, user: JSON.parse(localStorage.getItem('user')) })
                 });
             }
 
@@ -170,11 +184,6 @@ const JobPilotDashboard = () => {
         }
     };
 
-    const creditBalance = 1250;
-    const todayDate = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-
-    const fileInputRef = useRef(null);
-
     const handleModeChange = (mode) => {
         setActiveMode(mode);
         setUploadedFile(null);
@@ -201,12 +210,14 @@ const JobPilotDashboard = () => {
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
+    const todayDate = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const creditBalance = 1250;
+
     return (
-        <div className="flex h-screen w-screen bg-[#FAFAFA] font-sans text-gray-900 overflow-hidden selection:bg-pink-200 selection:text-pink-900 dark:bg-[#090909] dark:text-gray-100 dark:selection:bg-pink-900 dark:selection:text-pink-100 transition-colors duration-300">
-            <Sidebar />
-            <main className="flex-1 flex flex-col relative h-full">
+        <UserLayout activeMode={activeMode} handleModeChange={handleModeChange} isMobile={isMobile} disableScroll={true}>
+            <div className="flex flex-col h-full relative">
                 <div className="flex-1 overflow-y-auto w-full">
-                    <div className="min-h-full flex flex-col items-center p-6 md:p-8 pb-44">
+                    <div className="flex flex-col items-center min-h-full p-4 md:p-8 pb-32 md:pb-32">
                         {!chatStarted ? (
                             <DashboardHome
                                 activeMode={activeMode}
@@ -222,6 +233,7 @@ const JobPilotDashboard = () => {
                         )}
                     </div>
                 </div>
+                
                 <ChatInput
                     activeMode={activeMode}
                     handleModeChange={handleModeChange}
@@ -237,9 +249,10 @@ const JobPilotDashboard = () => {
                     isGenerating={isGenerating}
                     selectedCountry={selectedCountry}
                     setSelectedCountry={setSelectedCountry}
+                    isMobile={isMobile}
                 />
-            </main>
-        </div>
+            </div>
+        </UserLayout>
     );
 };
 
