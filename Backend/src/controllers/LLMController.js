@@ -17,7 +17,7 @@ export async function handleLLMRequest(req, res) {
   - Portfolio: https://atig.me/
 
 ## 2. USER IDENTIFICATION (CURRENT USER)
-**User Name:** ${user ? `${user.firstName} ${user.lastName}` : "N/A"}
+**User Name:** ${user ? `${user.fullName}` : "N/A"}
 - If the name is available, use it naturally to build rapport.
 - If "N/A", address the user neutrally.
 - **Note:** The "User" is distinct from the "Developer."
