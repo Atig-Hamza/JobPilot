@@ -1,6 +1,6 @@
-import InviteCode from "../models/inviteCode";
-import CreditCode from "../models/creditCode";
-import User from "../models/User";
+import InviteCode from "../models/inviteCode.js";
+import CreditCode from "../models/creditCode.js";
+import User from "../models/User.js";
 
 export const generateInviteCode = async (code, availableFor, expiresAt) => {
     const newInviteCode = await InviteCode.create({
