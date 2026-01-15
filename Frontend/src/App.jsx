@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -11,6 +11,10 @@ import NotFound from './pages/404';
 import UserDashboard from './pages/user/UserDashboard';
 import AutoPilotAgent from './pages/user/AutoPilotAgent';
 import PortalSelection from './pages/admin/Portal';
+import AdminLayout from './pages/admin/components/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import WaitlistRequests from './pages/admin/WaitlistRequests';
+import AccessManagement from './pages/admin/AccessManagement';
 import Authenticate from './middleware/authenticate';
 
 
@@ -34,6 +38,12 @@ function App() {
 
         <Route element={<Authenticate allowedRoles={['admin']} />}>
           <Route path="/admin/portal" element={<PortalSelection />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="waitlist" element={<WaitlistRequests />} />
+            <Route path="access-codes" element={<AccessManagement />} />
+          </Route>
         </Route>
       </Routes>
     </Router>
