@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
+import { sendNewLoginAlert } from './mailService.js';
 
 function removeSensitiveInfo(user) {
     const userObj = user.toObject();
@@ -10,7 +11,7 @@ function removeSensitiveInfo(user) {
     return userObj;
 }
 
-export const login = async (email, password) => {
+export const login = async (email, password, loginDetails) => {
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -35,6 +36,8 @@ export const login = async (email, password) => {
         process.env.JWT_SECRET,
         { expiresIn }
     );
+    
+    sendNewLoginAlert(user.email, new Date(), loginDetails);
 
     return { token, safeUser };
 };
