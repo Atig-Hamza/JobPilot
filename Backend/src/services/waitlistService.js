@@ -18,7 +18,6 @@ export const addToWaitlist = async (data) => {
     const newEntry = await Waitlist.create(data);
     
     sendWaitlistEmail({ email, name });
-    sendNewJoinWaitlistToAdmins(name);
 
     return newEntry;
 };
