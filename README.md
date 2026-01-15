@@ -1,8 +1,8 @@
 <div align="center">
 
-![JobPilot](https://capsule-render.vercel.app/api?type=waving&color=000000&height=300&section=header&text=JobPilot&fontSize=90&animation=fadeIn&fontAlignY=38&desc=Your%20AI-Powered%20Career%20Co-Pilot&descAlignY=51&descAlign=50)
-
+# 🚀 JobPilot
 ### *Navigate the chaotic job market with precision, intelligence, and speed.*
+<br/>
 
 [![React](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-blue?style=for-the-badge&logo=react)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Backend-Node.js-green?style=for-the-badge&logo=node.js)](https://nodejs.org/)
