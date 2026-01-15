@@ -169,8 +169,7 @@ const CustomGenderSelect = ({ value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const options = ["Male", "Female", "Non-binary", "Prefer not to say"];
-
+  const options = ["Male", "Female", "Prefer not to say"];
 
   useEffect(() => {
     const handleClickOutside = (event) => {
