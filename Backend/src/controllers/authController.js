@@ -1,20 +1,31 @@
 import { login, verifyToken } from '../services/authService.js';
 import { AppError } from '../utils/AppError.js';
 import catchAsync from '../utils/catchAsync.js';
+import geoip from 'geoip-lite';
+import { UAParser } from 'ua-parser-js';
+import { getClientIp } from '../utils/getClientIp.js';
 
 export const loginController = catchAsync(async (req, res) => {
     const { email, password } = req.body;
+
     if (!email || !password) {
         throw new AppError('Email and password are required', 400);
     }
-    const { token, safeUser } = await login(email, password);
+
+    const ip = getClientIp(req);
+    const location = geoip.lookup(ip) || null;
+    const parser = new UAParser(req.headers['user-agent']);
+    const device = parser.getResult();
+
+    const { token, safeUser } = await login(email, password, {
+        ip,
+        location,
+        device
+    });
 
     res.status(200).json({
         status: 'success',
-        data: {
-            user: safeUser,
-            token
-        }
+        data: { user: safeUser, token }
     });
 });
 
