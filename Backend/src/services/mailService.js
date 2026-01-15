@@ -154,3 +154,29 @@ export const sendNewLoginAlert = async (userEmail, date, loginDetails = {}) => {
         return false
     }
 }
+
+export const sendApprovalNotification = async (userEmail, fullName) => {
+    try {
+        const html = generateInlineHtml(`
+            <h1>Your JobPilot Access is Approved! 🎉</h1>
+            <p>Hi ${fullName || 'there'},</p>
+            <p>We're excited to inform you that your access to JobPilot has been approved. Welcome aboard!</p>
+            <p>You can now log in to your account and start exploring the features we've built to help you manage your career autonomously.</p>
+            <p>Click the link below to get started:</p>
+            <p><a href="https://myjobpilot.app/login" style="color: #db2777; font-weight: 600;">Log in to JobPilot</a></p>
+            <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
+            <br>
+            <p style="font-weight: 600; color: #fff;">The JobPilot Team</p>
+        `)
+        await transporter.sendMail({
+            from: `"JobPilot" <${process.env.SMTP_USER}>`,
+            to: userEmail,
+            subject: 'Your JobPilot Access is Approved! 🎉',
+            html: html
+        })
+        return true
+    } catch (error) {
+        console.error('Approval notification email error:', error)
+        return false
+    }
+}
