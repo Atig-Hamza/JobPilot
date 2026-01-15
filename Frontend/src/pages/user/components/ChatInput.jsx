@@ -16,8 +16,11 @@ const ChatInput = ({
     handleSendMessage,
     selectedCountry,
     setSelectedCountry,
-    isGenerating
+    isGenerating,
+    isMobile
 }) => {
+    const paddingClass = isMobile ? 'pt-4 pb-4 px-4' : 'pt-16 pb-8 px-6';
+    
     const countries = [
         { code: 'all', name: 'Worldwide', flag: '🌐' },
         { code: 'us', name: 'United States', flag: '🇺🇸' },
@@ -37,9 +40,9 @@ const ChatInput = ({
     ];
 
     return (
-        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#FAFAFA] via-[#FAFAFA]/90 to-transparent dark:from-[#09090b] dark:via-[#09090b]/90 dark:to-transparent pt-16 pb-8 px-6 z-30 pointer-events-none">
-            <div className="max-w-3xl mx-auto pointer-events-auto">
-                <div className="flex justify-center gap-2 mb-4">
+        <div className={`${isMobile ? 'fixed' : 'absolute'} bottom-0 left-0 w-full bg-gradient-to-t from-[#FAFAFA] via-[#FAFAFA]/90 to-transparent dark:from-[#09090b] dark:via-[#09090b]/90 dark:to-transparent ${paddingClass} z-30 pointer-events-none`}>
+            <div className={`max-w-3xl mx-auto pointer-events-auto ${isMobile ? 'w-full' : ''}`}>
+                <div className={`flex justify-center gap-2 ${isMobile ? 'mb-2' : 'mb-4'}`}>
                     <ModeBadge
                         active={activeMode === 'general'}
                         label="Chat"
@@ -60,7 +63,7 @@ const ChatInput = ({
                 </div>
                 <div className={`bg-white/80 dark:bg-[#111111]/80 backdrop-blur-xl shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)] rounded-[1.5rem] transition-all duration-300 relative overflow-hidden border ${activeMode === 'resume_opt' ? 'border-pink-200 ring-4 ring-pink-50/50 dark:border-pink-900/50 dark:ring-pink-900/10' : 'border-gray-200 dark:border-gray-800 ring-4 ring-white/50 dark:ring-black/50'}`}>
                     {activeMode === 'resume_opt' ? (
-                        <div className="p-2.5 flex items-center gap-3 h-[76px]">
+                        <div className={`p-2.5 flex items-center gap-3 ${isMobile ? 'h-[56px]' : 'h-[76px]'}`}>
                             <input
                                 type="file"
                                 ref={fileInputRef}
@@ -115,7 +118,7 @@ const ChatInput = ({
                             </button>
                         </div>
                     ) : (
-                        <div className="flex items-center gap-2 p-2.5 h-[76px]">
+                        <div className={`flex items-center gap-2 p-2.5 ${isMobile ? 'h-[56px]' : 'h-[76px]'}`}>
                             {activeMode === 'jop1_scrape' && (
                                 <div className="h-full pl-2 transition-all animate-in fade-in slide-in-from-left-4 duration-300">
                                     <div className="relative h-full">
@@ -153,12 +156,16 @@ const ChatInput = ({
                                 onKeyDown={handleKeyDown}
                                 disabled={isGenerating}
                                 placeholder={activeMode === 'jop1_scrape' ? "Paste job keyword here..." : "Ask JobPilot to find leads..."}
-                                className="flex-1 bg-transparent outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 h-full text-lg font-medium px-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`flex-1 bg-transparent outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 h-full ${isMobile ? 'text-base' : 'text-lg'} font-medium px-2 disabled:opacity-50 disabled:cursor-not-allowed`}
                             />
                             <button
                                 onClick={handleSendMessage}
                                 disabled={isGenerating || (!inputValue.trim() && activeMode !== 'resume_opt')}
-                                className={`h-12 px-6 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm transition-all shadow-sm group shrink-0 min-w-[100px] ${isGenerating || !inputValue.trim()
+                                className={`${isMobile ? 'h-9 w-9' : 'h-12'} flex items-center justify-center font-bold text-sm transition-all shadow-sm group shrink-0 ${
+                                    isMobile 
+                                        ? 'rounded-full' 
+                                        : 'px-6 rounded-2xl gap-2 min-w-[100px]'
+                                } ${isGenerating || !inputValue.trim()
                                         ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
                                         : activeMode === 'jop1_scrape'
                                             ? 'bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200'
@@ -168,8 +175,8 @@ const ChatInput = ({
                                     <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                                 ) : (
                                     <>
-                                        <span>{activeMode === 'jop1_scrape' ? 'Scrape' : 'Send'}</span>
-                                        <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                        {!isMobile && <span>{activeMode === 'jop1_scrape' ? 'Scrape' : 'Send'}</span>}
+                                        <ArrowRight size={18} className={!isMobile ? "group-hover:translate-x-1 transition-transform" : ""} />
                                     </>
                                 )}
                             </button>
