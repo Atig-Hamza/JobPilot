@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThumbsUp, ThumbsDown, Check, Copy, MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import AiLogo from '../../../assets/Main/logo-without-bg.png';
@@ -113,18 +115,26 @@ const ChatMessage = ({ msg, isStreaming }) => {
                                     code({ node, inline, className, children, ...props }) {
                                         const match = /language-(\w+)/.exec(className || '')
                                         return !inline ? (
-                                            <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden bg-white dark:bg-[#111111] my-4 transition-colors">
+                                            <div className="rounded-lg overflow-hidden my-4 relative group border border-gray-200 dark:border-gray-800">
                                                 <div className="bg-gray-50 dark:bg-[#18181b] px-4 py-2 flex justify-between items-center border-b border-gray-200 dark:border-gray-800">
-                                                    <span className="text-xs font-mono text-gray-500 dark:text-gray-400">{match ? match[1] : 'Code'}</span>
+                                                    <span className="text-xs font-mono text-gray-500 dark:text-gray-400 capitalize">{match ? match[1] : 'text'}</span>
                                                 </div>
-                                                <div className="p-5 bg-[#FBFBFB] dark:bg-[#111111] overflow-x-auto text-sm text-gray-800 dark:text-gray-200">
-                                                    <code className={className} {...props}>
-                                                        {children}
-                                                    </code>
-                                                </div>
+                                                <SyntaxHighlighter
+                                                    style={theme === 'dark' ? oneDark : oneLight}
+                                                    language={match ? match[1] : 'text'}
+                                                    PreTag="div"
+                                                    customStyle={{
+                                                        margin: 0,
+                                                        borderRadius: '0 0 0.5rem 0.5rem',
+                                                        padding: '1.25rem',
+                                                    }}
+                                                    {...props}
+                                                >
+                                                    {String(children).replace(/\n$/, '')}
+                                                </SyntaxHighlighter>
                                             </div>
                                         ) : (
-                                            <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm font-mono text-pink-600 dark:text-pink-400" {...props}>
+                                            <code className="bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-gray-200 px-1.5 py-0.5 rounded text-[0.9em] font-mono border border-gray-200 dark:border-gray-700" {...props}>
                                                 {children}
                                             </code>
                                         )
