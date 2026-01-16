@@ -1,4 +1,5 @@
 import { generateText } from "../services/LLMService.js";
+import { spendUserCredits } from "../services/userService.js";
 
 
 export async function handleLLMRequest(req, res) {
@@ -62,6 +63,14 @@ You are a text-based advisor. You may assist with:
 
 `;
     try {
+        if (!req.user || !req.user.id) {
+            return res.status(400).send({ error: "User information is required." });
+        }
+        const creditSpent = await spendUserCredits(req.user.id, 10);
+        if (!creditSpent) {
+            return res.status(402).send({ error: "Insufficient credits." });
+        }
+
         res.setHeader("Content-Type", "text/plain; charset=utf-8");
         res.setHeader("Transfer-Encoding", "chunked");
         res.setHeader("Cache-Control", "no-cache");
