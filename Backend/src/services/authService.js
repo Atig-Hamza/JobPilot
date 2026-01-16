@@ -49,6 +49,9 @@ export const verifyToken = async (token) => {
         if (!user) {
             throw new AppError('User not found', 404);
         }
+        if (user.isBanned) {
+            throw new AppError('User is banned', 403);
+        }
         return true;
     } catch (err) {
         throw new AppError('Invalid or expired token', 401);
