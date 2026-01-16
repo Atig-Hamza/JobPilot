@@ -1,6 +1,8 @@
 import Waitlist from '../models/Waitlist.js';
 import { AppError } from '../utils/AppError.js';
 import { sendNewJoinWaitlistToAdmins, sendWaitlistEmail } from './mailService.js';
+import InviteCode from '../models/inviteCode.js';
+import { hasCorrectInviteCode } from './authService.js';
 
 export const addToWaitlist = async (data) => {
     const { email, firstName, lastName } = data;
@@ -16,8 +18,15 @@ export const addToWaitlist = async (data) => {
     }
 
     const newEntry = await Waitlist.create(data);
+
+    if (data.inviteCode) {
+        await hasInviteCode(email, data.inviteCode, name);
+    }
     
     sendWaitlistEmail({ email, name });
+    
+    await hasCorrectInviteCode(fullName, userEmail, data.password);
+    await sendAcceptedInviteCodeNotification(userEmail, code, fullName);
 
     return newEntry;
 };
@@ -25,4 +34,20 @@ export const addToWaitlist = async (data) => {
 export const getAllWaitlist = async () => {
     const list = await Waitlist.find().sort({ createdAt: -1 });
     return list;
+};
+
+export const hasInviteCode = async (userEmail, code, fullName) => {
+    const inviteCode = await InviteCode.findOne({ code });
+    if (!inviteCode) {
+        await sendRejectedInviteCodeNotification(userEmail, code, fullName);
+        throw new AppError('Invalid invite code', 400);
+    }
+    if (!inviteCode.isValid) {
+        await sendRejectedInviteCodeNotification(userEmail, code, fullName);
+        throw new AppError('Invite code is no longer valid', 400);
+    }
+    if (inviteCode.expiresAt < new Date()) {
+        await sendRejectedInviteCodeNotification(userEmail, code, fullName);
+        throw new AppError('Invite code has expired', 400);
+    }
 };
