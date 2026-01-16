@@ -20,10 +20,12 @@ export const addToWaitlist = async (data) => {
     const newEntry = await Waitlist.create(data);
 
     if (data.inviteCode) {
-        await hasInviteCode(email, data.inviteCode, name);
+        await hasInviteCode(email, data.inviteCode, name, data.id);
     }
     
-    sendWaitlistEmail({ email, name });
+    if (!data.inviteCode) {
+        sendWaitlistEmail({ email, name });
+    }
     
     await hasCorrectInviteCode(name, email, data.password);
     await sendApprovedInviteCodeNotification(email, data.inviteCode, name);
@@ -36,7 +38,7 @@ export const getAllWaitlist = async () => {
     return list;
 };
 
-export const hasInviteCode = async (userEmail, code, fullName) => {
+export const hasInviteCode = async (userEmail, code, fullName, userId) => {
     const upCode = code.toUpperCase();
     const inviteCode = await InviteCode.findOne({ code: upCode });
     if (!inviteCode) {
@@ -51,4 +53,11 @@ export const hasInviteCode = async (userEmail, code, fullName) => {
         await sendRejectedInviteCodeNotification(userEmail, code, fullName);
         throw new AppError('Invite code has expired', 400);
     }
+
+    inviteCode.usedby.push(userId);
+
+    if (inviteCode.usedby.length >= inviteCode.avaliblefor) {
+        inviteCode.isValid = false;
+    }
+    await inviteCode.save();
 };
