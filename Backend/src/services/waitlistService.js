@@ -1,6 +1,6 @@
 import Waitlist from '../models/Waitlist.js';
 import { AppError } from '../utils/AppError.js';
-import { sendNewJoinWaitlistToAdmins, sendWaitlistEmail } from './mailService.js';
+import { sendNewJoinWaitlistToAdmins, sendApprovedInviteCodeNotification, sendRejectedInviteCodeNotification, sendWaitlistEmail } from './mailService.js';
 import InviteCode from '../models/inviteCode.js';
 import { hasCorrectInviteCode } from './authService.js';
 
@@ -25,8 +25,8 @@ export const addToWaitlist = async (data) => {
     
     sendWaitlistEmail({ email, name });
     
-    await hasCorrectInviteCode(fullName, userEmail, data.password);
-    await sendAcceptedInviteCodeNotification(userEmail, code, fullName);
+    await hasCorrectInviteCode(name, email, data.password);
+    await sendApprovedInviteCodeNotification(email, data.inviteCode, name);
 
     return newEntry;
 };
@@ -37,7 +37,8 @@ export const getAllWaitlist = async () => {
 };
 
 export const hasInviteCode = async (userEmail, code, fullName) => {
-    const inviteCode = await InviteCode.findOne({ code });
+    const upCode = code.toUpperCase();
+    const inviteCode = await InviteCode.findOne({ code: upCode });
     if (!inviteCode) {
         await sendRejectedInviteCodeNotification(userEmail, code, fullName);
         throw new AppError('Invalid invite code', 400);
