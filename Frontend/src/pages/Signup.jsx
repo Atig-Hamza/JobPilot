@@ -283,7 +283,24 @@ const SignUpFlow = () => {
 
   const validateForm = () => {
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.gender) return false;
-    if (!formData.dob.day || !formData.dob.month || !formData.dob.year) return false;
+    
+    const { day, month, year } = formData.dob;
+    if (!day || !month || !year) return false;
+
+    const d = parseInt(day);
+    const m = parseInt(month);
+    const y = parseInt(year);
+
+    if (isNaN(d) || isNaN(m) || isNaN(y)) return false;
+    if (m < 1 || m > 12) return false;
+    if (d < 1 || d > 31) return false;
+    
+    const currentYear = new Date().getFullYear();
+    if (y < 1900 || y > currentYear) return false;
+
+    const date = new Date(y, m - 1, d);
+    if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) return false;
+
     return true;
   };
 
@@ -291,7 +308,16 @@ const SignUpFlow = () => {
   const handleJoinWaitlist = async () => {
     const toastId = toast.loading('Securing your spot...');
     try {
-      const dateOfBirth = new Date(`${formData.dob.year}-${formData.dob.month}-${formData.dob.day}`);
+      const year = formData.dob.year;
+      const month = String(formData.dob.month).padStart(2, '0');
+      const day = String(formData.dob.day).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      
+      const dateOfBirth = new Date(dateString);
+
+      if (isNaN(dateOfBirth.getTime())) {
+        throw new Error("Invalid date of birth provided.");
+      }
 
       const payload = {
         ...formData,
