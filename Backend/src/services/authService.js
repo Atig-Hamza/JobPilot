@@ -52,7 +52,8 @@ export const verifyToken = async (token) => {
         if (user.isBanned) {
             throw new AppError('User is banned', 403);
         }
-        return true;
+        const userCredits = user.credits;
+        return userCredits;
     } catch (err) {
         throw new AppError('Invalid or expired token', 401);
     }
