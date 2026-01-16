@@ -16,6 +16,7 @@ const Authenticate = ({ allowedRoles }) => {
         axios.post(`${import.meta.env.VITE_BACKEND_API_URL}/auth/verify-token`, { token })
             .then(res => {
                 setIsVerified(res.status === 200);
+                localStorage.setItem('credits', res.data.data.credits);
             })
             .catch(() => {
                 setIsVerified(false);
