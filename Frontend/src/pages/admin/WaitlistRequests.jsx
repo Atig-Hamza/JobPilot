@@ -109,7 +109,6 @@ const WaitlistRequests = () => {
                     </table>
                 </div>
                 
-                {/* Pagination (Mock) */}
                 <div className="p-4 border-t border-gray-100 dark:border-[#27272a] bg-gray-50 dark:bg-[#18181b] flex justify-between items-center">
                     <span className="text-sm text-gray-500 dark:text-gray-400 pl-4">Showing 1-5 of 124 requests</span>
                     <div className="flex gap-2">
