@@ -24,6 +24,11 @@ export const getAllInviteCodes = async () => {
     return inviteCodes;
 }
 
+export const deleteInviteCode = async (id) => {
+    await InviteCode.findByIdAndDelete(id);
+    return true;
+};
+
 export const getAllCreditCodes = async () => {
     const creditCodes = await CreditCode.find().sort({ createdAt: -1 });
     return creditCodes;
@@ -49,7 +54,7 @@ export const useInviteCode = async (code, userId) => {
 }
 
 export const useCreditCode = async (code, userId) => {
-    const creditCode = await Credit.findOne({ code });
+    const creditCode = await CreditCode.findOne({ code });
     if (!creditCode || !creditCode.isValid) {
         throw new Error('Invalid credit code');
     }
