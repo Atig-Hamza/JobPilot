@@ -180,3 +180,52 @@ export const sendApprovalNotification = async (userEmail, fullName) => {
         return false
     }
 }
+
+export const sendApprovedInviteCodeNotification = async (userEmail, code, fullName) => {
+    try {
+        const html = generateInlineHtml(`
+            <h1>Invite Code Used Successfully!</h1>
+            <p>Hi ${fullName || 'there'},</p>
+            <p>Your invite code <span style="font-weight: 600; color: #db2777;">${code}</span> has been successfully applied to your JobPilot account.</p>
+            <p>You can now log in and start exploring all the features JobPilot has to offer.</p>
+            <p>Thank you for being part of our exclusive community. We're thrilled to have you on board and can't wait for you to experience all that JobPilot has to offer.</p>
+            <p>If you have any questions or need assistance, our support team is here to help.</p>
+            <br>
+            <p style="font-weight: 600; color: #fff;">The JobPilot Team</p>
+        `)
+        await transporter.sendMail({
+            from: `"JobPilot" <${process.env.SMTP_USER}>`,
+            to: userEmail,
+            subject: 'Invite Code Used Successfully!',
+            html: html
+        })
+        return true
+    } catch (error) {
+        console.error('Used invite code notification email error:', error)
+        return false
+    }
+}
+
+export const sendRejectedInviteCodeNotification = async (userEmail, code, fullName) => {
+    try {
+        const html = generateInlineHtml(`
+            <h1>Invite Code Issue Notification</h1>
+            <p>Hi ${fullName || 'there'},</p>
+            <p>We wanted to inform you that there was an issue with the invite code <span style="font-weight: 600; color: #db2777;">${code}</span> you attempted to use on your JobPilot account.</p>
+            <p>This could be due to the code being invalid, expired, or already used. Please double-check the code and try again.</p>
+            <p>If you believe this is an error or need further assistance, please don't hesitate to reach out to our support team. We're here to help!</p>
+            <br>
+            <p style="font-weight: 600; color: #fff;">The JobPilot Team</p>
+        `)
+        await transporter.sendMail({
+            from: `"JobPilot" <${process.env.SMTP_USER}>`,
+            to: userEmail,
+            subject: 'Invite Code Issue Notification',
+            html: html
+        })
+        return true
+    } catch (error) {
+        console.error('Rejected invite code notification email error:', error)
+        return false
+    }
+}
