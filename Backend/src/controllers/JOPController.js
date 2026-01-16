@@ -1,9 +1,18 @@
 import * as JOPService from '../services/JOPService.js';
+import { spendUserCredits } from '../services/userService.js';
 import { AppError } from '../utils/AppError.js';
 import catchAsync from '../utils/catchAsync.js';
 
 export const crawlCompanies = catchAsync(async (req, res) => {
     const { keywords, country, limit } = req.body;
+
+    if (!req.user || !req.user.id) {
+        return res.status(400).send({ error: "User information is required." });
+    }
+    const creditSpent = await spendUserCredits(req.user.id, 70);
+    if (!creditSpent) {
+        return res.status(402).send({ error: "Insufficient credits." });
+    }
 
     if (!keywords) {
         throw new AppError('Keywords are required', 400);
@@ -15,21 +24,21 @@ export const crawlCompanies = catchAsync(async (req, res) => {
     res.flushHeaders();
 
     try {
-        const stream = JOPService.processSearchWithAI({ 
-            keywords, 
-            country: country || 'Global', 
-            limit: limit || 12 
+        const stream = JOPService.processSearchWithAI({
+            keywords,
+            country: country || 'Global',
+            limit: limit || 12
         });
 
         for await (const chunk of stream) {
             res.write(`data: ${JSON.stringify(chunk)}\n\n`);
         }
-        
+
     } catch (error) {
         console.error('Streaming error:', error);
-        res.write(`data: ${JSON.stringify({ 
-            type: 'error', 
-            message: 'Internal processing error occurred.' 
+        res.write(`data: ${JSON.stringify({
+            type: 'error',
+            message: 'Internal processing error occurred.'
         })}\n\n`);
     } finally {
         res.end();
