@@ -53,6 +53,7 @@ export const hasInviteCode = async (userEmail, code, fullName, userId) => {
         await sendRejectedInviteCodeNotification(userEmail, code, fullName);
         throw new AppError('Invite code has expired', 400);
     }
+    console.log(userId);
 
     inviteCode.usedby.push(userId);
 
