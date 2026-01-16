@@ -54,7 +54,7 @@ export const adminAccountInit = async () => {
       password: adminPassword,
       role: 'admin',
       isVerified: true,
-      credits: Infinity
+      credits: 500000
     });
     console.log('Admin account created');
   }
