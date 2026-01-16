@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { 
     Menu, X, Home, Sparkles, Briefcase, Code2, Users, 
     CheckSquare, Calendar, FileText, User, 
-    Gift, Moon, Sun, Settings, LogOut, ChevronRight
+    Gift, Moon, Sun, Settings, LogOut, ChevronRight,
+    AudioWaveform,
+    LibraryBig
 } from 'lucide-react';
 import MainLogo from '../../../assets/Main/logo-without-bg.png';
 import MainLogoWhite from '../../../assets/Main/logo-white-without-bg.png';
@@ -90,7 +92,7 @@ const SidebarContent = ({ collapsed = false, activeMode, handleModeChange, navig
             <NavItem 
                 icon={<Home />} 
                 label="Dashboard" 
-                active={activeMode !== 'autopilot'} 
+                active={activeMode !== 'autopilot' && activeMode !== 'interview-coach'} 
                 onClick={() => handleModeChange ? handleModeChange('general') : navigate('/user/dashboard')}
                 collapsed={collapsed}
                 setIsMenuOpen={setIsMenuOpen}
@@ -101,6 +103,15 @@ const SidebarContent = ({ collapsed = false, activeMode, handleModeChange, navig
                 label="AutoPilot Agent" 
                 active={activeMode === 'autopilot'} 
                 onClick={() => navigate('/user/autopilot')}
+                collapsed={collapsed}
+                setIsMenuOpen={setIsMenuOpen}
+                isMobile={isMobile}
+            />
+            <NavItem
+                icon={<AudioWaveform />}
+                label="Interview Coach"
+                active={activeMode === 'interview-coach'}
+                onClick={() => navigate('/user/interview-coach')}
                 collapsed={collapsed}
                 setIsMenuOpen={setIsMenuOpen}
                 isMobile={isMobile}
@@ -116,7 +127,6 @@ const SidebarContent = ({ collapsed = false, activeMode, handleModeChange, navig
              <div className="space-y-1">
                 <NavItem icon={<Briefcase />} label="Lead Finder" isPro={true} collapsed={collapsed} setIsMenuOpen={setIsMenuOpen} isMobile={isMobile} />
                 <NavItem icon={<Code2 />} label="Tech Interview Lab" collapsed={collapsed} setIsMenuOpen={setIsMenuOpen} isMobile={isMobile} />
-                <NavItem icon={<Users />} label="Behavioral Sim" collapsed={collapsed} setIsMenuOpen={setIsMenuOpen} isMobile={isMobile} />
              </div>
         </div>
 
@@ -125,9 +135,8 @@ const SidebarContent = ({ collapsed = false, activeMode, handleModeChange, navig
                 <h3 className="text-xs font-bold text-gray-400 dark:text-gray-600 px-4 uppercase tracking-wider whitespace-nowrap">Management</h3>
              </div>
              <div className="space-y-1">
-                <NavItem icon={<CheckSquare />} label="Applications" badge="12" collapsed={collapsed} setIsMenuOpen={setIsMenuOpen} isMobile={isMobile} />
-                <NavItem icon={<Calendar />} label="Interviews" collapsed={collapsed} setIsMenuOpen={setIsMenuOpen} isMobile={isMobile} />
-                <NavItem icon={<FileText />} label="Cover Letters" collapsed={collapsed} setIsMenuOpen={setIsMenuOpen} isMobile={isMobile} />
+                <NavItem icon={<Calendar />} label="Interviews review" collapsed={collapsed} setIsMenuOpen={setIsMenuOpen} isMobile={isMobile} />
+                <NavItem icon={<LibraryBig />} label="Historys" collapsed={collapsed} setIsMenuOpen={setIsMenuOpen} isMobile={isMobile} />
              </div>
         </div>
 
