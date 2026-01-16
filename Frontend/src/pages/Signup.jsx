@@ -281,15 +281,22 @@ const SignUpFlow = () => {
     }));
   };
 
-  const validateForm = () => {
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.gender) return false;
+  const isFormValid = () => {
+    if (!formData.firstName?.trim() || 
+        !formData.lastName?.trim() || 
+        !formData.email?.trim() || 
+        !formData.password || 
+        !formData.gender) {
+      return false;
+    }
     
     const { day, month, year } = formData.dob;
+    // ensure strict string/number presence
     if (!day || !month || !year) return false;
 
-    const d = parseInt(day);
-    const m = parseInt(month);
-    const y = parseInt(year);
+    const d = Number(day);
+    const m = Number(month);
+    const y = Number(year);
 
     if (isNaN(d) || isNaN(m) || isNaN(y)) return false;
     if (m < 1 || m > 12) return false;
@@ -457,13 +464,17 @@ const SignUpFlow = () => {
 
             <button
               onClick={() => {
-                if (validateForm()) setStep(2);
-                else toast.error("Please fill in all required fields.");
+                if (isFormValid()) setStep(2);
               }}
-              className="w-full bg-black text-white h-14 rounded-xl font-bold text-base hover:bg-gray-900 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 group"
+              disabled={!isFormValid()}
+              className={`w-full bg-black text-white h-14 rounded-xl font-bold text-base transition-all duration-200 flex items-center justify-center gap-2 group ${
+                !isFormValid() 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:bg-gray-900 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98]'
+              }`}
             >
               Continue
-              <ArrowRight size={18} className="text-[#ffb6e6] group-hover:translate-x-1 transition-transform" />
+              <ArrowRight size={18} className={`text-[#ffb6e6] transition-transform ${isFormValid() ? 'group-hover:translate-x-1' : ''}`} />
             </button>
 
             <p className="text-center mt-6 text-xs text-gray-400 font-medium">
