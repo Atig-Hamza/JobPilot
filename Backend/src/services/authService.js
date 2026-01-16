@@ -61,5 +61,5 @@ export const hasCorrectInviteCode = async (fullName, email, password) => {
         throw new AppError('Email is already registered', 400);
     }
     const hashedPassword = await bcrypt.hash(password, 12);
-    await User.create({ fullName, email, password: hashedPassword});
+    await User.create({ fullName, email, password: hashedPassword, credits: 500});
 }
