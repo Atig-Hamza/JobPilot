@@ -18,6 +18,7 @@ import WaitlistRequests from './pages/admin/WaitlistRequests';
 import AccessManagement from './pages/admin/AccessManagement';
 import Authenticate from './middleware/authenticate';
 import Preloader from './components/Preloader';
+import InterviewCoach from './pages/user/InterviewCoach';
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -39,6 +40,7 @@ function App() {
           <Route element={<Authenticate allowedRoles={['user', 'admin']} />}>
             <Route path="/user/dashboard" element={<UserDashboard />} />
             <Route path="/user/autopilot" element={<AutoPilotAgent />} />
+            <Route path="/user/interview-coach" element={<InterviewCoach />} />
           </Route>
 
           <Route element={<Authenticate allowedRoles={['admin']} />}>
