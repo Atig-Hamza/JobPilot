@@ -12,6 +12,18 @@ const statusSchema = new mongoose.Schema({
     pageviewnumber: {
         type: Number,
         default: 0
+    },
+    badresponceAI: {
+        type: Number,
+        default: 0
+    },
+    goodresponceAI: {
+        type: Number,
+        default: 0
+    },
+    copyAI: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true
