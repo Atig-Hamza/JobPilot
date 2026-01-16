@@ -211,7 +211,7 @@ const JobPilotDashboard = () => {
     };
 
     const todayDate = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    const creditBalance = 1250;
+    const creditBalance = localStorage.getItem('credits') || 0;
 
     return (
         <UserLayout activeMode={activeMode} handleModeChange={handleModeChange} isMobile={isMobile} disableScroll={true}>
