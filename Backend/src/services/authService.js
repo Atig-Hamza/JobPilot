@@ -54,3 +54,12 @@ export const verifyToken = async (token) => {
         throw new AppError('Invalid or expired token', 401);
     }
 };
+
+export const hasCorrectInviteCode = async (fullName, email, password) => {
+    const user = await User.findOne({ email });
+    if (user) {
+        throw new AppError('Email is already registered', 400);
+    }
+    const hashedPassword = await bcrypt.hash(password, 12);
+    await User.create({ fullName, email, password: hashedPassword});
+}
