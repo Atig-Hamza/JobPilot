@@ -34,10 +34,12 @@ export const verifyTokenController = catchAsync(async (req, res) => {
     if (!token) {
         throw new AppError('Token is required', 400);
     }
-    await verifyToken(token);
+    
+    const userCredits = await verifyToken(token);
 
     res.status(200).json({
         status: 'success',
-        message: 'Token is valid'
+        message: 'Token is valid',
+        data: { credits: userCredits }
     });
 });
