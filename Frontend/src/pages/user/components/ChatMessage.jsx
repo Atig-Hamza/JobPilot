@@ -168,32 +168,34 @@ const ChatMessage = ({ msg, isStreaming }) => {
                                 {msg.content}
                             </ReactMarkdown>
 
-                            <div className="flex items-center gap-2 pt-2">
-                                <button
-                                    onClick={() => setFeedback(feedback === 'up' ? null : 'up')}
-                                    className={`p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${feedback === 'up' ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
-                                    title="Good response"
-                                >
-                                    <ThumbsUp size={18} />
-                                </button>
-                                <button
-                                    onClick={() => setFeedback(feedback === 'down' ? null : 'down')}
-                                    className={`p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${feedback === 'down' ? 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
-                                    title="Bad response"
-                                >
-                                    <ThumbsDown size={18} />
-                                </button>
-                                <button
-                                    onClick={handleCopy}
-                                    className={`p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ml-1 ${isCopied ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
-                                    title="Copy text"
-                                >
-                                    {isCopied ? <Check size={18} /> : <Copy size={18} />}
-                                </button>
-                                <button className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors ml-auto" title="More options">
-                                    <MoreHorizontal size={18} />
-                                </button>
-                            </div>
+                            {!isStreaming && (
+                                <div className="flex items-center gap-2 pt-2 animate-in fade-in duration-300">
+                                    <button
+                                        onClick={() => setFeedback(feedback === 'up' ? null : 'up')}
+                                        className={`p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${feedback === 'up' ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                                        title="Good response"
+                                    >
+                                        <ThumbsUp size={18} />
+                                    </button>
+                                    <button
+                                        onClick={() => setFeedback(feedback === 'down' ? null : 'down')}
+                                        className={`p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${feedback === 'down' ? 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                                        title="Bad response"
+                                    >
+                                        <ThumbsDown size={18} />
+                                    </button>
+                                    <button
+                                        onClick={handleCopy}
+                                        className={`p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ml-1 ${isCopied ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                                        title="Copy text"
+                                    >
+                                        {isCopied ? <Check size={18} /> : <Copy size={18} />}
+                                    </button>
+                                    <button className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors ml-auto" title="More options">
+                                        <MoreHorizontal size={18} />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </>
