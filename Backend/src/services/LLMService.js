@@ -47,4 +47,35 @@ async function generateText(prompt, roomId, onToken, systemPrompt) {
     }
 }
 
-export { generateText };
+async function generateChatTitle(roomId) {
+    try {
+        if (!roomContexts[roomId]) return null;
+
+        const messages = [...roomContexts[roomId]];
+        messages.push({ 
+            role: "user", 
+            content: "Generate a very short title (max 4 words) for this conversation based on the context." 
+        });
+
+        const response = await openai.chat.completions.create({
+            model: "moonshotai/kimi-k2-instruct",
+            messages: messages,
+            temperature: 0.7,
+            max_tokens: 50
+        });
+
+        let title = response.choices[0]?.message?.content?.trim();
+        if (title) {
+            title = title.replace(/^["']|["']$/g, '');
+            if (title.split(' ').length > 4) {
+                 title = title.split(' ').slice(0, 4).join(' ');
+            }
+        }
+        return title;
+    } catch (error) {
+        console.error("Error generating title:", error);
+        return null;
+    }
+}
+
+export { generateText, generateChatTitle };
