@@ -31,7 +31,7 @@ const ChatMessage = ({ msg, isStreaming }) => {
         <div className={msg.role === 'user' ? "flex justify-end w-full group" : "flex items-start gap-5 w-full animate-in fade-in slide-in-from-bottom-2 duration-500"}>
             {msg.role === 'user' ? (
                 <div className="flex flex-col items-end gap-2 max-w-[80%]">
-                    <div className="bg-gray-100 dark:bg-gray-800 text-gray-900 px-5 py-3 rounded-2xl rounded-tr-sm">
+                    <div className="bg-gray-100 dark:bg-[#161616] text-gray-900 px-5 py-3 rounded-2xl rounded-tr-sm">
                         <p className="text-[15px] leading-relaxed whitespace-pre-wrap text-left font-medium tracking-wide dark:text-gray-100">
                             {msg.content}
                         </p>
