@@ -12,10 +12,17 @@
       darkMode: 'class',
     }
   </script>
-  <link href="https://fonts.googleapis.com/css2?family=Söhne:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <style>
-      body { font-family: 'Söhne', 'Helvetica', sans-serif; }
-      .font-mono { font-family: 'Roboto Mono', monospace; }
+      body { font-family: 'Inter', sans-serif; }
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+      .fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 
