@@ -39,16 +39,7 @@ const ChatMessage = ({ msg, isStreaming }) => {
                 </div>
             ) : (
                 <>
-                    <div className="w-8 h-8 mt-1 rounded-xl flex items-center justify-center shrink-0 overflow-hidden">
-                        <img src={theme === 'dark' ? AiLogoWhite : AiLogo} alt="AI" className="w-full h-full object-contain p-0.5" />
-                    </div>
-
                     <div className="flex-1 min-w-0 backdrop-blur-sm rounded-2xl p-0.5 sm:p-0">
-                        <div className="flex items-center gap-3 mb-2 px-1">
-                            <span className="text-xs font-bold text-gray-900 dark:text-gray-100 tracking-tight">JobPilot AI</span>
-                            <span className="text-[10px] bg-gray-100 dark:bg-[#111111] text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-800 uppercase tracking-wider font-bold">Bot</span>
-                        </div>
-
                         {msg.processLogs && msg.processLogs.length > 0 && (
                             <div className="mb-5">
                                 <button
