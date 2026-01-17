@@ -1,5 +1,6 @@
 import { generateText } from "../services/LLMService.js";
 import { spendUserCredits } from "../services/userService.js";
+import { saveChatInteraction } from "../services/historyService.js";
 
 
 export async function handleLLMRequest(req, res) {
@@ -75,9 +76,12 @@ You are a text-based advisor. You may assist with:
         res.setHeader("Transfer-Encoding", "chunked");
         res.setHeader("Cache-Control", "no-cache");
         res.setHeader("Connection", "keep-alive");
-        await generateText(prompt, roomId, (token) => {
+        const fullResponse = await generateText(prompt, roomId, (token) => {
             res.write(token);
         }, systemPrompt);
+
+        await saveChatInteraction(req.user.id, roomId, prompt, fullResponse);
+
         res.end();
     } catch (error) {
         console.error('Error processing LLM request:', error);

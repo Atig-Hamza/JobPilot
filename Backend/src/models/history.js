@@ -6,6 +6,10 @@ const historySchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    roomId: {
+        type: String,
+        required: false
+    },
     title: {
         type: String,
         required: true
