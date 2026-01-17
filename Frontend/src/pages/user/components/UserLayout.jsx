@@ -187,7 +187,6 @@ const UserLayout = ({ children, activeMode }) => {
             <main className="flex-1 flex flex-col relative w-full h-full bg-white dark:bg-[#050505]">
                 <div className="absolute top-6 right-6 z-30 flex items-center gap-3 pointer-events-none">
                      <div className="bg-white/80 dark:bg-[#121212]/80 backdrop-blur-md border border-gray-200 dark:border-[#333] px-3 py-1.5 rounded-full shadow-sm flex items-center gap-2 transition-colors pointer-events-auto">
-                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Credits: <span className="font-bold text-gray-900 dark:text-white">{credits}</span></span>
                      </div>
                 </div>
