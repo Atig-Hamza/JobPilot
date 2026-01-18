@@ -14,7 +14,8 @@ const Onboarding = () => {
         phoneNumber: '',
         skills: '',
         experience: [],
-        education: []
+        education: [],
+        socialLinks: []
     });
 
     const handleFileChange = async (e) => {
@@ -38,7 +39,7 @@ const Onboarding = () => {
             const data = await res.json();
 
             if (data.status === 'success') {
-                const { bio, contactEmail, phoneNumber, skills, experience, education, cv } = data.data;
+                const { bio, contactEmail, phoneNumber, skills, experience, education, cv, socialLinks } = data.data;
                 setFormData({
                     bio: bio || '',
                     contactEmail: contactEmail || '',
@@ -46,6 +47,7 @@ const Onboarding = () => {
                     skills: Array.isArray(skills) ? skills.join(', ') : skills || '',
                     experience: experience || [],
                     education: education || [],
+                    socialLinks: socialLinks || [],
                     cv: cv
                 });
                 setStep('manual');
@@ -120,6 +122,23 @@ const Onboarding = () => {
 
     const removeEducation = (index) => {
         setFormData(prev => ({ ...prev, education: prev.education.filter((_, i) => i !== index) }));
+    };
+
+    const addSocialLink = () => {
+        setFormData(prev => ({
+            ...prev,
+            socialLinks: [...prev.socialLinks, { platform: '', url: '' }]
+        }));
+    };
+
+    const updateSocialLink = (index, field, value) => {
+        const newLinks = [...formData.socialLinks];
+        newLinks[index][field] = value;
+        setFormData(prev => ({ ...prev, socialLinks: newLinks }));
+    };
+
+    const removeSocialLink = (index) => {
+        setFormData(prev => ({ ...prev, socialLinks: prev.socialLinks.filter((_, i) => i !== index) }));
     };
 
     return (
@@ -200,6 +219,42 @@ const Onboarding = () => {
                                             className="w-full p-3 rounded-lg bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-zinc-800 focus:border-black dark:focus:border-zinc-600 outline-none"
                                             placeholder="+1 (555) 000-0000"
                                         />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="text-sm font-medium">Social Links</label>
+                                        <button onClick={addSocialLink} className="text-xs flex items-center gap-1 hover:underline">
+                                            <i className="ph ph-plus"></i> Add Link
+                                        </button>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {formData.socialLinks.map((link, idx) => (
+                                            <div key={idx} className="flex gap-2 items-center group">
+                                                <input
+                                                    placeholder="Platform (e.g. LinkedIn)"
+                                                    value={link.platform}
+                                                    onChange={(e) => updateSocialLink(idx, 'platform', e.target.value)}
+                                                    className="w-1/3 p-3 rounded-lg bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-zinc-800 focus:border-black dark:focus:border-zinc-600 outline-none"
+                                                />
+                                                <input
+                                                    placeholder="URL"
+                                                    value={link.url}
+                                                    onChange={(e) => updateSocialLink(idx, 'url', e.target.value)}
+                                                    className="flex-1 p-3 rounded-lg bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-zinc-800 focus:border-black dark:focus:border-zinc-600 outline-none"
+                                                />
+                                                <button
+                                                    onClick={() => removeSocialLink(idx)}
+                                                    className="p-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <i className="ph ph-trash"></i>
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {formData.socialLinks.length === 0 && (
+                                            <p className="text-xs text-gray-500 italic">No social links added.</p>
+                                        )}
                                     </div>
                                 </div>
                                 <div>
