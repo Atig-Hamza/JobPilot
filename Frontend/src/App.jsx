@@ -19,12 +19,15 @@ import AccessManagement from './pages/admin/AccessManagement';
 import Authenticate from './middleware/authenticate';
 import Preloader from './components/Preloader';
 import InterviewCoach from './pages/user/InterviewCoach';
+import Onboarding from './pages/user/Onboarding';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   const [loading, setLoading] = useState(true);
 
   return (
     <>
+      <Toaster position="top-center" />
       <Preloader onComplete={() => setLoading(false)} />
       <Router>
         <Routes>
@@ -38,6 +41,7 @@ function App() {
           <Route path="/soon" element={<ComingSoon />} />
 
           <Route element={<Authenticate allowedRoles={['user', 'admin']} />}>
+            <Route path="/user/onboarding" element={<Onboarding />} />
             <Route path="/user/dashboard" element={<UserDashboard />} />
             <Route path="/user/autopilot" element={<AutoPilotAgent />} />
             <Route path="/user/interview-coach" element={<InterviewCoach />} />
