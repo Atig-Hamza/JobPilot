@@ -6,10 +6,12 @@ import waitlistRoutes from './waitlistRoutes.js';
 import authRoutes from './authRoutes.js';
 import codeRoutes from './codeRoutes.js';
 import historyRoutes from './historyRoutes.js';
+import profileRoutes from './profileRoutes.js';
 
 const router = express.Router();
 
 router.use('/users', userRoutes);
+router.use('/profile', profileRoutes);
 router.use('/llm', llmRoutes);
 router.use('/waitlist', waitlistRoutes);
 router.use('/', jopRoutes);
