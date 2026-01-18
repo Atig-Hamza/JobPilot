@@ -56,6 +56,29 @@ const profileSchema = new mongoose.Schema({
         ],
         default: []
     },
+    languages: {
+        type: [
+            {
+                language: String,
+                proficiency: {
+                    type: String,
+                    enum: ['Native', 'Fluent', 'Advanced', 'Intermediate', 'Basic'],
+                    default: 'Intermediate'
+                }
+            }
+        ],
+        default: []
+    },
+    certificates: {
+        type: [
+            {
+                name: String,
+                issuer: String,
+                date: String
+            }
+        ],
+        default: []
+    },
     cv: {
         public_id: {
             type: String,
