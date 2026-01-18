@@ -5,7 +5,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
     const { theme, toggleTheme } = useTheme();
     const [activeTab, setActiveTab] = useState('general');
     const [user, setUser] = useState({});
-    const [profile, setProfile] = useState({ contactEmail: '', phoneNumber: '', bio: '', skills: [] });
+    const [profile, setProfile] = useState({ contactEmail: '', phoneNumber: '', bio: '', skills: [], socialLinks: [] });
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
@@ -175,7 +175,57 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                     {isSaving ? 'Saving...' : 'Save Changes'}
                                 </button>
                             </div>
+                            <div className="h-px bg-gray-200 dark:bg-[#222] w-full my-4"></div>
 
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-zinc-500 uppercase tracking-wider">Social Links</label>
+                                    <button
+                                        onClick={() => setProfile({ ...profile, socialLinks: [...(profile.socialLinks || []), { platform: '', url: '' }] })}
+                                        className="text-xs flex items-center gap-1 hover:underline text-blue-600 dark:text-blue-400"
+                                    >
+                                        <i className="ph ph-plus"></i> Add Link
+                                    </button>
+                                </div>
+                                <div className="space-y-3">
+                                    {profile.socialLinks && profile.socialLinks.map((link, idx) => (
+                                        <div key={idx} className="flex gap-2 items-center group">
+                                            <input
+                                                placeholder="Platform"
+                                                value={link.platform}
+                                                onChange={(e) => {
+                                                    const newLinks = [...profile.socialLinks];
+                                                    newLinks[idx].platform = e.target.value;
+                                                    setProfile({ ...profile, socialLinks: newLinks });
+                                                }}
+                                                className="w-1/3 p-2.5 rounded-lg bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] text-sm focus:border-black dark:focus:border-white outline-none"
+                                            />
+                                            <input
+                                                placeholder="URL"
+                                                value={link.url}
+                                                onChange={(e) => {
+                                                    const newLinks = [...profile.socialLinks];
+                                                    newLinks[idx].url = e.target.value;
+                                                    setProfile({ ...profile, socialLinks: newLinks });
+                                                }}
+                                                className="flex-1 p-2.5 rounded-lg bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] text-sm focus:border-black dark:focus:border-white outline-none"
+                                            />
+                                            <button
+                                                onClick={() => {
+                                                    const newLinks = profile.socialLinks.filter((_, i) => i !== idx);
+                                                    setProfile({ ...profile, socialLinks: newLinks });
+                                                }}
+                                                className="p-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <i className="ph ph-trash"></i>
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {(!profile.socialLinks || profile.socialLinks.length === 0) && (
+                                        <p className="text-xs text-gray-500 italic">No social links added.</p>
+                                    )}
+                                </div>
+                            </div>
                             <div>
                                 <label className="block text-xs font-medium text-gray-500 dark:text-zinc-500 mb-1 uppercase tracking-wider">Top Skills</label>
                                 <div className="flex flex-wrap gap-2 mt-2">
@@ -227,8 +277,8 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.id
-                                        ? 'bg-gray-200 dark:bg-[#27272a] text-gray-900 dark:text-white'
-                                        : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-[#1a1a1a]'
+                                    ? 'bg-gray-200 dark:bg-[#27272a] text-gray-900 dark:text-white'
+                                    : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-[#1a1a1a]'
                                     }`}
                             >
                                 <i className={`ph ${tab.icon} text-lg`}></i>
