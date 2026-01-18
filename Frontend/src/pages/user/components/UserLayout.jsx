@@ -17,14 +17,17 @@ const UserLayout = ({ children, activeMode }) => {
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
     const isMobile = useIsMobile();
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Default open on desktop, adjusted via effect
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [credits, setCredits] = useState(() => localStorage.getItem('credits') || '0');
     const profileRef = useRef(null);
+    
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const user = JSON.parse(localStorage.getItem('user')) || { fullName: 'User', email: 'user@example.com' };
 
-    // Auto-collapse on mobile
     useEffect(() => {
         if (isMobile) {
             setIsSidebarCollapsed(true);
@@ -54,14 +57,116 @@ const UserLayout = ({ children, activeMode }) => {
         };
     }, []);
 
+    const [history, setHistory] = useState([]);
+    const [historyPage, setHistoryPage] = useState(1);
+    const [hasMoreHistory, setHasMoreHistory] = useState(true);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+    const fetchHistory = async (page = 1) => {
+        try {
+            setIsLoadingHistory(true);
+            const token = localStorage.getItem('token');
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+            const response = await fetch(`${API_URL}/history/titles?page=${page}&limit=10`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                 if (page === 1) {
+                     setHistory(data.data.history);
+                 } else {
+                     setHistory(prev => [...prev, ...data.data.history]);
+                 }
+                 setHasMoreHistory(data.data.currentPage < data.data.totalPages);
+                 setHistoryPage(data.data.currentPage);
+            }
+        } catch (error) {
+            console.error('Failed to fetch history', error);
+        } finally {
+            setIsLoadingHistory(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchHistory(1);
+    }, []);
+
+    const loadMoreHistory = (e) => {
+        e.stopPropagation();
+        if (!isLoadingHistory && hasMoreHistory) {
+            fetchHistory(historyPage + 1);
+        }
+    };
+
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         navigate('/login');
     };
 
+    const confirmDelete = (item, e) => {
+        e.stopPropagation();
+        setItemToDelete(item);
+        setDeleteModalOpen(true);
+    };
+
+    const handleDeleteHistory = async () => {
+        if (!itemToDelete) return;
+        setIsDeleting(true);
+        try {
+            const token = localStorage.getItem('token');
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+            
+            const response = await fetch(`${API_URL}/history/${itemToDelete._id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                setHistory(prev => prev.filter(h => h._id !== itemToDelete._id));
+                setDeleteModalOpen(false);
+                setItemToDelete(null);
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('roomId') === itemToDelete.roomId) {
+                    navigate('/user/dashboard');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to delete history', error);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return (
         <div className="flex w-full h-screen bg-white dark:bg-[#050505] text-gray-900 dark:text-[#EDEDED] font-sans antialiased overflow-hidden transition-colors duration-300">
+            {deleteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#222] w-full max-w-sm rounded-xl shadow-2xl p-6 transform transition-all scale-100">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Delete Chat?</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                            This will permanently delete "{itemToDelete?.title || 'this chat'}". This action cannot be undone.
+                        </p>
+                        <div className="flex items-center justify-end gap-3">
+                            <button 
+                                onClick={() => { setDeleteModalOpen(false); setItemToDelete(null); }}
+                                className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1a1a1a] rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleDeleteHistory}
+                                disabled={isDeleting}
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-2"
+                            >
+                                {isDeleting ? 'Deleting...' : 'Delete'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Mobile Overlay */}
             {isMobile && !isSidebarCollapsed && (
                 <div 
@@ -134,13 +239,47 @@ const UserLayout = ({ children, activeMode }) => {
                     {(!isSidebarCollapsed || isMobile) && (
                         <div className="px-2 space-y-1 fade-in">
                             <div className="text-xs font-medium text-gray-400 dark:text-[#888888] mb-3 pl-1">Recent</div>
-                            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#121212] text-left group transition-colors">
-                                <i className="ph ph-chat-teardrop text-gray-400 dark:text-[#888888] group-hover:text-black dark:group-hover:text-white"></i>
-                                <span className="text-sm text-gray-500 dark:text-[#888888] group-hover:text-black dark:group-hover:text-white truncate">Google PM Interview</span>
-                            </button>
-                            <button className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-gray-400 dark:text-[#888888] hover:text-black dark:hover:text-white text-xs transition-colors">
-                                <i className="ph ph-caret-down"></i> Show more
-                            </button>
+                            
+                            {history.length === 0 && !isLoadingHistory ? (
+                                <div className="px-3 py-2 text-xs text-gray-400 dark:text-gray-600">No recent chats</div>
+                            ) : (
+                                history.map((item) => (
+                                    <button 
+                                        key={item._id}
+                                        onClick={() => navigate(`/user/dashboard?roomId=${item.roomId}`)}
+                                        className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#121212] text-left group transition-all relative"
+                                    >
+                                        <i className="ph ph-chat-teardrop text-gray-400 dark:text-[#888888] group-hover:text-black dark:group-hover:text-white flex-shrink-0"></i>
+                                        <span className="text-sm text-gray-500 dark:text-[#888888] group-hover:text-black dark:group-hover:text-white truncate flex-1 pr-6">
+                                            {item.title || 'New Chat'}
+                                        </span>
+                                        
+                                        <div 
+                                            className="absolute right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-red-500 hover:bg-gray-200 dark:hover:bg-[#222] rounded cursor-pointer"
+                                            onClick={(e) => confirmDelete(item, e)}
+                                            title="Delete Chat"
+                                        >
+                                            <i className="ph ph-trash text-sm"></i>
+                                        </div>
+                                    </button>
+                                ))
+                            )}
+
+                            {hasMoreHistory && (
+                                <button 
+                                    onClick={loadMoreHistory}
+                                    disabled={isLoadingHistory}
+                                    className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-gray-400 dark:text-[#888888] hover:text-black dark:hover:text-white text-xs transition-colors"
+                                >
+                                    {isLoadingHistory ? (
+                                        <span className="animate-pulse">Loading...</span>
+                                    ) : (
+                                        <>
+                                            <i className="ph ph-caret-down"></i> Show more
+                                        </>
+                                    )}
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
