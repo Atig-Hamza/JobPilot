@@ -18,18 +18,22 @@ const CV_TEMPLATE = `
     <title>Professional Resume</title>
     <style>
         @page { margin: 0; size: A4; }
-        body { font-family: 'Inter', sans-serif; line-height: 1.5; color: #333; margin: 0; padding: 0; background: #fff; }
-        .container { max-width: 210mm; margin: 0 auto; padding: 40px; }
-        .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+        body { font-family: 'Inter', sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #fff; }
+        .container { width: 210mm; margin: 0 auto; padding: 20mm; box-sizing: border-box; background: white; min-height: 297mm; }
+        
+        /* Smarter Page Breaks */
+        .section { margin-bottom: 25px; page-break-inside: avoid; break-inside: avoid; }
+        .experience-item { margin-bottom: 20px; page-break-inside: avoid; break-inside: avoid; }
+        .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; page-break-inside: avoid; }
+        h1, h2, h3, h4 { page-break-after: avoid; }
+        
         .name { font-size: 32px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #2d3748; margin: 0; }
         .contact-info { margin-top: 10px; font-size: 14px; color: #666; display: flex; gap: 15px; flex-wrap: wrap; }
-        .section { margin-bottom: 25px; }
         .section-title { font-size: 16px; font-weight: 700; text-transform: uppercase; color: #2d3748; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 15px; letter-spacing: 0.5px; }
-        .experience-item { margin-bottom: 20px; }
         .job-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
         .job-title { font-weight: 700; color: #1a202c; }
         .company { color: #4a5568; font-weight: 500; }
-        .date { color: #718096; font-size: 14px; }
+        .date { color: #718096; font-size: 14px; white-space: nowrap; }
         .description-list { margin: 5px 0 0 18px; padding: 0; }
         .description-list li { margin-bottom: 5px; font-size: 14px; color: #4a5568; }
         .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
@@ -130,8 +134,6 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl) {
         if (cvMode && cvBuffer.length > 500) {
             await onToken({ type: 'process', content: "Finalizing document..." });
             try {
-                // Ensure the closing tag is present in the final response
-                // ONLY append if it's not already there to avoid duplicates
                 if (!fullResponse.includes('<!-- CV_END -->')) {
                     fullResponse += "\n<!-- CV_END -->";
                 }
@@ -142,8 +144,6 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl) {
                 const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
                 const downloadUrl = `${host}${savedFile.relativePath}`;
                 
-                // Explicitly send closing tag so frontend triggers the CV UI
-                // Front-end should handle deduplication if necessary
                 await onToken({ type: 'content', content: "\n<!-- CV_END -->" });
                 await onToken({ type: 'content', content: `\n\n**Success!** Your CV is ready.\n\n[Download PDF](${downloadUrl})` });
             } catch (pdfError) {
