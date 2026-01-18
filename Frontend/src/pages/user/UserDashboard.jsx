@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import UserLayout from './components/UserLayout';
 import ChatInterface from './components/ChatInterface';
 import { useTheme } from '../../context/ThemeContext';
@@ -55,6 +56,14 @@ const JobPilotDashboard = () => {
 
     const handleSendMessage = async () => {
         if (!inputValue.trim()) return;
+
+        // Optimistic Credit Update
+        const currentCredits = parseInt(localStorage.getItem('credits') || '0', 10);
+        if (currentCredits > 0) {
+             const newCredits = Math.max(0, currentCredits - 10);
+             localStorage.setItem('credits', newCredits);
+             window.dispatchEvent(new CustomEvent('credits-updated', { detail: newCredits }));
+        }
 
         setMessages(prev => [...prev, { role: 'user', content: inputValue }]);
 
@@ -231,13 +240,46 @@ const JobPilotDashboard = () => {
 
             {!chatStarted ? (
                 <div className="flex-1 flex flex-col items-center justify-center w-full max-w-[900px] mx-auto px-6 overflow-y-auto fade-in">
-
+                    
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#222222] text-[12px] text-gray-500 dark:text-[#888888] mb-6 shadow-sm">
-                            Start your dream job search. <span className="text-indigo-600 dark:text-white ml-1 underline cursor-pointer">View new features.</span>
+                        <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#222222] mb-8 shadow-sm group cursor-pointer hover:border-indigo-500/20 dark:hover:border-white/20 transition-all">
+                             <span className="shiny-text text-[13px] font-medium block">
+                                Start your dream job search. View new features.
+                             </span>
                         </div>
-                        <h1 className="text-5xl font-medium tracking-tight text-gray-900 dark:text-white mb-2">Good Morning {firstName} <span className="animate-pulse inline-block">👋</span></h1>
-                        <p className="text-gray-500 dark:text-[#888888] text-lg">Let JobPilot help you land your next opportunity.</p>
+                        
+                        <h1 className="text-5xl font-medium tracking-tight text-gray-900 dark:text-white mb-3 flex justify-center flex-wrap gap-x-3 gap-y-1">
+                             {["Good", "Morning", firstName].map((word, i) => (
+                                <motion.span
+                                    key={i}
+                                    initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
+                                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                    transition={{ 
+                                        delay: 0.1 + (i * 0.1), 
+                                        duration: 0.6,
+                                        ease: [0.2, 0.65, 0.3, 0.9]
+                                    }}
+                                    className="inline-block"
+                                >
+                                    {word}
+                                </motion.span>
+                             ))}
+                             <motion.span
+                                initial={{ opacity: 0, scale: 0.5, rotate: -20 }}
+                                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                                transition={{ delay: 0.5, type: 'spring', stiffness: 200, damping: 12 }}
+                                className="inline-block ml-1"
+                            >👋</motion.span>
+                        </h1>
+                        
+                        <motion.p 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.6, duration: 0.8 }}
+                            className="text-gray-500 dark:text-[#888888] text-lg"
+                        >
+                            Let JobPilot help you land your next opportunity.
+                        </motion.p>
                     </div>
 
                     <div className="w-full max-w-3xl relative mb-6">
