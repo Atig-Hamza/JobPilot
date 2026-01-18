@@ -5,7 +5,7 @@ export const getHistoryTitleByUserId = async (userId, page = 1, limit = 20) => {
     const skip = (page - 1) * limit;
     const history = await History.find({ userId })
         .select('title roomId createdAt')
-        .sort({ createdAt: -1 })
+        .sort({ updatedAt: -1 })
         .skip(skip)
         .limit(limit);
     
