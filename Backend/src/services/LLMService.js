@@ -78,4 +78,22 @@ async function generateChatTitle(roomId) {
     }
 }
 
-export { generateText, generateChatTitle };
+async function generateCompletion(prompt, systemPrompt) {
+    try {
+        const completion = await openai.chat.completions.create({
+            model: "moonshotai/kimi-k2-instruct",
+            messages: [
+                { role: "system", content: systemPrompt || "You are a helpful assistant." },
+                { role: "user", content: prompt }
+            ],
+            temperature: 0.2,
+            max_tokens: 2048
+        });
+        return completion.choices[0].message.content;
+    } catch (error) {
+        console.error("OpenAI Completion Error:", error);
+        throw error;
+    }
+}
+
+export { generateText, generateChatTitle, generateCompletion };
