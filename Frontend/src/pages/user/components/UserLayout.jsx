@@ -29,6 +29,31 @@ const UserLayout = ({ children, activeMode, isGenerating }) => {
     const user = JSON.parse(localStorage.getItem('user')) || { fullName: 'User', email: 'user@example.com' };
 
     useEffect(() => {
+        if (activeMode === 'onboarding') return;
+        if (sessionStorage.getItem('skipOnboarding') === 'true') return;
+
+        const checkProfile = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+
+                const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+                const response = await fetch(`${API_URL}/profile`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.status === 404) {
+                    navigate('/user/onboarding');
+                }
+            } catch (error) {
+                console.error("Profile check failed", error);
+            }
+        };
+
+        checkProfile();
+    }, [activeMode, navigate]);
+
+    useEffect(() => {
         if (isMobile) {
             setIsSidebarCollapsed(true);
         } else {
