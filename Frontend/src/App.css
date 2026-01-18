@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .shiny-text {
+    background: linear-gradient(
+      to right,
+      #9ca3af 20%,
+      #1f2937 40%,
+      #4f46e5 50%,
+      #1f2937 60%,
+      #9ca3af 80%
+    );
+    background-size: 200% auto;
+    color: #000;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 4s linear infinite;
+  }
+
+  .dark .shiny-text {
+    background: linear-gradient(
+        to right,
+        #b1b1b1 20%,
+        #ffffff 40%,
+        #6366f1 50%,
+        #ffffff 60%,
+        #b1b1b1 80%
+    );
+    background-size: 200% auto;
+    color: #fff;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 4s linear infinite;
+  }
+
+  @keyframes shine {
+    to {
+      background-position: 200% center;
+    }
+  }
+}

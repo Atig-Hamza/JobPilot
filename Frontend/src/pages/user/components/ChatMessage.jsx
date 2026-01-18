@@ -28,27 +28,18 @@ const ChatMessage = ({ msg, isStreaming }) => {
     };
 
     return (
-        <div className={msg.role === 'user' ? "flex justify-end w-full group" : "flex items-start gap-5 w-full animate-in fade-in slide-in-from-bottom-2 duration-500"}>
+        <div className={msg.role === 'user' ? "flex justify-end w-full group" : "flex items-start gap-3 md:gap-5 w-full animate-in fade-in slide-in-from-bottom-2 duration-500"}>
             {msg.role === 'user' ? (
-                <div className="flex flex-col items-end gap-2 max-w-[80%]">
-                    <div className="bg-gray-100 dark:bg-gray-800 text-gray-900 px-5 py-3 rounded-2xl rounded-tr-sm">
-                        <p className="text-[15px] leading-relaxed whitespace-pre-wrap text-left font-medium tracking-wide dark:text-gray-100">
+                <div className="flex flex-col items-end gap-2 max-w-[90%] md:max-w-[80%]">
+                    <div className="bg-gray-100 dark:bg-[#161616] text-gray-900 px-4 md:px-5 py-2 md:py-3 rounded-2xl rounded-tr-sm">
+                        <p className="text-[14px] md:text-[15px] leading-relaxed whitespace-pre-wrap text-left font-medium tracking-wide dark:text-gray-100">
                             {msg.content}
                         </p>
                     </div>
                 </div>
             ) : (
                 <>
-                    <div className="w-8 h-8 mt-1 rounded-xl flex items-center justify-center shrink-0 overflow-hidden">
-                        <img src={theme === 'dark' ? AiLogoWhite : AiLogo} alt="AI" className="w-full h-full object-contain p-0.5" />
-                    </div>
-
                     <div className="flex-1 min-w-0 backdrop-blur-sm rounded-2xl p-0.5 sm:p-0">
-                        <div className="flex items-center gap-3 mb-2 px-1">
-                            <span className="text-xs font-bold text-gray-900 dark:text-gray-100 tracking-tight">JobPilot AI</span>
-                            <span className="text-[10px] bg-gray-100 dark:bg-[#111111] text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-800 uppercase tracking-wider font-bold">Bot</span>
-                        </div>
-
                         {msg.processLogs && msg.processLogs.length > 0 && (
                             <div className="mb-5">
                                 <button

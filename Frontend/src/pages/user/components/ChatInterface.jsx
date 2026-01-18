@@ -8,7 +8,7 @@ const ChatInterface = ({ messages, isLoading, isGenerating }) => {
     const { theme } = useTheme();
 
     return (
-        <div className="w-full max-w-3xl px-6 flex flex-col gap-12 pt-12 pb-44">
+        <div className="w-full max-w-3xl px-4 md:px-6 flex flex-col gap-8 md:gap-12 pt-8 md:pt-12 pb-32 md:pb-44">
             {messages.map((msg, idx) => (
                 <ChatMessage
                     key={idx}
@@ -19,14 +19,7 @@ const ChatInterface = ({ messages, isLoading, isGenerating }) => {
 
             {isLoading && (
                 <div className="flex items-start gap-5 w-full">
-                    <div className="w-8 h-8 mt-1 rounded-xl flex items-center justify-center shrink-0 overflow-hidden bg-white dark:bg-[#111111] dark:border dark:border-gray-800">
-                        <img src={theme === 'dark' ? AiLogoWhite : AiLogo} alt="AI" className="w-full h-full object-contain p-0.5 opacity-80" />
-                    </div>
                     <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2 px-1">
-                            <span className="text-xs font-bold text-gray-900 dark:text-gray-100 tracking-tight">JobPilot AI</span>
-                            <span className="text-[10px] bg-gray-100 dark:bg-[#111111] text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-800 uppercase tracking-wider font-bold">Bot</span>
-                        </div>
                         <div className="flex items-center gap-1.5 px-1">
                             <span className="text-xs font-bold text-gray-400 dark:text-gray-500 animate-pulse">Thinking</span>
                             <div className="flex gap-0.5 pt-1">

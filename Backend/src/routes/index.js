@@ -5,6 +5,7 @@ import jopRoutes from './JOPRoutes.js';
 import waitlistRoutes from './waitlistRoutes.js';
 import authRoutes from './authRoutes.js';
 import codeRoutes from './codeRoutes.js';
+import historyRoutes from './historyRoutes.js';
 
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.use('/waitlist', waitlistRoutes);
 router.use('/', jopRoutes);
 router.use('/auth', authRoutes);
 router.use('/codes', codeRoutes);
+router.use('/history', historyRoutes);
 
 export default router;
