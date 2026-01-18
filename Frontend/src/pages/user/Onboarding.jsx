@@ -13,6 +13,8 @@ const Onboarding = () => {
         contactEmail: '',
         phoneNumber: '',
         skills: '',
+        languages: [],
+        certificates: [],
         experience: [],
         education: [],
         socialLinks: []
@@ -39,12 +41,14 @@ const Onboarding = () => {
             const data = await res.json();
 
             if (data.status === 'success') {
-                const { bio, contactEmail, phoneNumber, skills, experience, education, cv, socialLinks } = data.data;
+                const { bio, contactEmail, phoneNumber, skills, languages, certificates, experience, education, cv, socialLinks } = data.data;
                 setFormData({
                     bio: bio || '',
                     contactEmail: contactEmail || '',
                     phoneNumber: phoneNumber || '',
                     skills: Array.isArray(skills) ? skills.join(', ') : skills || '',
+                    languages: languages || [],
+                    certificates: certificates || [],
                     experience: experience || [],
                     education: education || [],
                     socialLinks: socialLinks || [],
@@ -139,6 +143,40 @@ const Onboarding = () => {
 
     const removeSocialLink = (index) => {
         setFormData(prev => ({ ...prev, socialLinks: prev.socialLinks.filter((_, i) => i !== index) }));
+    };
+
+    const addLanguage = () => {
+        setFormData(prev => ({
+            ...prev,
+            languages: [...prev.languages, { language: '', proficiency: 'Intermediate' }]
+        }));
+    };
+
+    const updateLanguage = (index, field, value) => {
+        const newLangs = [...formData.languages];
+        newLangs[index][field] = value;
+        setFormData(prev => ({ ...prev, languages: newLangs }));
+    };
+
+    const removeLanguage = (index) => {
+        setFormData(prev => ({ ...prev, languages: prev.languages.filter((_, i) => i !== index) }));
+    };
+
+    const addCertificate = () => {
+        setFormData(prev => ({
+            ...prev,
+            certificates: [...prev.certificates, { name: '', issuer: '', date: '' }]
+        }));
+    };
+
+    const updateCertificate = (index, field, value) => {
+        const newCerts = [...formData.certificates];
+        newCerts[index][field] = value;
+        setFormData(prev => ({ ...prev, certificates: newCerts }));
+    };
+
+    const removeCertificate = (index) => {
+        setFormData(prev => ({ ...prev, certificates: prev.certificates.filter((_, i) => i !== index) }));
     };
 
     return (
@@ -275,6 +313,93 @@ const Onboarding = () => {
                                         className="w-full p-3 rounded-lg bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-zinc-800 focus:border-black dark:focus:border-zinc-600 outline-none"
                                         placeholder="React, Node.js, Design..."
                                     />
+                                </div>
+
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="text-sm font-medium">Languages</label>
+                                        <button onClick={addLanguage} className="text-xs flex items-center gap-1 hover:underline">
+                                            <i className="ph ph-plus"></i> Add Language
+                                        </button>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {formData.languages.map((lang, idx) => (
+                                            <div key={idx} className="flex gap-2 items-center group">
+                                                <input
+                                                    placeholder="Language (e.g. English)"
+                                                    value={lang.language}
+                                                    onChange={(e) => updateLanguage(idx, 'language', e.target.value)}
+                                                    className="flex-1 p-3 rounded-lg bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-zinc-800 focus:border-black dark:focus:border-zinc-600 outline-none"
+                                                />
+                                                <select
+                                                    value={lang.proficiency}
+                                                    onChange={(e) => updateLanguage(idx, 'proficiency', e.target.value)}
+                                                    className="w-1/3 p-3 rounded-lg bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-zinc-800 focus:border-black dark:focus:border-zinc-600 outline-none"
+                                                >
+                                                    <option value="Basic">Basic</option>
+                                                    <option value="Intermediate">Intermediate</option>
+                                                    <option value="Advanced">Advanced</option>
+                                                    <option value="Fluent">Fluent</option>
+                                                    <option value="Native">Native</option>
+                                                </select>
+                                                <button
+                                                    onClick={() => removeLanguage(idx)}
+                                                    className="p-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <i className="ph ph-trash"></i>
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {formData.languages.length === 0 && (
+                                            <p className="text-xs text-gray-500 italic">No languages added.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <label className="text-sm font-medium">Certificates</label>
+                                    <button onClick={addCertificate} className="text-xs flex items-center gap-1 hover:underline">
+                                        <i className="ph ph-plus"></i> Add
+                                    </button>
+                                </div>
+                                <div className="space-y-4">
+                                    {formData.certificates.map((cert, idx) => (
+                                        <div key={idx} className="p-4 rounded-lg border border-gray-200 dark:border-zinc-800 relative group">
+                                            <button
+                                                onClick={() => removeCertificate(idx)}
+                                                className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <i className="ph ph-trash"></i>
+                                            </button>
+                                            <div className="grid grid-cols-2 gap-4 mb-3">
+                                                <input
+                                                    placeholder="Certificate Name"
+                                                    value={cert.name}
+                                                    onChange={(e) => updateCertificate(idx, 'name', e.target.value)}
+                                                    className="p-2 bg-transparent border-b border-gray-200 dark:border-zinc-800 outline-none focus:border-black dark:focus:border-zinc-600"
+                                                />
+                                                <input
+                                                    placeholder="Issuer"
+                                                    value={cert.issuer}
+                                                    onChange={(e) => updateCertificate(idx, 'issuer', e.target.value)}
+                                                    className="p-2 bg-transparent border-b border-gray-200 dark:border-zinc-800 outline-none focus:border-black dark:focus:border-zinc-600"
+                                                />
+                                            </div>
+                                            <input
+                                                placeholder="Date (e.g. 2023)"
+                                                value={cert.date}
+                                                onChange={(e) => updateCertificate(idx, 'date', e.target.value)}
+                                                className="w-full p-2 bg-transparent border-b border-gray-200 dark:border-zinc-800 outline-none focus:border-black dark:focus:border-zinc-600"
+                                            />
+                                        </div>
+                                    ))}
+                                    {formData.certificates.length === 0 && (
+                                        <p className="text-sm text-gray-400 italic text-center py-4 border border-dashed border-gray-200 dark:border-zinc-800 rounded-lg">
+                                            No certificates added yet.
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
