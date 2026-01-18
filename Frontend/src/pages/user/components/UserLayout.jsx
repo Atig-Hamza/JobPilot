@@ -7,19 +7,30 @@ const UserLayout = ({ children, activeMode }) => {
     const { theme, toggleTheme } = useTheme();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [credits, setCredits] = useState(() => localStorage.getItem('credits') || '0');
     const profileRef = useRef(null);
 
     const user = JSON.parse(localStorage.getItem('user')) || { fullName: 'User', email: 'user@example.com' };
-    const credits = localStorage.getItem('credits') || '0';
 
     useEffect(() => {
+        const handleCreditsUpdate = (e) => {
+            const newCredits = e.detail || localStorage.getItem('credits') || '0';
+            setCredits(newCredits);
+        };
+
+        window.addEventListener('credits-updated', handleCreditsUpdate);
+        
         const handleClickOutside = (event) => {
             if (profileRef.current && !profileRef.current.contains(event.target)) {
                 setIsProfileOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('credits-updated', handleCreditsUpdate);
+        };
     }, []);
 
     const handleLogout = () => {
