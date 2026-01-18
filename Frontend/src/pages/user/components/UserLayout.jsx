@@ -178,8 +178,14 @@ const UserLayout = ({ children, activeMode, isGenerating }) => {
             <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
             
             {deleteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#222] w-full max-w-sm rounded-xl shadow-2xl p-6 transform transition-all scale-100">
+                <div 
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={() => { setDeleteModalOpen(false); setItemToDelete(null); }}
+                >
+                    <div 
+                        className="bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#222] w-full max-w-sm rounded-xl shadow-2xl p-6 animate-in zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Delete Chat?</h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                             This will permanently delete "{itemToDelete?.title || 'this chat'}". This action cannot be undone.
