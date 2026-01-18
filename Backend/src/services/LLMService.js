@@ -54,7 +54,7 @@ async function generateChatTitle(roomId) {
         const messages = [...roomContexts[roomId]];
         messages.push({ 
             role: "user", 
-            content: "Generate a very short title (max 4 words) for this conversation based on the context." 
+            content: "Generate a very short title (max 4 words) for this conversation based on the context. Respond with only the title, no additional text, no markdown." 
         });
 
         const response = await openai.chat.completions.create({
