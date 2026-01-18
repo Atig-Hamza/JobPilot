@@ -84,8 +84,11 @@ const JobPilotDashboard = () => {
 
         if (urlRoomId && urlRoomId !== roomId) {
             fetchHistory();
-        } else if (!urlRoomId && roomId) {
-
+        } else if (!urlRoomId && chatStarted) {
+            setMessages([]);
+            setChatStarted(false);
+            setRoomId(generateRoomId());
+            setInputValue("");
         }
     }, [urlRoomId]);
 
@@ -218,6 +221,7 @@ const JobPilotDashboard = () => {
                 }
             }
             setIsGenerating(false);
+            window.dispatchEvent(new Event('history-updated'));
         } catch (error) {
             console.error("Error fetching AI response:", error);
             setIsLoading(false);
