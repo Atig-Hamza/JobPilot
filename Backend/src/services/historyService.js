@@ -1,8 +1,22 @@
 import History from "../models/history.js";
 import { generateChatTitle } from "./LLMService.js";
 
-export const getHistoryTitleByUserId = async (userId) => {
-    return await History.find({ userId }).select('title').sort({ createdAt: -1 });
+export const getHistoryTitleByUserId = async (userId, page = 1, limit = 20) => {
+    const skip = (page - 1) * limit;
+    const history = await History.find({ userId })
+        .select('title roomId createdAt')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+    
+    const total = await History.countDocuments({ userId });
+    
+    return {
+        history,
+        total,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page
+    };
 }
 
 export const addHistoryEntry = async (userId, title, content) => {
@@ -29,6 +43,10 @@ export const updateHistoryEntry = async (historyId, userId, updatedContent) => {
     }
     historyEntry.content = updatedContent;
     return await historyEntry.save();
+}
+
+export const getHistoryByRoomId = async (userId, roomId) => {
+    return await History.findOne({ userId, roomId });
 }
 
 export const saveChatInteraction = async (userId, roomId, prompt, response) => {
