@@ -163,6 +163,9 @@ const JobPilotDashboard = () => {
                 if (!isResponseStarted) {
                     setIsLoading(false);
                     isResponseStarted = true;
+                    if (!urlRoomId) {
+                        setSearchParams({ roomId: roomId });
+                    }
                     setMessages(prev => [...prev, { role: 'ai', content: '' }]);
                 }
 
@@ -272,7 +275,7 @@ const JobPilotDashboard = () => {
     };
 
     return (
-        <UserLayout activeMode={activeMode}>
+        <UserLayout activeMode={activeMode} isGenerating={isGenerating}>
 
             <header className={`absolute top-0 left-0 right-0 p-6 flex ${isMobile ? 'justify-center' : 'justify-between'} items-center z-10 pointer-events-none`}>
                 <div className="flex items-center gap-3 cursor-pointer select-none pointer-events-auto">
