@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../../context/ThemeContext';
+import SettingsModal from './SettingsModal';
 
 const useIsMobile = () => {
     const [isMobile, setIsMobile] = useState(false);
@@ -25,6 +26,7 @@ const UserLayout = ({ children, activeMode, isGenerating }) => {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     const user = JSON.parse(localStorage.getItem('user')) || { fullName: 'User', email: 'user@example.com' };
 
@@ -173,6 +175,8 @@ const UserLayout = ({ children, activeMode, isGenerating }) => {
 
     return (
         <div className="flex w-full h-screen bg-white dark:bg-[#050505] text-gray-900 dark:text-[#EDEDED] font-sans antialiased overflow-hidden transition-colors duration-300">
+            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+            
             {deleteModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#222] w-full max-w-sm rounded-xl shadow-2xl p-6 transform transition-all scale-100">
@@ -199,7 +203,6 @@ const UserLayout = ({ children, activeMode, isGenerating }) => {
                 </div>
             )}
 
-            {/* Mobile Overlay */}
             {isMobile && !isSidebarCollapsed && (
                 <div
                     className="fixed inset-0 bg-black/50 z-30 backdrop-blur-sm"
@@ -399,7 +402,10 @@ const UserLayout = ({ children, activeMode, isGenerating }) => {
                                     <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
                                 </button>
                                 <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1a1a1a] rounded-lg transition-colors"
-                                    onClick={() => navigate('/user/settings')}
+                                    onClick={() => {
+                                        setIsSettingsOpen(true);
+                                        setIsProfileOpen(false);
+                                    }}
                                 >
                                     <i className="ph ph-gear text-lg"></i>
                                     <span>Settings</span>
@@ -427,7 +433,6 @@ const UserLayout = ({ children, activeMode, isGenerating }) => {
                     </div>
                 </div>
 
-                {/* Mobile Menu Trigger */}
                 {isMobile && isSidebarCollapsed && (
                     <button
                         className="absolute top-6 left-6 z-30 p-2 text-gray-500 dark:text-[#888888] bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#333] rounded-lg shadow-sm"
