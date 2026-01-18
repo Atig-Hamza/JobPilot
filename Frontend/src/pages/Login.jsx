@@ -177,7 +177,19 @@ const LoginPage = () => {
       if (user.role === 'admin') {
         navigate('/admin/portal');
       } else {
-        navigate('/user/dashboard');
+        try {
+          const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+          const profileRes = await axios.get(`${API_URL}/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (profileRes.data.status === 'success') {
+            navigate('/user/dashboard');
+          } else {
+            navigate('/user/onboarding');
+          }
+        } catch (e) {
+          navigate('/user/onboarding');
+        }
       }
     } catch (err) {
       console.error("Login failed", err);
@@ -265,21 +277,21 @@ const LoginPage = () => {
 
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="space-y-6">
-                <MinimalInput 
-                  label="Work Email" 
-                  type="email" 
-                  name="email" 
-                  placeholder="Email address" 
-                  icon={Mail} 
+                <MinimalInput
+                  label="Work Email"
+                  type="email"
+                  name="email"
+                  placeholder="Email address"
+                  icon={Mail}
                   value={loginData.email}
                   onChange={handleChange}
                 />
-                <MinimalInput 
-                  label="Password" 
-                  type="password" 
-                  name="password" 
-                  placeholder="Password" 
-                  icon={Lock} 
+                <MinimalInput
+                  label="Password"
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  icon={Lock}
                   value={loginData.password}
                   onChange={handleChange}
                 />
