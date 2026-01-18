@@ -49,48 +49,48 @@ const JobPilotDashboard = () => {
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
 
-    useEffect(() => {
-        const fetchHistory = async () => {
-            if (!urlRoomId) return;
+    const fetchChatHistory = async (idToFetch) => {
+        if (!idToFetch) return;
 
-            try {
-                const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
-                const token = localStorage.getItem('token');
+        try {
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+            const token = localStorage.getItem('token');
 
-                const response = await fetch(`${API_URL}/history/${urlRoomId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+            const response = await fetch(`${API_URL}/history/${idToFetch}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
 
-                const data = await response.json();
+            const data = await response.json();
 
-                if (data.status === 'success' && data.data) {
-                    const parsedMessages = data.data.content.map(msg => {
-                        if (msg.startsWith('User: ')) {
-                            return { role: 'user', content: msg.replace('User: ', '') };
-                        } else if (msg.startsWith('AI: ')) {
-                            return { role: 'ai', content: msg.replace('AI: ', '') };
-                        }
-                        return null;
-                    }).filter(Boolean);
+            if (data.status === 'success' && data.data) {
+                const parsedMessages = data.data.content.map(msg => {
+                    if (msg.startsWith('User: ')) {
+                        return { role: 'user', content: msg.replace('User: ', '') };
+                    } else if (msg.startsWith('AI: ')) {
+                        return { role: 'ai', content: msg.replace('AI: ', '') };
+                    }
+                    return null;
+                }).filter(Boolean);
 
-                    setMessages(parsedMessages);
-                    setRoomId(urlRoomId);
-                    setChatStarted(true);
-                }
-            } catch (error) {
-                console.error("Error fetching history:", error);
+                setMessages(parsedMessages);
+                setRoomId(idToFetch);
+                setChatStarted(true);
             }
-        };
+        } catch (error) {
+            console.error("Error fetching history:", error);
+        }
+    };
 
-        if (urlRoomId && urlRoomId !== roomId) {
-            fetchHistory();
+    useEffect(() => {
+        if (urlRoomId && (urlRoomId !== roomId || messages.length === 0)) {
+            fetchChatHistory(urlRoomId);
         } else if (!urlRoomId && chatStarted) {
             setMessages([]);
             setChatStarted(false);
             setRoomId(generateRoomId());
             setInputValue("");
         }
-    }, [urlRoomId]);
+    }, [urlRoomId, roomId]);
 
     const scrollToBottom = (behavior = "smooth") => {
         messagesEndRef.current?.scrollIntoView({ behavior: behavior });
@@ -100,10 +100,12 @@ const JobPilotDashboard = () => {
         scrollToBottom(isLoading ? "smooth" : "auto");
     }, [messages, isLoading]);
 
-    const handleSendMessage = async () => {
-        if (!inputValue.trim()) return;
+    const handleSendMessage = async (customText = null, forcedMode = null) => {
+        const text = customText || inputValue;
+        const currentMode = forcedMode || activeMode;
 
-        // Optimistic Credit Update
+        if (!text.trim()) return;
+
         const currentCredits = parseInt(localStorage.getItem('credits') || '0', 10);
         if (currentCredits > 0) {
             const newCredits = Math.max(0, currentCredits - 10);
@@ -111,15 +113,19 @@ const JobPilotDashboard = () => {
             window.dispatchEvent(new CustomEvent('credits-updated', { detail: newCredits }));
         }
 
-        setMessages(prev => [...prev, { role: 'user', content: inputValue }]);
+        setMessages(prev => [...prev, { role: 'user', content: text }]);
 
-        let apiPrompt = inputValue;
-        if (activeMode === 'jop1_scrape') {
-            apiPrompt = `Scrape Request:\nKeywords: ${inputValue}\nCountry Code: ${selectedCountry.toUpperCase()}`;
+        let apiPrompt = text;
+        if (currentMode === 'jop1_scrape') {
+            apiPrompt = `Scrape Request:\nKeywords: ${text}\nCountry Code: ${selectedCountry.toUpperCase()}`;
         }
 
         setChatStarted(true);
-        setInputValue("");
+        if (!customText) setInputValue("");
+        if (forcedMode && forcedMode !== activeMode) {
+            setActiveMode(forcedMode);
+        }
+
         setIsLoading(true);
         setIsGenerating(true);
 
@@ -130,14 +136,14 @@ const JobPilotDashboard = () => {
             let response;
             const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
 
-            if (activeMode === 'jop1_scrape') {
+            if (currentMode === 'jop1_scrape') {
                 response = await fetch(`${API_URL}/crawl`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
                     },
-                    body: JSON.stringify({ keywords: inputValue, country: selectedCountry, limit: 5 })
+                    body: JSON.stringify({ keywords: text, country: selectedCountry, limit: 5 })
                 });
             } else {
                 response = await fetch(`${API_URL}/llm/generate`, {
@@ -154,11 +160,54 @@ const JobPilotDashboard = () => {
             const decoder = new TextDecoder();
             let buffer = '';
 
+            const processPart = (part) => {
+                if (part.startsWith('data: ')) {
+                    try {
+                        const jsonStr = part.slice(6);
+                        const data = JSON.parse(jsonStr);
+
+                        if (data.type === 'process') {
+                            setMessages(prev => {
+                                const newMessages = [...prev];
+                                if (newMessages.length > 0) {
+                                    const lastMsgIndex = newMessages.length - 1;
+                                    const lastMsg = newMessages[lastMsgIndex];
+                                    const currentProcess = lastMsg.processLogs || [];
+                                    newMessages[lastMsgIndex] = {
+                                        ...lastMsg,
+                                        processLogs: [...currentProcess, data.content]
+                                    };
+                                }
+                                return newMessages;
+                            });
+                        } else if (data.type === 'content' || data.type === 'markdown') {
+                            const content = data.content;
+                            aiText += (data.type === 'markdown' ? content + '\n\n' : content);
+
+                            setMessages(prev => {
+                                const newMessages = [...prev];
+                                if (newMessages.length > 0) {
+                                    const lastMsgIndex = newMessages.length - 1;
+                                    const lastMsg = newMessages[lastMsgIndex];
+                                    newMessages[lastMsgIndex] = {
+                                        ...lastMsg,
+                                        content: aiText
+                                    };
+                                }
+                                return newMessages;
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Error parsing SSE:', e);
+                    }
+                }
+            };
+
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
 
-                const text = decoder.decode(value, { stream: true });
+                const textChunk = decoder.decode(value, { stream: true });
 
                 if (!isResponseStarted) {
                     setIsLoading(false);
@@ -169,62 +218,26 @@ const JobPilotDashboard = () => {
                     setMessages(prev => [...prev, { role: 'ai', content: '' }]);
                 }
 
-                if (activeMode === 'jop1_scrape') {
-                    buffer += text;
-                    const parts = buffer.split('\n\n');
-                    buffer = parts.pop();
+                buffer += textChunk;
+                let parts = buffer.split('\n\n');
+                buffer = parts.pop();
 
-                    for (const part of parts) {
-                        if (part.startsWith('data: ')) {
-                            try {
-                                const jsonStr = part.slice(6);
-                                const data = JSON.parse(jsonStr);
-
-                                if (data.type === 'process') {
-                                    setMessages(prev => {
-                                        const newMessages = [...prev];
-                                        if (newMessages.length > 0) {
-                                            const lastMsg = newMessages[newMessages.length - 1];
-                                            const currentProcess = lastMsg.processLogs || [];
-                                            newMessages[newMessages.length - 1] = {
-                                                ...lastMsg,
-                                                processLogs: [...currentProcess, data.content]
-                                            };
-                                        }
-                                        return newMessages;
-                                    });
-                                } else if (data.type === 'markdown') {
-                                    aiText += data.content + '\n\n';
-                                    setMessages(prev => {
-                                        const newMessages = [...prev];
-                                        if (newMessages.length > 0) {
-                                            const lastMsg = newMessages[newMessages.length - 1];
-                                            newMessages[newMessages.length - 1] = {
-                                                ...lastMsg,
-                                                content: aiText
-                                            };
-                                        }
-                                        return newMessages;
-                                    });
-                                }
-                            } catch (e) {
-                                console.error('Stream parse error:', e);
-                            }
-                        }
-                    }
-                } else {
-                    aiText += text;
-                    setMessages(prev => {
-                        const newMessages = [...prev];
-                        if (newMessages.length > 0) {
-                            newMessages[newMessages.length - 1] = { role: 'ai', content: aiText };
-                        }
-                        return newMessages;
-                    });
+                for (const part of parts) {
+                    processPart(part);
                 }
             }
+
+            if (buffer.trim()) {
+                const parts = buffer.split('\n\n');
+                for (const part of parts) {
+                    if (part.trim()) processPart(part);
+                }
+            }
+
             setIsGenerating(false);
             window.dispatchEvent(new Event('history-updated'));
+            // Refresh the chat from server to ensure consistent UI
+            if (roomId) await fetchChatHistory(roomId);
         } catch (error) {
             console.error("Error fetching AI response:", error);
             setIsLoading(false);
@@ -467,7 +480,9 @@ const JobPilotDashboard = () => {
                                                     Web search
                                                 </button>
 
-                                                <button className="flex items-center gap-1.5 px-2.5 py-2 rounded-full text-[13px] leading-none transition-colors
+                                                <button
+                                                    onClick={() => handleSendMessage("I want to create a professional CV based on my profile.", "general")}
+                                                    className="flex items-center gap-1.5 px-2.5 py-2 rounded-full text-[13px] leading-none transition-colors
         bg-gray-100 dark:bg-[#222] hover:bg-gray-200 dark:hover:bg-[#2a2a2a] 
         text-gray-500 dark:text-[#888888] hover:text-black dark:hover:text-white"
                                                 >

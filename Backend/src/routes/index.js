@@ -7,11 +7,13 @@ import authRoutes from './authRoutes.js';
 import codeRoutes from './codeRoutes.js';
 import historyRoutes from './historyRoutes.js';
 import profileRoutes from './profileRoutes.js';
+import cvRoutes from './cvRoutes.js';
 
 const router = express.Router();
 
 router.use('/users', userRoutes);
 router.use('/profile', profileRoutes);
+router.use('/cv', cvRoutes);
 router.use('/llm', llmRoutes);
 router.use('/waitlist', waitlistRoutes);
 router.use('/', jopRoutes);

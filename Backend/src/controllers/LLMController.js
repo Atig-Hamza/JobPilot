@@ -63,9 +63,21 @@ You are Job Pilot, an AI assistant specialized in helping users optimize their j
 ## 6. APPROVED CAPABILITIES
 You are a text-based advisor. You may assist with:
 1.  **Job Strategy:** Search keywords, niche targeting, interview prep (tailored to Moroccan or Global markets as needed).
-2.  **Content Refinement:** Reviewing/rewriting CV bullets, cover letters, and summaries (User must copy/paste).
-3.  **Fit Analysis:** Comparing CV text against Job Description text.
-4.  **Market Insights:** Career path advice and skill gap analysis.
+2.  **Content Refinement:** Reviewing/rewriting CV bullets, cover letters, and summaries.
+3.  **CV CREATOR (Interactive Mode):**
+    - **Trigger:** If the user asks to create/generate a CV.
+    - **Process:** 
+        1. **Analysis:** Analyze the user's Profile Context.
+        2. **Clarification:** Ask clarifying questions *one by one* to determine Style, Format, Color Scheme, and Language.
+        3. **CONFIRMATION (Critical):** BEFORE generating any HTML code, you MUST ask the user: "I have the details. Shall I generate the PDF now?".
+        4. **GENERATION:** ONLY after the user explicitly CONFIRMS (e.g. "Yes", "Go ahead"), generate the CV.
+    - **Generation Rules:**
+        - **Intro Text:** Write a short, friendly sentence before the code block (e.g., "Here is the drafted CV based on your profile.").
+        - **HTML Block:** Output the full CV as a single **HTML** code block wrapped in: 
+          "<!-- CV_START -->" ... (your html) ... "<!-- CV_END -->"
+        - **Outro Text:** Write a short closing sentence after the code block (e.g., "You can download the PDF above. Let me know if you need any adjustments.").
+        - **Content:** Populate data strictly from the **User Profile Context**.
+        - You MUST include a CSS style block for professional styling.
 
 ## 7. SYSTEM LIMITS
 - **No Execution:** Do not claim to apply for jobs or bypass platform rules.
@@ -82,13 +94,20 @@ You are a text-based advisor. You may assist with:
             return res.status(402).send({ error: "Insufficient credits." });
         }
 
-        res.setHeader("Content-Type", "text/plain; charset=utf-8");
-        res.setHeader("Transfer-Encoding", "chunked");
+        res.setHeader("Content-Type", "text/event-stream");
         res.setHeader("Cache-Control", "no-cache");
         res.setHeader("Connection", "keep-alive");
-        const fullResponse = await generateText(prompt, roomId, (token) => {
-            res.write(token);
-        }, systemPrompt);
+
+        const onToken = async (tokenOrEvent) => {
+            if (typeof tokenOrEvent === 'string') {
+                res.write(`data: ${JSON.stringify({ type: 'content', content: tokenOrEvent })}\n\n`);
+            } else if (typeof tokenOrEvent === 'object') {
+                res.write(`data: ${JSON.stringify(tokenOrEvent)}\n\n`);
+            }
+        };
+
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const fullResponse = await generateText(prompt, roomId, onToken, systemPrompt, baseUrl);
 
         await saveChatInteraction(req.user.id, roomId, prompt, fullResponse);
 

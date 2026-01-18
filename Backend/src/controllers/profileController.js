@@ -100,6 +100,12 @@ You are an expert CV parser. Extract the following information from the CV text 
   "socialLinks": [
     { "platform": "Platform Name (e.g. LinkedIn, GitHub, Website)", "url": "URL" }
   ],
+  "languages": [
+    { "language": "Language Name", "proficiency": "Native/Fluent/Advanced/Intermediate/Basic" }
+  ],
+  "certificates": [
+    { "name": "Certificate Name", "issuer": "Issuing Organization", "date": "Date Obtained" }
+  ],
   "skills": ["Array", "of", "skills"],
   "experience": [
     { "role": "Job Title", "company": "Company Name", "startDate": "YYYY-MM-DD (approx)", "endDate": "YYYY-MM-DD or Present", "description": "Short description" }
