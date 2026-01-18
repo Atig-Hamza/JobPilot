@@ -19,12 +19,32 @@ import AccessManagement from './pages/admin/AccessManagement';
 import Authenticate from './middleware/authenticate';
 import Preloader from './components/Preloader';
 import InterviewCoach from './pages/user/InterviewCoach';
+import Onboarding from './pages/user/Onboarding';
+import { Toaster } from 'react-hot-toast';
+import { useTheme } from './context/ThemeContext';
 
 function App() {
   const [loading, setLoading] = useState(true);
+  const { theme } = useTheme();
 
   return (
     <>
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: theme === 'dark' ? '#18181b' : '#fff',
+            color: theme === 'dark' ? '#fff' : '#000',
+            border: theme === 'dark' ? '1px solid #27272a' : '1px solid #e5e7eb',
+          },
+          success: {
+            iconTheme: {
+              primary: theme === 'dark' ? '#fff' : '#000',
+              secondary: theme === 'dark' ? '#000' : '#fff',
+            },
+          },
+        }}
+      />
       <Preloader onComplete={() => setLoading(false)} />
       <Router>
         <Routes>
@@ -38,6 +58,7 @@ function App() {
           <Route path="/soon" element={<ComingSoon />} />
 
           <Route element={<Authenticate allowedRoles={['user', 'admin']} />}>
+            <Route path="/user/onboarding" element={<Onboarding />} />
             <Route path="/user/dashboard" element={<UserDashboard />} />
             <Route path="/user/autopilot" element={<AutoPilotAgent />} />
             <Route path="/user/interview-coach" element={<InterviewCoach />} />

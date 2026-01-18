@@ -6,6 +6,14 @@ const profileSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    phoneNumber: {
+        type: String,
+        default: ''
+    },
+    contactEmail: {
+        type: String,
+        default: ''
+    },
     bio: {
         type: String,
         default: ''
@@ -19,8 +27,8 @@ const profileSchema = new mongoose.Schema({
             {
                 company: String,
                 role: String,
-                startDate: Date,
-                endDate: Date,
+                startDate: String,
+                endDate: String,
                 description: String
             }
         ],
@@ -32,17 +40,21 @@ const profileSchema = new mongoose.Schema({
                 institution: String,
                 degree: String,
                 fieldOfStudy: String,
-                startDate: Date,
-                endDate: Date,
+                startDate: String,
+                endDate: String,
                 description: String
             }
         ],
         default: []
     },
     socialLinks: {
-        type: Map,
-        of: String,
-        default: {}
+        type: [
+            {
+                platform: String,
+                url: String
+            }
+        ],
+        default: []
     },
     cv: {
         public_id: {
