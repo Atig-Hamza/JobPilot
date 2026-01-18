@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
+import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ThumbsUp, ThumbsDown, Check, Copy, MoreHorizontal, ChevronDown, ChevronUp, Download, FileText, Loader2 } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Check, Copy, MoreHorizontal, ChevronDown, ChevronUp, Download, FileText, Loader2, Volume2, Share2, StopCircle } from 'lucide-react';
 import AiLogo from '../../../assets/Main/logo-without-bg.png';
 import AiLogoWhite from '../../../assets/Main/logo-white-without-bg.png';
 import { useTheme } from '../../../context/ThemeContext';
@@ -96,6 +97,96 @@ const ChatMessage = ({ msg, isStreaming }) => {
     const [feedback, setFeedback] = useState(null);
     const [isCopied, setIsCopied] = useState(false);
     const [showProcess, setShowProcess] = useState(false);
+    const [showMore, setShowMore] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            window.speechSynthesis.cancel();
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            if (isSpeaking) {
+                window.speechSynthesis.cancel();
+            }
+        };
+    }, [isSpeaking]);
+
+    const handleStopSpeaking = () => {
+        window.speechSynthesis.cancel();
+        setIsSpeaking(false);
+    };
+
+    const cleanTextForSpeech = (text) => {
+        return text
+            .replace(/<!--[\s\S]*?-->/g, '')
+            .replace(/#{1,6}\s/g, '')
+            .replace(/(\*\*|__)(.*?)\1/g, '$2')
+            .replace(/(\*|_)(.*?)\1/g, '$2')
+            .replace(/`{1,3}(.*?)`{1,3}/g, '$1')
+            .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+            .replace(/^\s*[-*+]\s/gm, '')
+            .replace(/[\\*#_`~>]/g, '')
+            .replace(/\n+/g, '. ');
+    };
+
+    const detectLanguage = (text) => {
+        const frenchPattern = /[àâäéèêëîïôöùûüçœ]|(\b(le|la|les|est|et|des|pour|dans|sur)\b)/i;
+        return frenchPattern.test(text) ? 'fr-FR' : 'en-US';
+    };
+
+    const handleSpeak = () => {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            
+            const cleanContent = cleanTextForSpeech(msg.content);
+            const language = detectLanguage(cleanContent);
+            const utterance = new SpeechSynthesisUtterance(cleanContent);
+            
+            utterance.lang = language;
+            
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => v.lang.startsWith(language) && v.name.includes('Google')) ||
+                                 voices.find(v => v.lang.startsWith(language));
+            
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+            
+            utterance.onstart = () => {
+                setIsSpeaking(true);
+            };
+            
+            utterance.onend = () => {
+                setIsSpeaking(false);
+            };
+            
+            utterance.onerror = () => {
+                setIsSpeaking(false);
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+    };
+
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'JobPilot AI Response',
+                    text: msg.content,
+                });
+            } catch (err) {
+                console.error('Error sharing:', err);
+            }
+        } else {
+            handleCopy();
+            toast.success('Copied to clipboard');
+        }
+    };
 
     const handleCopy = async () => {
         if (!msg.content) return;
@@ -173,7 +264,6 @@ const ChatMessage = ({ msg, isStreaming }) => {
                     <CVDownloadCard html={cvContent} />
 
                     {afterCv && (
-                        /* Exclude rehypeRaw to prevent any accidental HTML rendering in normal text */
                         <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{
@@ -301,6 +391,63 @@ const ChatMessage = ({ msg, isStreaming }) => {
                 <div className="flex-1 flex flex-col min-w-0 max-w-full">
                     {renderMessageContent()}
 
+                    {!isStreaming && (
+                        <div className="flex items-center gap-2 mt-4 select-none">
+                            <button
+                                onClick={handleCopy}
+                                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
+                                title="Copy"
+                            >
+                                {isCopied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+                            </button>
+
+                            <button
+                                onClick={() => setFeedback(feedback === 'good' ? null : 'good')}
+                                className={`p-1.5 transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-white/5 ${feedback === 'good' ? 'text-green-500' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}
+                                title="Good response"
+                            >
+                                <ThumbsUp size={16} />
+                            </button>
+
+                            <button
+                                onClick={() => setFeedback(feedback === 'bad' ? null : 'bad')}
+                                className={`p-1.5 transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-white/5 ${feedback === 'bad' ? 'text-red-500' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}
+                                title="Bad response"
+                            >
+                                <ThumbsDown size={16} />
+                            </button>
+
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowMore(!showMore)}
+                                    className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
+                                    title="More options"
+                                >
+                                    <MoreHorizontal size={16} />
+                                </button>
+
+                                {showMore && (
+                                    <div className="absolute top-full left-0 mt-1 w-32 bg-white dark:bg-[#18181b] border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg overflow-hidden py-1 z-10 flex flex-col">
+                                        <button
+                                            onClick={() => { handleSpeak(); setShowMore(false); }}
+                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2"
+                                        >
+                                            <Volume2 size={14} />
+                                            <span>Read this</span>
+                                        </button>
+                                        <button
+                                            onClick={() => { handleShare(); setShowMore(false); }}
+                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2"
+                                        >
+                                            <Share2 size={14} />
+                                            <span>Share</span>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {msg.processLogs && msg.processLogs.length > 0 && isStreaming && (
                         <div className="mt-3 relative overflow-hidden rounded-xl bg-white/50 dark:bg-white/5 border border-gray-100 dark:border-white/10 p-4 shadow-sm">
                             <motion.div
@@ -321,6 +468,19 @@ const ChatMessage = ({ msg, isStreaming }) => {
                         </div>
                     )}
                 </div>
+            )}
+
+            {isSpeaking && createPortal(
+                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top duration-300">
+                    <button
+                        onClick={handleStopSpeaking}
+                        className="flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full shadow-lg hover:opacity-90 transition-opacity font-medium text-sm"
+                    >
+                        <StopCircle size={16} className="animate-pulse" />
+                        <span>Stop Reading</span>
+                    </button>
+                </div>,
+                document.body
             )}
         </div>
     );
