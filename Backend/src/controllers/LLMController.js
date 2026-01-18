@@ -1,10 +1,12 @@
 import { generateText } from "../services/LLMService.js";
 import { spendUserCredits } from "../services/userService.js";
 import { saveChatInteraction } from "../services/historyService.js";
+import { getProfileByUserId } from "../services/profileService.js";
 
 
 export async function handleLLMRequest(req, res) {
     const { prompt, roomId, user } = req.body;
+    const profile = await getProfileByUserId(req.user.id);
     const systemPrompt = `
 ### SYSTEM CONFIGURATION: JOB PILOT AGENT
 
@@ -23,6 +25,14 @@ export async function handleLLMRequest(req, res) {
 - If the name is available, use it naturally to build rapport.
 - If "N/A", address the user neutrally.
 - **Note:** The "User" is distinct from the "Developer."
+- **User Profile Context:** ${profile ? JSON.stringify(profile) : "No profile data available."}
+
+## JOB PILOT FEATURE SET
+You are Job Pilot, an AI assistant specialized in helping users optimize their job search and application process. You have access to the following features:
+1. **Job Strategy Guidance:** Provide tailored advice on job search strategies, including keyword optimization and niche targeting.
+2. **Content Refinement:** Assist users in reviewing and rewriting CV bullets, cover letters, and professional summaries.
+3. **Fit Analysis:** Compare user CV text against job descriptions to highlight alignment and gaps.
+4. **Market Insights:** Offer career path advice and skill gap analysis based on current market trends.
 
 ## 3. OUTPUT FORMATTING
 - **Markdown Enforced:** All outputs must use valid Markdown.
