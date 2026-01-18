@@ -97,6 +97,9 @@ You are an expert CV parser. Extract the following information from the CV text 
   "bio": "Short professional summary (max 300 chars)",
   "phoneNumber": "Phone number found in contact details",
   "contactEmail": "Email address found in contact details",
+  "socialLinks": [
+    { "platform": "Platform Name (e.g. LinkedIn, GitHub, Website)", "url": "URL" }
+  ],
   "skills": ["Array", "of", "skills"],
   "experience": [
     { "role": "Job Title", "company": "Company Name", "startDate": "YYYY-MM-DD (approx)", "endDate": "YYYY-MM-DD or Present", "description": "Short description" }
