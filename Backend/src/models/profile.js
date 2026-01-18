@@ -19,8 +19,8 @@ const profileSchema = new mongoose.Schema({
             {
                 company: String,
                 role: String,
-                startDate: Date,
-                endDate: Date,
+                startDate: String,
+                endDate: String,
                 description: String
             }
         ],
@@ -32,8 +32,8 @@ const profileSchema = new mongoose.Schema({
                 institution: String,
                 degree: String,
                 fieldOfStudy: String,
-                startDate: Date,
-                endDate: Date,
+                startDate: String,
+                endDate: String,
                 description: String
             }
         ],
