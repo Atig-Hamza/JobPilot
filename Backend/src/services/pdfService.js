@@ -16,7 +16,7 @@ export const generatePdfFromHtml = async (htmlContent) => {
 
         const printStyle = `
             <style>
-                @page { margin: 0; size: letter; }
+                @page { margin: 0; size: A4; }
                 body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; font-family: ui-sans-serif, system-ui, sans-serif; }
                 * { box-sizing: border-box; }
             </style>
@@ -51,7 +51,7 @@ export const generatePdfFromHtml = async (htmlContent) => {
         await page.setContent(html, { waitUntil: 'networkidle' });
 
         const pdfBuffer = await page.pdf({
-            format: 'Letter',
+            format: 'A4',
             printBackground: true,
             margin: { top: '0', bottom: '0', left: '0', right: '0' },
             preferCSSPageSize: true
