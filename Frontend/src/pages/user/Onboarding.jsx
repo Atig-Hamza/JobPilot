@@ -10,6 +10,8 @@ const Onboarding = () => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [formData, setFormData] = useState({
         bio: '',
+        contactEmail: '',
+        phoneNumber: '',
         skills: '',
         experience: [],
         education: []
@@ -34,11 +36,13 @@ const Onboarding = () => {
                 body: formDataUpload
             });
             const data = await res.json();
-            
+
             if (data.status === 'success') {
-                const { bio, skills, experience, education, cv } = data.data;
+                const { bio, contactEmail, phoneNumber, skills, experience, education, cv } = data.data;
                 setFormData({
                     bio: bio || '',
+                    contactEmail: contactEmail || '',
+                    phoneNumber: phoneNumber || '',
                     skills: Array.isArray(skills) ? skills.join(', ') : skills || '',
                     experience: experience || [],
                     education: education || [],
@@ -117,12 +121,12 @@ const Onboarding = () => {
     const removeEducation = (index) => {
         setFormData(prev => ({ ...prev, education: prev.education.filter((_, i) => i !== index) }));
     };
-    
+
     return (
         <UserLayout activeMode="onboarding">
             <div className="flex flex-col h-full bg-white dark:bg-[#09090b] text-gray-900 dark:text-gray-100 overflow-y-auto">
                 <div className="max-w-3xl mx-auto w-full px-6 py-12">
-                    
+
                     <div className="mb-10 text-center">
                         <h1 className="text-3xl font-bold tracking-tight mb-3">Welcome to JobPilot</h1>
                         <p className="text-gray-500 dark:text-zinc-400">Let's set up your profile to personalize your experience.</p>
@@ -130,16 +134,16 @@ const Onboarding = () => {
 
                     {step === 'upload' && (
                         <div className="space-y-6">
-                            <div 
+                            <div
                                 onClick={() => fileInputRef.current?.click()}
                                 className={`border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-xl p-12 text-center cursor-pointer hover:border-black dark:hover:border-zinc-600 transition-colors group ${isAnalyzing ? 'opacity-50 pointer-events-none' : ''}`}
                             >
-                                <input 
-                                    type="file" 
-                                    ref={fileInputRef} 
-                                    className="hidden" 
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
                                     accept=".pdf,.doc,.docx"
-                                    onChange={handleFileChange} 
+                                    onChange={handleFileChange}
                                 />
                                 <div className="w-16 h-16 bg-gray-100 dark:bg-[#111] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                                     <i className="ph ph-upload-simple text-2xl text-gray-500 dark:text-zinc-400"></i>
@@ -155,7 +159,7 @@ const Onboarding = () => {
                                 <div className="h-px bg-gray-200 dark:bg-zinc-800 flex-1"></div>
                             </div>
 
-                            <button 
+                            <button
                                 onClick={() => setStep('manual')}
                                 className="w-full py-3 rounded-lg border border-gray-200 dark:border-zinc-800 font-medium hover:bg-gray-50 dark:hover:bg-[#111] transition-colors"
                             >
@@ -163,7 +167,7 @@ const Onboarding = () => {
                             </button>
 
                             <div className="text-center mt-6">
-                                <button 
+                                <button
                                     onClick={handleSkip}
                                     className="text-sm text-gray-400 hover:text-gray-600 dark:text-zinc-600 dark:hover:text-zinc-400"
                                 >
@@ -176,21 +180,43 @@ const Onboarding = () => {
                     {step === 'manual' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Email Address</label>
+                                        <input
+                                            type="email"
+                                            value={formData.contactEmail}
+                                            onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                                            className="w-full p-3 rounded-lg bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-zinc-800 focus:border-black dark:focus:border-zinc-600 outline-none"
+                                            placeholder="email@example.com"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Phone Number</label>
+                                        <input
+                                            type="tel"
+                                            value={formData.phoneNumber}
+                                            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                            className="w-full p-3 rounded-lg bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-zinc-800 focus:border-black dark:focus:border-zinc-600 outline-none"
+                                            placeholder="+1 (555) 000-0000"
+                                        />
+                                    </div>
+                                </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-2">Professional Bio</label>
-                                    <textarea 
+                                    <textarea
                                         value={formData.bio}
-                                        onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                                         className="w-full p-3 rounded-lg bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-zinc-800 focus:border-black dark:focus:border-zinc-600 outline-none min-h-[120px]"
                                         placeholder="Tell us about yourself..."
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-2">Skills (comma separated)</label>
-                                    <input 
+                                    <input
                                         type="text"
                                         value={formData.skills}
-                                        onChange={(e) => setFormData({...formData, skills: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
                                         className="w-full p-3 rounded-lg bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-zinc-800 focus:border-black dark:focus:border-zinc-600 outline-none"
                                         placeholder="React, Node.js, Design..."
                                     />
@@ -207,41 +233,41 @@ const Onboarding = () => {
                                 <div className="space-y-4">
                                     {formData.experience.map((exp, idx) => (
                                         <div key={idx} className="p-4 rounded-lg border border-gray-200 dark:border-zinc-800 relative group">
-                                            <button 
+                                            <button
                                                 onClick={() => removeExperience(idx)}
                                                 className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                             >
                                                 <i className="ph ph-trash"></i>
                                             </button>
                                             <div className="grid grid-cols-2 gap-4 mb-3">
-                                                <input 
+                                                <input
                                                     placeholder="Role"
                                                     value={exp.role}
                                                     onChange={(e) => updateExperience(idx, 'role', e.target.value)}
                                                     className="p-2 bg-transparent border-b border-gray-200 dark:border-zinc-800 outline-none focus:border-black dark:focus:border-zinc-600"
                                                 />
-                                                <input 
-                                                    placeholder="Company" 
+                                                <input
+                                                    placeholder="Company"
                                                     value={exp.company}
                                                     onChange={(e) => updateExperience(idx, 'company', e.target.value)}
                                                     className="p-2 bg-transparent border-b border-gray-200 dark:border-zinc-800 outline-none focus:border-black dark:focus:border-zinc-600"
                                                 />
                                             </div>
                                             <div className="grid grid-cols-2 gap-4 mb-3">
-                                                <input 
+                                                <input
                                                     placeholder="Start Date"
                                                     value={exp.startDate}
                                                     onChange={(e) => updateExperience(idx, 'startDate', e.target.value)}
                                                     className="p-2 bg-transparent border-b border-gray-200 dark:border-zinc-800 outline-none focus:border-black dark:focus:border-zinc-600"
                                                 />
-                                                <input 
-                                                    placeholder="End Date" 
+                                                <input
+                                                    placeholder="End Date"
                                                     value={exp.endDate}
                                                     onChange={(e) => updateExperience(idx, 'endDate', e.target.value)}
                                                     className="p-2 bg-transparent border-b border-gray-200 dark:border-zinc-800 outline-none focus:border-black dark:focus:border-zinc-600"
                                                 />
                                             </div>
-                                            <textarea 
+                                            <textarea
                                                 placeholder="Description"
                                                 value={exp.description}
                                                 onChange={(e) => updateExperience(idx, 'description', e.target.value)}
@@ -268,41 +294,41 @@ const Onboarding = () => {
                                 <div className="space-y-4">
                                     {formData.education.map((edu, idx) => (
                                         <div key={idx} className="p-4 rounded-lg border border-gray-200 dark:border-zinc-800 relative group">
-                                            <button 
+                                            <button
                                                 onClick={() => removeEducation(idx)}
                                                 className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                             >
                                                 <i className="ph ph-trash"></i>
                                             </button>
                                             <div className="grid grid-cols-2 gap-4 mb-3">
-                                                <input 
+                                                <input
                                                     placeholder="School / University"
                                                     value={edu.institution}
                                                     onChange={(e) => updateEducation(idx, 'institution', e.target.value)}
                                                     className="p-2 bg-transparent border-b border-gray-200 dark:border-zinc-800 outline-none focus:border-black dark:focus:border-zinc-600"
                                                 />
-                                                <input 
-                                                    placeholder="Degree" 
+                                                <input
+                                                    placeholder="Degree"
                                                     value={edu.degree}
                                                     onChange={(e) => updateEducation(idx, 'degree', e.target.value)}
                                                     className="p-2 bg-transparent border-b border-gray-200 dark:border-zinc-800 outline-none focus:border-black dark:focus:border-zinc-600"
                                                 />
                                             </div>
-                                            <input 
+                                            <input
                                                 placeholder="Field of Study"
                                                 value={edu.fieldOfStudy}
                                                 onChange={(e) => updateEducation(idx, 'fieldOfStudy', e.target.value)}
                                                 className="w-full p-2 mb-3 bg-transparent border-b border-gray-200 dark:border-zinc-800 outline-none focus:border-black dark:focus:border-zinc-600"
                                             />
                                             <div className="grid grid-cols-2 gap-4 mb-3">
-                                                <input 
+                                                <input
                                                     placeholder="Start Date"
                                                     value={edu.startDate}
                                                     onChange={(e) => updateEducation(idx, 'startDate', e.target.value)}
                                                     className="p-2 bg-transparent border-b border-gray-200 dark:border-zinc-800 outline-none focus:border-black dark:focus:border-zinc-600"
                                                 />
-                                                <input 
-                                                    placeholder="End Date" 
+                                                <input
+                                                    placeholder="End Date"
                                                     value={edu.endDate}
                                                     onChange={(e) => updateEducation(idx, 'endDate', e.target.value)}
                                                     className="p-2 bg-transparent border-b border-gray-200 dark:border-zinc-800 outline-none focus:border-black dark:focus:border-zinc-600"
@@ -319,13 +345,13 @@ const Onboarding = () => {
                             </div>
 
                             <div className="pt-6 flex items-center justify-end gap-3">
-                                <button 
+                                <button
                                     onClick={handleSkip}
                                     className="px-6 py-2 text-sm font-medium text-gray-500 hover:text-black dark:text-zinc-400 dark:hover:text-white"
                                 >
                                     Skip
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleSubmit}
                                     className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
                                 >
