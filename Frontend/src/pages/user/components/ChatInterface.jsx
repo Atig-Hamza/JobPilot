@@ -8,7 +8,7 @@ const ChatInterface = ({ messages, isLoading, isGenerating }) => {
     const { theme } = useTheme();
 
     return (
-        <div className="w-full max-w-3xl px-6 flex flex-col gap-12 pt-12 pb-44">
+        <div className="w-full max-w-3xl px-4 md:px-6 flex flex-col gap-8 md:gap-12 pt-8 md:pt-12 pb-32 md:pb-44">
             {messages.map((msg, idx) => (
                 <ChatMessage
                     key={idx}
