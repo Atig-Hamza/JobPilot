@@ -48,9 +48,13 @@ const profileSchema = new mongoose.Schema({
         default: []
     },
     socialLinks: {
-        type: Map,
-        of: String,
-        default: {}
+        type: [
+            {
+                platform: String,
+                url: String
+            }
+        ],
+        default: []
     },
     cv: {
         public_id: {
