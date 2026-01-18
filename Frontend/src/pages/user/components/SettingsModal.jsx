@@ -125,8 +125,14 @@ const SettingsModal = ({ isOpen, onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="w-full max-w-[850px] h-[600px] bg-white dark:bg-[#09090b] border border-gray-200 dark:border-[#27272a] rounded-2xl flex shadow-2xl overflow-hidden relative font-sans">
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            onClick={onClose}
+        >
+            <div 
+                className="w-full max-w-[850px] h-[600px] bg-white dark:bg-[#09090b] border border-gray-200 dark:border-[#27272a] rounded-2xl flex shadow-2xl overflow-hidden relative font-sans animate-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <div className="w-[240px] bg-gray-50 dark:bg-[#0c0c0e] border-r border-gray-200 dark:border-[#27272a] flex flex-col p-2 pt-14 relative">
                     <button 
                         onClick={onClose}
