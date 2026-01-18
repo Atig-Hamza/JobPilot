@@ -6,6 +6,14 @@ const profileSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    phoneNumber: {
+        type: String,
+        default: ''
+    },
+    contactEmail: {
+        type: String,
+        default: ''
+    },
     bio: {
         type: String,
         default: ''
