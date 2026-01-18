@@ -13,7 +13,7 @@ const useIsMobile = () => {
     return isMobile;
 };
 
-const UserLayout = ({ children, activeMode }) => {
+const UserLayout = ({ children, activeMode, isGenerating }) => {
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
     const isMobile = useIsMobile();
@@ -246,30 +246,46 @@ const UserLayout = ({ children, activeMode }) => {
                     {(!isSidebarCollapsed || isMobile) && (
                         <div className="px-2 space-y-1 fade-in">
                             <div className="text-xs font-medium text-gray-400 dark:text-[#888888] mb-3 pl-1">Recent</div>
-
-                            {history.length === 0 && !isLoadingHistory ? (
-                                <div className="px-3 py-2 text-xs text-gray-400 dark:text-gray-600">No recent chats</div>
-                            ) : (
-                                history.map((item) => (
-                                    <button
-                                        key={item._id}
-                                        onClick={() => navigate(`/user/dashboard?roomId=${item.roomId}`)}
-                                        className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#121212] text-left group transition-all relative"
-                                    >
-                                        <i className="ph ph-chat-teardrop text-gray-400 dark:text-[#888888] group-hover:text-black dark:group-hover:text-white flex-shrink-0"></i>
-                                        <span className="text-sm text-gray-500 dark:text-[#888888] group-hover:text-black dark:group-hover:text-white truncate flex-1 pr-6">
-                                            {item.title || 'New Chat'}
-                                        </span>
-
-                                        <div
-                                            className="absolute right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-red-500 hover:bg-gray-200 dark:hover:bg-[#222] rounded cursor-pointer"
-                                            onClick={(e) => confirmDelete(item, e)}
-                                            title="Delete Chat"
-                                        >
-                                            <i className="ph ph-trash text-sm"></i>
-                                        </div>
-                                    </button>
+                            {isLoadingHistory && history.length === 0 ? (
+                                [...Array(5)].map((_, i) => (
+                                    <div key={i} className="flex items-center gap-3 px-3 py-2 w-full">
+                                        <div className="w-4 h-4 rounded-full bg-gray-200 dark:bg-[#1a1a1a] animate-pulse flex-shrink-0"></div>
+                                        <div className="h-4 rounded bg-gray-200 dark:bg-[#1a1a1a] animate-pulse w-3/4"></div>
+                                    </div>
                                 ))
+                            ) : (
+                                <>
+                                    {isGenerating && (
+                                        <div className="flex items-center gap-3 px-3 py-2 w-full animate-pulse transition-all duration-300">
+                                            <div className="w-4 h-4 rounded-full bg-gray-200 dark:bg-[#1a1a1a] flex-shrink-0"></div>
+                                            <div className="h-4 rounded bg-gray-200 dark:bg-[#1a1a1a] w-3/4"></div>
+                                        </div>
+                                    )}
+                                    {history.length === 0 ? (
+                                        !isGenerating && <div className="px-3 py-2 text-xs text-gray-400 dark:text-gray-600">No recent chats</div>
+                                    ) : (
+                                        history.map((item) => (
+                                            <button
+                                                key={item._id}
+                                                onClick={() => navigate(`/user/dashboard?roomId=${item.roomId}`)}
+                                                className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#121212] text-left group transition-all relative"
+                                            >
+                                                <i className="ph ph-chat-teardrop text-gray-400 dark:text-[#888888] group-hover:text-black dark:group-hover:text-white flex-shrink-0"></i>
+                                                <span className="text-sm text-gray-500 dark:text-[#888888] group-hover:text-black dark:group-hover:text-white truncate flex-1 pr-6">
+                                                    {item.title || 'New Chat'}
+                                                </span>
+
+                                                <div
+                                                    className="absolute right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-red-500 hover:bg-gray-200 dark:hover:bg-[#222] rounded cursor-pointer"
+                                                    onClick={(e) => confirmDelete(item, e)}
+                                                    title="Delete Chat"
+                                                >
+                                                    <i className="ph ph-trash text-sm"></i>
+                                                </div>
+                                            </button>
+                                        ))
+                                    )}
+                                </>
                             )}
 
                             {hasMoreHistory && (
