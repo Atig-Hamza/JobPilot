@@ -92,6 +92,23 @@ const CVDownloadCard = ({ html }) => {
     );
 };
 
+const ProcessTimer = () => {
+    const [seconds, setSeconds] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setSeconds(s => s + 1);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <span className="text-sm font-mono text-gray-400 dark:text-gray-500 px-2 py-1 rounded-md">
+            {seconds}s
+        </span>
+    );
+};
+
 const ChatMessage = ({ msg, isStreaming }) => {
     const { theme } = useTheme();
     const [feedback, setFeedback] = useState(null);
@@ -106,7 +123,7 @@ const ChatMessage = ({ msg, isStreaming }) => {
         };
 
         window.addEventListener('beforeunload', handleBeforeUnload);
-        
+
         return () => {
             window.removeEventListener('beforeunload', handleBeforeUnload);
             if (isSpeaking) {
@@ -141,29 +158,29 @@ const ChatMessage = ({ msg, isStreaming }) => {
     const handleSpeak = () => {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
-            
+
             const cleanContent = cleanTextForSpeech(msg.content);
             const language = detectLanguage(cleanContent);
             const utterance = new SpeechSynthesisUtterance(cleanContent);
-            
+
             utterance.lang = language;
-            
+
             const voices = window.speechSynthesis.getVoices();
             const preferredVoice = voices.find(v => v.lang.startsWith(language) && v.name.includes('Google')) ||
-                                 voices.find(v => v.lang.startsWith(language));
-            
+                voices.find(v => v.lang.startsWith(language));
+
             if (preferredVoice) {
                 utterance.voice = preferredVoice;
             }
-            
+
             utterance.onstart = () => {
                 setIsSpeaking(true);
             };
-            
+
             utterance.onend = () => {
                 setIsSpeaking(false);
             };
-            
+
             utterance.onerror = () => {
                 setIsSpeaking(false);
             };
@@ -362,7 +379,7 @@ const ChatMessage = ({ msg, isStreaming }) => {
                             </div>
                         ),
                         a: ({ href, children }) => <a href={href} className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline decoration-blue-300 dark:decoration-blue-700 underline-offset-2 transition-colors" target="_blank" rel="noopener noreferrer">{children}</a>,
-                        table: ({ children }) => <div className="overflow-x-auto my-8 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm"><table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800 text-sm table-fixed">{children}</table></div>,
+                        table: ({ children }) => <div className="overflow-x-auto my-8 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm"><table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800 text-sm whitespace-nowrap">{children}</table></div>,
                         thead: ({ children }) => <thead className="bg-gray-50 dark:bg-[#18181b]">{children}</thead>,
                         tbody: ({ children }) => <tbody className="bg-white dark:bg-[#111111] divide-y divide-gray-100 dark:divide-gray-800">{children}</tbody>,
                         tr: ({ children }) => <tr className="group hover:bg-gray-50/50 dark:hover:bg-[#18181b]/50 transition-colors">{children}</tr>,
@@ -460,10 +477,11 @@ const ChatMessage = ({ msg, isStreaming }) => {
                                     ease: "linear",
                                 }}
                             />
-                            <div className="relative z-10 flex items-center gap-3">
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200 shiny-text">
+                            <div className="relative z-10 flex items-center justify-between gap-3 w-full">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200 shiny-text truncate">
                                     {msg.processLogs[msg.processLogs.length - 1]}
                                 </span>
+                                <ProcessTimer />
                             </div>
                         </div>
                     )}

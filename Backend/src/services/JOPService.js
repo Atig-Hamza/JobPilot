@@ -9,7 +9,7 @@ const processSearchWithAI = async function* ({ keywords, country, limit }) {
     let phase = 0
     let entropy = Math.random().toString(36).slice(2)
 
-    yield { type: 'process', content: `**Agent Status**: Initializing autonomous intelligence run ${runId.slice(0, 8)} for "${keywords}" in ${countryName}...` }
+    yield { type: 'process', content: `Initializing autonomous intelligence run ${runId.slice(0, 8)} for "${keywords}" in ${countryName}...` }
 
     while (results.length < limit && phase < 7) {
         phase++
@@ -28,7 +28,7 @@ const processSearchWithAI = async function* ({ keywords, country, limit }) {
             if (usedQueries.has(query)) continue
             usedQueries.add(query)
 
-            yield { type: 'process', content: `**Search Vector**: ${query}` }
+            yield { type: 'process', content: `Exploring search vector: ${query}` }
 
             const urls = await performWebSearch(query, limit * 6)
 
@@ -46,14 +46,14 @@ const processSearchWithAI = async function* ({ keywords, country, limit }) {
                 const score = await scoreDomain(domain, html, runId, entropy)
                 if (score < 0.58) continue
 
-                yield { type: 'process', content: `**Inspection**: ${domain} (${Math.round(score * 100)}% confidence)` }
+                yield { type: 'process', content: `Inspecting domain ${domain} (${Math.round(score * 100)}% confidence)` }
 
                 const company = await processSingleCompany(url, score < 0.78, runId, entropy)
                 if (!company) continue
 
                 results.push(company)
                 yield { type: 'json', data: company }
-                yield { type: 'process', content: `**Confirmed**: ${company.company}` }
+                yield { type: 'process', content: `Validated company: ${company.company}` }
             }
         }
 
