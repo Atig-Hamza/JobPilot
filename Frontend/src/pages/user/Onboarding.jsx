@@ -8,6 +8,7 @@ const Onboarding = () => {
     const fileInputRef = useRef(null);
     const [step, setStep] = useState('upload');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [formData, setFormData] = useState({
         bio: '',
         contactEmail: '',
@@ -66,6 +67,7 @@ const Onboarding = () => {
 
     const handleSubmit = async () => {
         try {
+            setIsSaving(true);
             const API_URL = import.meta.env.VITE_BACKEND_API_URL;
             const token = localStorage.getItem('token');
             const skillsArray = formData.skills.split(',').map(s => s.trim()).filter(Boolean);
@@ -86,6 +88,8 @@ const Onboarding = () => {
         } catch (error) {
             console.error('Save failed:', error);
             toast.error('Failed to save profile.');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -356,7 +360,7 @@ const Onboarding = () => {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <div className="flex items-center justify-between mb-4">
                                     <label className="text-sm font-medium">Certificates</label>
@@ -533,9 +537,11 @@ const Onboarding = () => {
                                 </button>
                                 <button
                                     onClick={handleSubmit}
-                                    className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                                    disabled={isSaving}
+                                    className={`px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2 ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
                                 >
-                                    Save Profile
+                                    {isSaving && <i className="ph ph-spinner animate-spin"></i>}
+                                    {isSaving ? 'Saving...' : 'Save Profile'}
                                 </button>
                             </div>
                         </div>
