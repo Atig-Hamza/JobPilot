@@ -5,6 +5,9 @@ import streamifier from "streamifier";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import mammoth from "mammoth";
 import { generateCompletion } from "../services/LLMService.js";
+import fs from "fs";
+import path from "path";
+
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -12,13 +15,18 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+const UPLOAD_DIR = path.join(process.cwd(), "media/uploads");
+
+if (!fs.existsSync(UPLOAD_DIR)) {
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
 const extractPdfText = async (buffer) => {
     const loadingTask = pdfjsLib.getDocument({
         data: new Uint8Array(buffer)
     });
 
     const pdf = await loadingTask.promise;
-
     let text = "";
 
     for (let i = 1; i <= pdf.numPages; i++) {
@@ -44,6 +52,20 @@ const uploadToCloudinary = (buffer) => {
     });
 };
 
+const saveToLocal = (buffer, filename) => {
+    return new Promise((resolve, reject) => {
+        fs.writeFile(
+            path.join(UPLOAD_DIR, filename),
+            buffer,
+            (err) => {
+                if (err) return reject(err);
+                resolve();
+            }
+        );
+    });
+};
+
+
 export const analyzeCV = catchAsync(async (req, res) => {
     if (!req.file) {
         return res.status(400).json({
@@ -57,15 +79,15 @@ export const analyzeCV = catchAsync(async (req, res) => {
     try {
         if (req.file.mimetype === "application/pdf") {
             text = await extractPdfText(req.file.buffer);
-        }
-        else if (
+        } else if (
             req.file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
             req.file.mimetype === "application/msword"
         ) {
-            const result = await mammoth.extractRawText({ buffer: req.file.buffer });
+            const result = await mammoth.extractRawText({
+                buffer: req.file.buffer
+            });
             text = result.value;
-        }
-        else {
+        } else {
             text = req.file.buffer.toString("utf-8");
         }
 
@@ -78,6 +100,16 @@ export const analyzeCV = catchAsync(async (req, res) => {
             status: "error",
             message: `Failed to extract text from file: ${err.message}`
         });
+    }
+
+    if (req.file.mimetype === "application/pdf") {
+        const safeFilename = `${Date.now()}-${req.file.originalname}`;
+
+        try {
+            await saveToLocal(req.file.buffer, safeFilename);
+        } catch (err) {
+            console.error("Local PDF save failed:", err);
+        }
     }
 
     let uploadResult;
@@ -125,10 +157,7 @@ Do not include markdown. Return raw JSON only.
             systemPrompt
         );
 
-        const cleanJson = llmResponse
-            .replace(/```json|```/g, "")
-            .trim();
-
+        const cleanJson = llmResponse.replace(/```json|```/g, "").trim();
         parsedData = JSON.parse(cleanJson);
     } catch (err) {
         console.error("LLM parsing failed:", err);
