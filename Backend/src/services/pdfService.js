@@ -3,16 +3,28 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import he from 'he';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+let browserInstance = null;
+
+const getBrowser = async () => {
+    if (!browserInstance) {
+        browserInstance = await chromium.launch({ headless: true });
+    }
+    return browserInstance;
+};
+
 export const generatePdfFromHtml = async (htmlContent) => {
-    let browser = null;
+    let page;
+    let context;
+
     try {
         let html = he.decode(htmlContent);
         html = html.replace(/^```[a-z]*\s*/gi, '').replace(/\s*```$/gi, '');
-        html = html.replace(/```html/gi, '').replace(/```/g, ''); 
+        html = html.replace(/```html/gi, '').replace(/```/g, '');
 
         const printStyle = `
             <style>
@@ -31,23 +43,21 @@ export const generatePdfFromHtml = async (htmlContent) => {
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     ${printStyle}
                 </head>
-                <body>
-                    ${html}
-                </body>
+                <body>${html}</body>
                 </html>
             `;
         } else {
-             if (html.toLowerCase().includes('</head>')) {
+            if (html.toLowerCase().includes('</head>')) {
                 html = html.replace('</head>', `${printStyle}</head>`);
             } else {
                 html = html.replace('<body', `<head>${printStyle}</head><body`);
             }
         }
 
-        browser = await chromium.launch({ headless: true });
-        const context = await browser.newContext();
-        const page = await context.newPage();
-        
+        const browser = await getBrowser();
+        context = await browser.newContext();
+        page = await context.newPage();
+
         await page.setContent(html, { waitUntil: 'networkidle' });
 
         const pdfBuffer = await page.pdf({
@@ -57,30 +67,45 @@ export const generatePdfFromHtml = async (htmlContent) => {
             preferCSSPageSize: true
         });
 
-        await browser.close();
-        browser = null;
+        await page.close();
+        await context.close();
 
         return pdfBuffer;
-
     } catch (error) {
-        if (browser) await browser.close();
+        if (page) await page.close();
+        if (context) await context.close();
         throw new Error(`PDF Generation failed: ${error.message}`);
     }
 };
 
-export const savePdfLocally = async (buffer, folderName = 'generated') => {
+export const savePdfLocally = async (
+    buffer,
+    { folderName = 'generated', fileKey } = {}
+) => {
     try {
-        const fileName = `cv_${Date.now()}_${Math.random().toString(36).substring(7)}.pdf`;
+        const resolvedKey =
+            fileKey ||
+            crypto.createHash('sha256').update(buffer).digest('hex');
+
+        const hash = crypto
+            .createHash('sha256')
+            .update(resolvedKey)
+            .digest('hex')
+            .slice(0, 12);
+
+        const fileName = `cv_${hash}.pdf`;
         const mediaPath = path.join(__dirname, '../../media', folderName);
-        
+
         if (!fs.existsSync(mediaPath)) {
             fs.mkdirSync(mediaPath, { recursive: true });
         }
 
         const filePath = path.join(mediaPath, fileName);
-        
-        await fs.promises.writeFile(filePath, buffer);
-        
+
+        if (!fs.existsSync(filePath)) {
+            await fs.promises.writeFile(filePath, buffer);
+        }
+
         return {
             fileName,
             relativePath: `/media/${folderName}/${fileName}`
