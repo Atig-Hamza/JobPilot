@@ -14,9 +14,6 @@ const AIInterviewModal = ({ isOpen, onClose, onConfirm }) => {
                 className="bg-white dark:bg-[#1A1A1A] rounded-[24px] w-full max-w-md overflow-hidden shadow-2xl flex flex-col border border-gray-100 dark:border-gray-800"
             >
                 <div className="p-6 bg-[#F6F7FB] dark:bg-[#222] border-b border-gray-100 dark:border-gray-800 flex flex-col items-center text-center">
-                    <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-4">
-                        <Bot size={32} className="text-blue-600 dark:text-blue-400" />
-                    </div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white">AI Interview Process</h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                         Please review the simulation process before applying.
@@ -28,7 +25,7 @@ const AIInterviewModal = ({ isOpen, onClose, onConfirm }) => {
                         <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-100 dark:bg-gray-800" />
                         
                         <div className="relative z-10 flex gap-4">
-                            <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">1</div>
+                            <div className="w-8 h-8 rounded-full bg-black dark:bg-white text-black dark:text-black flex items-center justify-center text-sm font-bold shrink-0">1</div>
                             <div>
                                 <h4 className="font-bold text-gray-900 dark:text-white text-sm">AI Agent Call</h4>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
