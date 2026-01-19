@@ -143,7 +143,7 @@ const JobPilotDashboard = () => {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
                     },
-                    body: JSON.stringify({ keywords: text, country: selectedCountry, limit: 5 })
+                    body: JSON.stringify({ keywords: text, country: selectedCountry, limit: 5, roomId: roomId })
                 });
             } else {
                 response = await fetch(`${API_URL}/llm/generate`, {
