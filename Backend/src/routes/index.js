@@ -8,6 +8,7 @@ import codeRoutes from './codeRoutes.js';
 import historyRoutes from './historyRoutes.js';
 import profileRoutes from './profileRoutes.js';
 import cvRoutes from './cvRoutes.js';
+import jobRoutes from './jobRoutes.js';
 
 const router = express.Router();
 
@@ -20,5 +21,7 @@ router.use('/', jopRoutes);
 router.use('/auth', authRoutes);
 router.use('/codes', codeRoutes);
 router.use('/history', historyRoutes);
+router.use('/jobs', jobRoutes);
 
 export default router;
+
