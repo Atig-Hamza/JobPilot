@@ -92,6 +92,23 @@ const CVDownloadCard = ({ html }) => {
     );
 };
 
+const ProcessTimer = () => {
+    const [seconds, setSeconds] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setSeconds(s => s + 1);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <span className="text-sm font-mono text-gray-400 dark:text-gray-500 px-2 py-1 rounded-md">
+            {seconds}s
+        </span>
+    );
+};
+
 const ChatMessage = ({ msg, isStreaming }) => {
     const { theme } = useTheme();
     const [feedback, setFeedback] = useState(null);
@@ -460,10 +477,11 @@ const ChatMessage = ({ msg, isStreaming }) => {
                                     ease: "linear",
                                 }}
                             />
-                            <div className="relative z-10 flex items-center gap-3">
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200 shiny-text">
+                            <div className="relative z-10 flex items-center justify-between gap-3 w-full">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200 shiny-text truncate">
                                     {msg.processLogs[msg.processLogs.length - 1]}
                                 </span>
+                                <ProcessTimer />
                             </div>
                         </div>
                     )}
