@@ -30,7 +30,11 @@ export const getJob = catchAsync(async (req, res) => {
 });
 
 export const createNewJob = catchAsync(async (req, res) => {
-    const job = await createJob(req.body);
+    const jobData = {
+        ...req.body,
+        createdBy: req.user.id
+    };
+    const job = await createJob(jobData);
     res.status(201).json({
         status: "success",
         data: {
@@ -50,7 +54,9 @@ export const applyJob = catchAsync(async (req, res) => {
 });
 
 export const generateJobs = catchAsync(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user._id.toString(); 
+    console.log('Generating jobs for user ID:', userId);
+    
     const profile = await getProfileByUserId(userId);
     
     if (!profile) {
@@ -60,7 +66,7 @@ export const generateJobs = catchAsync(async (req, res) => {
         });
     }
 
-    const jobs = await generateJobOfferForUser(profile);
+    const jobs = await generateJobOfferForUser(profile, userId);
     
     res.status(200).json({
         status: "success",
