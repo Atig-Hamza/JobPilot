@@ -103,20 +103,12 @@ const InterviewCoach = () => {
 
     const filteredJobs = jobs.filter(job => {
         if (jobSource === 'recommended') {
-            const userSpecs = [
-                userProfile?.specialization, 
-                userProfile?.profession, 
-                userProfile?.title,
-                userProfile?.skills
-            ].filter(Boolean).join(' ').toLowerCase();
+             // Filter by jobs created by the user or strictly destined for the user (AI generated)
+            const isCreatedByUser = job.createdBy === userId;
+            const isDestinedForUser = job.jobDestinedTo === userId;
 
-            if (!userSpecs) return false;
-
-            const jobText = (job.title + ' ' + (job.description || '')).toLowerCase();
-            const keywords = userSpecs.split(/[\s,]+/).filter(w => w.length > 2);
-            const matches = keywords.some(k => jobText.includes(k));
-            
-            if (!matches) return false;
+            if (isCreatedByUser || isDestinedForUser) return true;
+            return false;
         }
 
         if (filters.employmentTypes.length > 0 && !filters.employmentTypes.includes(job.employmentType)) {
