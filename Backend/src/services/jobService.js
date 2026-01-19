@@ -1,16 +1,17 @@
 import Job from "../models/jobs.js";
 import { generateCompletion } from "./LLMService.js";
 
-export const generateJobOfferForUser = async (userProfile) => {
+export const generateJobOfferForUser = async (userProfile, userId) => {
     const systemPrompt = `You are an expert HR recruiter and job market analyst. 
-    Your task is to generate 3 distinct job offers based on the provided user profile in valid JSON format.
+    Your task is to generate 3 distinct job offers specifically tailored to the provided user profile in valid JSON format.
+    These jobs should be destined for this specific user ID: ${userId}.
     Return ONLY a JSON array containing the 3 job objects. No markdown, no conversational text.`;
 
     const promptCommand = `
     Analyze the following user profile:
     ${JSON.stringify(userProfile)}
 
-    Based on this profile, generate 3 specific job offers:
+    Based on this profile, generate 3 specific job offers destined for this user:
     1. **Standard Match**: A role that fits the user's current skills and experience perfectly.
     2. **Stretch/Challenge**: A role that is "harder" - more senior, requiring advanced skills or strictly higher qualifications than the user currently lists.
     3. **Pivot/Niche**: A role in a similar niche/industry but a different domain (e.g., if Developer, suggest Technical Product Manager or DevRel).
@@ -19,7 +20,7 @@ export const generateJobOfferForUser = async (userProfile) => {
     - title (string)
     - company (string, fictional or realistic names)
     - location (string)
-    - salaryRange (string)
+    - salaryRange (string, FORMAT: "MIN/MAX" e.g., "5000/8000". STRICTLY NUMBERS separated by '/'. DO NOT include currency symbols like '$' or words like 'k'.)
     - description (string)
     - requirements (array of strings)
     - responsibilities (array of strings)
@@ -47,7 +48,12 @@ export const generateJobOfferForUser = async (userProfile) => {
 
         const savedJobs = [];
         for (const offer of jobOffersData) {
-            const newJob = new Job(offer);
+            console.log(`Saving job designed for user: ${userId}`);
+            const newJob = new Job({
+                ...offer,
+                jobDestinedTo: userId,
+                createdBy: 'AI'
+            });
             await newJob.save();
             savedJobs.push(newJob);
         }
