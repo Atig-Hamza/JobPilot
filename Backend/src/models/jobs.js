@@ -56,6 +56,15 @@ const jobSchema = new mongoose.Schema({
         enum: ['Entry', 'Mid', 'Senior', 'Director', 'Executive'],
         required: false
     },
+    jobDestinedTo: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.Mixed,
+        required: false
+    },
     applicants: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
