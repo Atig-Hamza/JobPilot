@@ -15,7 +15,7 @@ export const createOrUpdateProfile = async (userId, profileData) => {
         const savedProfile = await profile.save();
 
         try {
-            await generateJobOfferForUser(savedProfile);
+            await generateJobOfferForUser(savedProfile, savedProfile.userId);
         } catch (error) {
             console.error("Failed to generate initial jobs for new profile:", error);
         }
