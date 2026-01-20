@@ -176,13 +176,13 @@ const UserLayout = ({ children, activeMode, isGenerating }) => {
     return (
         <div className="flex w-full h-screen bg-white dark:bg-[#050505] text-gray-900 dark:text-[#EDEDED] font-sans antialiased overflow-hidden transition-colors duration-300">
             <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-            
+
             {deleteModalOpen && (
-                <div 
+                <div
                     className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
                     onClick={() => { setDeleteModalOpen(false); setItemToDelete(null); }}
                 >
-                    <div 
+                    <div
                         className="bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#222] w-full max-w-sm rounded-xl shadow-2xl p-6 animate-in zoom-in-95 duration-200"
                         onClick={(e) => e.stopPropagation()}
                     >
@@ -407,6 +407,17 @@ const UserLayout = ({ children, activeMode, isGenerating }) => {
                                     <i className={`ph ${theme === 'dark' ? 'ph-sun' : 'ph-moon'} text-lg`}></i>
                                     <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
                                 </button>
+
+                                {user.role === 'admin' && (
+                                    <button
+                                        onClick={() => navigate('/admin/dashboard')}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1a1a1a] rounded-lg transition-colors"
+                                    >
+                                        <i className="ph ph-shield-check text-lg"></i>
+                                        <span>Switch to Admin</span>
+                                    </button>
+                                )}
+
                                 <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1a1a1a] rounded-lg transition-colors"
                                     onClick={() => {
                                         setIsSettingsOpen(true);
