@@ -28,6 +28,8 @@ import {
   Menu
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import Preloader from '../components/Preloader';
 import kimiK2 from '../assets/Secondaire/kimi-k2.png';
 import MainLogo from '../assets/Main/logo-without-bg.png';
 
@@ -135,7 +137,7 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-14 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-      <div 
+      <div
         className={`
           bg-white/80 backdrop-blur-xl border border-white/60 
           shadow-[0_8px_30px_rgb(0,0,0,0.04)] pointer-events-auto 
@@ -420,24 +422,49 @@ const CheckItem = ({ text, colorClass = "text-blue-600 bg-blue-100" }) => (
 
 
 
+const testimonials = [
+  {
+    quote: "I applied to 50 jobs manually and got 0 callbacks. With JobPilot, I sent 15 tailored applications and got 3 interviews. It feels like cheating.",
+    author: "Alex Chen",
+    role: "Senior Product Engineer"
+  },
+  {
+    quote: "The context-aware reasoning is mind-blowing. It actually understood my portfolio nuances and wrote cover letters that sounded exactly like me.",
+    author: "Sarah Jenkins",
+    role: "Lead UX Designer"
+  },
+  {
+    quote: "Finally, a tool that respects my privacy. Running locally means I can trust it with my sensitive career data without worry.",
+    author: "Michael Ross",
+    role: "Staff Data Scientist"
+  }
+];
+
 const App = () => {
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+
+  const handleNext = () => {
+    setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
+  };
+
+  const handlePrev = () => {
+    setActiveTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  };
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900 selection:bg-pink-200 selection:text-pink-900 overflow-x-hidden">
       <style>{styles}</style>
+      <Preloader />
 
       <TopBanner />
       <Navbar />
 
-      {/* Hero Section (Reference: image_6c44c4.jpg) */}
       <header className="relative pt-48 pb-20 px-6 flex flex-col items-center text-center overflow-hidden">
-        {/* Background Blobs */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-200 rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob"></div>
           <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-200 rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob animation-delay-2000"></div>
           <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-pink-200 rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob animation-delay-4000"></div>
         </div>
 
-        {/* Hero Content */}
         <div className="max-w-5xl mx-auto z-10 flex flex-col items-center text-center">
           <h1 className="text-6xl md:text-[6.5rem] font-bold tracking-tight text-gray-900 mb-6 leading-[1.05]">
             The career <br />
@@ -466,7 +493,6 @@ const App = () => {
             </Link>
           </div>
 
-          {/* Trusted By Logos - Integrated directly into Hero (No free space) */}
           <div className="flex flex-col items-center gap-8">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-widest">Trusted by Candidates at</p>
             <div className="flex flex-wrap justify-center items-center gap-x-8 gap-y-6 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
@@ -483,14 +509,12 @@ const App = () => {
         </div>
       </header>
 
-      {/* How It Works Section */}
       <section className="py-32 px-6 max-w-7xl mx-auto">
         <div className="text-center mb-24">
           <h2 className="text-5xl md:text-6xl font-bold text-gray-900 tracking-tight">How JobPilot works</h2>
         </div>
 
         <div className="grid md:grid-cols-3 gap-12">
-          {/* Step 1 */}
           <WorkflowStep
             step="1"
             title="Connect sources"
@@ -499,7 +523,6 @@ const App = () => {
             <ConnectMockup />
           </WorkflowStep>
 
-          {/* Step 2 */}
           <WorkflowStep
             step="2"
             title="Reason with context"
@@ -508,7 +531,6 @@ const App = () => {
             <LaunchMockup />
           </WorkflowStep>
 
-          {/* Step 3 */}
           <WorkflowStep
             step="3"
             title="Review & Apply"
@@ -519,12 +541,9 @@ const App = () => {
         </div>
       </section>
 
-      {/* Use Cases Scroller */}
       <section className="py-20 bg-gray-50/50 border-y border-gray-100">
         <div className="max-w-[1400px] mx-auto px-6">
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 tracking-tight">How Candidates Are Using JobPilot</h2>
-
-          {/* Scrolling Container */}
           <div className="flex gap-6 overflow-x-auto pb-12 pt-4 snap-x scrollbar-hide px-4 mask-fade-sides">
             <UseCaseCard icon={Zap} title="Automating repetitive application forms on Workday" color="bg-blue-100" />
             <UseCaseCard icon={Search} title="Comprehensive salary research & negotiation prep" color="bg-pink-100" />
@@ -535,13 +554,10 @@ const App = () => {
         </div>
       </section>
 
-      {/* Benchmark Section */}
       <section className="py-32 px-6 max-w-7xl mx-auto">
         <div className="bg-[#f2f0ef] rounded-[3rem] p-10 md:p-20 flex flex-col md:flex-row gap-20 items-center border border-gray-200/50 shadow-sm">
 
-          {/* Chart Graphic */}
           <div className="w-full md:w-1/2 relative min-h-[400px] flex items-end gap-6 md:gap-10 px-6 border-b border-gray-300/50 pb-0">
-            {/* Grid Lines */}
             <div className="absolute inset-0 border-t border-dashed border-gray-300 opacity-30 top-[20%]"></div>
             <div className="absolute inset-0 border-t border-dashed border-gray-300 opacity-30 top-[50%]"></div>
 
@@ -550,12 +566,10 @@ const App = () => {
               <span className="absolute right-0 -top-6 bg-white px-2 py-1 rounded text-[10px] font-mono border border-gray-200 shadow-sm">Response Rate • 12%</span>
             </div>
 
-            {/* Bar 1 */}
             <div className="flex flex-col items-center gap-3 w-1/4 group">
               <div className="w-full bg-gray-800 rounded-t-xl h-32 opacity-10 group-hover:opacity-20 transition-opacity"></div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Manual</div>
             </div>
-            {/* Bar 2 (Hero) */}
             <div className="flex flex-col items-center gap-3 w-1/4 relative z-10">
               <div className="w-full bg-gradient-to-b from-gray-700 to-black rounded-t-xl h-[280px] relative shadow-2xl">
                 <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-white shadow-xl rounded-2xl p-4 text-center min-w-[140px] border border-gray-100 transform scale-110">
@@ -565,12 +579,10 @@ const App = () => {
               </div>
               <div className="text-xs font-bold text-gray-900 uppercase tracking-wider bg-white px-3 py-1 rounded-full shadow-sm">JobPilot</div>
             </div>
-            {/* Bar 3 */}
             <div className="flex flex-col items-center gap-3 w-1/4 group">
               <div className="w-full bg-gray-800 rounded-t-xl h-44 opacity-10 group-hover:opacity-20 transition-opacity"></div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Agency</div>
             </div>
-            {/* Bar 4 */}
             <div className="flex flex-col items-center gap-3 w-1/4 group">
               <div className="w-full bg-gray-800 rounded-t-xl h-20 opacity-10 group-hover:opacity-20 transition-opacity"></div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Copy/Paste</div>
@@ -607,7 +619,6 @@ const App = () => {
         </div>
       </section>
 
-      {/* Impact Stats */}
       <section className="py-20 px-6 max-w-[1400px] mx-auto">
         <h2 className="text-4xl md:text-5xl font-bold text-center mb-20 tracking-tight">The impact our users have seen</h2>
         <div className="grid md:grid-cols-4 gap-6">
@@ -618,7 +629,6 @@ const App = () => {
         </div>
       </section>
 
-      {/* Deployment Options */}
       <section className="py-32 px-6 max-w-7xl mx-auto">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 flex flex-col md:flex-row items-center justify-center gap-4">
@@ -638,7 +648,6 @@ const App = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Card 1 */}
           <div className="bg-[#edeceb] rounded-[3rem] p-12 border border-transparent hover:border-pink-300 hover:shadow-2xl transition-all duration-300 group">
             <div className="w-14 h-14 bg-pink-200 rounded-2xl flex items-center justify-center text-pink-600 mb-8 shadow-sm group-hover:scale-110 transition-transform">
               <Lock size={28} />
@@ -650,8 +659,6 @@ const App = () => {
               <CheckItem text="Use local LLMs (Llama 3) for free, private inference." colorClass="bg-pink-200 text-pink-600" />
             </ul>
           </div>
-
-          {/* Card 2 */}
           <div className="bg-[#edeceb] rounded-[3rem] p-12 border border-transparent hover:border-blue-300 hover:shadow-2xl transition-all duration-300 group">
             <div className="w-14 h-14 bg-blue-200 rounded-2xl flex items-center justify-center text-blue-600 mb-8 shadow-sm group-hover:scale-110 transition-transform">
               <Shield size={28} />
@@ -666,31 +673,53 @@ const App = () => {
         </div>
       </section>
 
-      {/* Testimonial */}
       <section className="py-32 px-6 max-w-5xl mx-auto text-center relative">
-        <button className="absolute left-0 top-1/2 -translate-y-1/2 p-4 bg-white border border-gray-100 shadow-lg rounded-full hover:scale-110 transition-all text-gray-400 hover:text-black hidden md:block">
+        <button
+          onClick={handlePrev}
+          className="absolute left-0 top-1/2 -translate-y-1/2 p-4 bg-white border border-gray-100 shadow-lg rounded-full hover:scale-110 transition-all text-gray-400 hover:text-black hidden md:block z-10"
+        >
           <ChevronLeft size={24} />
         </button>
-        <button className="absolute right-0 top-1/2 -translate-y-1/2 p-4 bg-white border border-gray-100 shadow-lg rounded-full hover:scale-110 transition-all text-gray-400 hover:text-black hidden md:block">
+        <button
+          onClick={handleNext}
+          className="absolute right-0 top-1/2 -translate-y-1/2 p-4 bg-white border border-gray-100 shadow-lg rounded-full hover:scale-110 transition-all text-gray-400 hover:text-black hidden md:block z-10"
+        >
           <ChevronRight size={24} />
         </button>
 
         <div className="mb-10 font-black text-2xl tracking-tighter">Candidate.</div>
-        <blockquote className="text-2xl md:text-4xl font-medium leading-normal mb-10 text-gray-900 tracking-tight">
-          "I applied to 50 jobs manually and got 0 callbacks. With JobPilot, I sent 15 tailored applications and got 3 interviews. It feels like cheating."
-        </blockquote>
-        <div className="text-base">
-          <div className="font-bold text-gray-900">Alex Chen</div>
-          <div className="text-gray-500 font-medium">Senior Product Engineer</div>
+
+        <div className="min-h-[200px] flex flex-col justify-center">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTestimonial}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <blockquote className="text-2xl md:text-4xl font-medium leading-normal mb-10 text-gray-900 tracking-tight">
+                "{testimonials[activeTestimonial].quote}"
+              </blockquote>
+              <div className="text-base">
+                <div className="font-bold text-gray-900">{testimonials[activeTestimonial].author}</div>
+                <div className="text-gray-500 font-medium">{testimonials[activeTestimonial].role}</div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
+
         <div className="flex justify-center gap-3 mt-12">
-          <div className="w-2.5 h-2.5 rounded-full bg-black"></div>
-          <div className="w-2.5 h-2.5 rounded-full bg-gray-300 hover:bg-gray-400 cursor-pointer transition-colors"></div>
-          <div className="w-2.5 h-2.5 rounded-full bg-gray-300 hover:bg-gray-400 cursor-pointer transition-colors"></div>
+          {testimonials.map((_, idx) => (
+            <div
+              key={idx}
+              onClick={() => setActiveTestimonial(idx)}
+              className={`w-2.5 h-2.5 rounded-full cursor-pointer transition-colors ${idx === activeTestimonial ? 'bg-black' : 'bg-gray-300 hover:bg-gray-400'}`}
+            ></div>
+          ))}
         </div>
       </section>
 
-      {/* Safety & Transparency */}
       <section className="pb-32 px-6 max-w-7xl mx-auto">
         <div className="bg-[#f2f0ef] rounded-[4rem] p-12 md:p-24 text-center border border-gray-200/50">
           <div className="w-16 h-16 bg-pink-100 rounded-3xl flex items-center justify-center text-pink-600 mx-auto mb-10 shadow-sm">
@@ -734,7 +763,6 @@ const App = () => {
         </div>
       </section>
 
-      {/* Footer CTA */}
       <footer className="relative overflow-hidden pt-40 pb-16 bg-gradient-to-t from-gray-50 to-white">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <h2 className="text-5xl md:text-7xl font-bold tracking-tight text-gray-900 mb-6 leading-tight">
