@@ -48,6 +48,7 @@ const JobPilotDashboard = () => {
 
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
+    const abortControllerRef = useRef(null);
 
     const fetchChatHistory = async (idToFetch) => {
         if (!idToFetch) return;
@@ -132,7 +133,17 @@ const JobPilotDashboard = () => {
         let aiText = '';
         let isResponseStarted = false;
 
+
         try {
+            // Cancel any existing request
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+
+            // Create new controller for this request
+            abortControllerRef.current = new AbortController();
+            const signal = abortControllerRef.current.signal;
+
             let response;
             const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
 
@@ -143,7 +154,8 @@ const JobPilotDashboard = () => {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
                     },
-                    body: JSON.stringify({ keywords: text, country: selectedCountry, limit: 5, roomId: roomId })
+                    body: JSON.stringify({ keywords: text, country: selectedCountry, limit: 5, roomId: roomId }),
+                    signal
                 });
             } else {
                 response = await fetch(`${API_URL}/llm/generate`, {
@@ -152,7 +164,8 @@ const JobPilotDashboard = () => {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
                     },
-                    body: JSON.stringify({ prompt: apiPrompt, roomId: roomId, user: JSON.parse(localStorage.getItem('user')) })
+                    body: JSON.stringify({ prompt: apiPrompt, roomId: roomId, user: JSON.parse(localStorage.getItem('user')) }),
+                    signal
                 });
             }
 
@@ -235,23 +248,42 @@ const JobPilotDashboard = () => {
             }
 
             setIsGenerating(false);
+            abortControllerRef.current = null;
             window.dispatchEvent(new Event('history-updated'));
-            // Refresh the chat from server to ensure consistent UI
             if (roomId) await fetchChatHistory(roomId);
         } catch (error) {
-            console.error("Error fetching AI response:", error);
-            setIsLoading(false);
-            setIsGenerating(false);
+            if (error.name === 'AbortError') {
+                console.log('Generation stopped by user');
+                setIsGenerating(false);
+                setIsLoading(false);
+                setMessages(prev => {
+                    return prev;
+                });
+            } else {
+                console.error("Error fetching AI response:", error);
+                setIsLoading(false);
+                setIsGenerating(false);
 
-            setMessages(prev => {
-                if (isResponseStarted) {
-                    const newMessages = [...prev];
-                    newMessages[newMessages.length - 1] = { role: 'ai', content: aiText + "\n\n[System Error: Response interrupted]" };
-                    return newMessages;
-                } else {
-                    return [...prev, { role: 'ai', content: "Sorry, I encountered an error. Please check your connection and try again." }];
-                }
-            });
+                setMessages(prev => {
+                    if (isResponseStarted) {
+                        const newMessages = [...prev];
+                        newMessages[newMessages.length - 1] = { role: 'ai', content: aiText + "\n\n[System Error: Response interrupted]" };
+                        return newMessages;
+                    } else {
+                        return [...prev, { role: 'ai', content: "Sorry, I encountered an error. Please check your connection and try again." }];
+                    }
+                });
+            }
+            abortControllerRef.current = null;
+        }
+    };
+
+    const handleStopGeneration = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+            setIsGenerating(false);
+            setIsLoading(false);
         }
     };
 
@@ -501,7 +533,7 @@ const JobPilotDashboard = () => {
                                         </div>
 
                                         <button
-                                            onClick={()=>handleSendMessage()}
+                                            onClick={() => handleSendMessage()}
                                             className="w-8 h-8 rounded-full bg-gray-200 dark:bg-[#333] hover:bg-gray-900 dark:hover:bg-white hover:text-white dark:hover:text-black flex items-center justify-center transition-all group"
                                         >
                                             <i className="ph-bold ph-arrow-up text-gray-500 dark:text-[#888888] group-hover:text-white dark:group-hover:text-black"></i>
@@ -612,11 +644,18 @@ const JobPilotDashboard = () => {
                                     </div>
 
                                     <button
-                                        onClick={handleSendMessage}
-                                        disabled={isGenerating || !inputValue.trim()}
-                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${inputValue.trim() ? 'bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200' : 'bg-gray-100 dark:bg-[#333] text-gray-300 dark:text-[#666] cursor-not-allowed'}`}
+                                        onClick={isGenerating ? handleStopGeneration : handleSendMessage}
+                                        disabled={!isGenerating && !inputValue.trim()}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${(isGenerating || inputValue.trim())
+                                                ? 'bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200'
+                                                : 'bg-gray-100 dark:bg-[#333] text-gray-300 dark:text-[#666] cursor-not-allowed'
+                                            }`}
                                     >
-                                        {isGenerating ? <div className="w-4 h-4 border-2 border-gray-300 dark:border-zinc-500 border-t-gray-500 dark:border-t-zinc-300 rounded-full animate-spin"></div> : <i className="ph-bold ph-arrow-up"></i>}
+                                        {isGenerating ? (
+                                            <i className="ph-fill ph-stop"></i>
+                                        ) : (
+                                            <i className="ph-bold ph-arrow-up"></i>
+                                        )}
                                     </button>
                                 </div>
                             </div>
