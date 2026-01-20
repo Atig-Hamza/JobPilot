@@ -29,7 +29,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import Preloader from '../components/Preloader';
 import kimiK2 from '../assets/Secondaire/kimi-k2.png';
 import MainLogo from '../assets/Main/logo-without-bg.png';
 
@@ -453,8 +452,6 @@ const App = () => {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900 selection:bg-pink-200 selection:text-pink-900 overflow-x-hidden">
       <style>{styles}</style>
-      <Preloader />
-
       <TopBanner />
       <Navbar />
 
