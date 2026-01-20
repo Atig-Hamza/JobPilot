@@ -501,7 +501,7 @@ const JobPilotDashboard = () => {
                                         </div>
 
                                         <button
-                                            onClick={handleSendMessage}
+                                            onClick={()=>handleSendMessage()}
                                             className="w-8 h-8 rounded-full bg-gray-200 dark:bg-[#333] hover:bg-gray-900 dark:hover:bg-white hover:text-white dark:hover:text-black flex items-center justify-center transition-all group"
                                         >
                                             <i className="ph-bold ph-arrow-up text-gray-500 dark:text-[#888888] group-hover:text-white dark:group-hover:text-black"></i>
