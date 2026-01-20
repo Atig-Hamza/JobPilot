@@ -5,8 +5,20 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/logo-white-without-bg.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JobPilot</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>JobPilot - AI Career Agent</title>
+  <meta name="description"
+    content="JobPilot is an AI-powered career agent that helps you land your dream job. Use context-aware reasoning to tailor resumes, draft cover letters, and track applications." />
+  <meta name="keywords"
+    content="AI job search, career agent, resume builder, cover letter generator, job application tracker, privacy first" />
+  <meta property="og:title" content="JobPilot - The Career Agent Built for Privacy" />
+  <meta property="og:description"
+    content="Unblock your job search with JobPilot. Context-aware AI that runs locally or in your private cloud." />
+  <meta property="og:image" content="/logo-white-without-bg.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="JobPilot - AI Career Agent" />
+  <meta name="twitter:description" content="JobPilot helps you land your dream job with privacy-first AI tools." />
+  <script src="./src/tailwind.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -17,12 +29,39 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <style>
-      body { font-family: 'Inter', sans-serif; }
-      ::-webkit-scrollbar { width: 4px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-      .fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
-      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 2px;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   </style>
 </head>
 
