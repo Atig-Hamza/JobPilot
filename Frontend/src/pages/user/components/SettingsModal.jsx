@@ -10,12 +10,10 @@ const SettingsModal = ({ isOpen, onClose }) => {
     const [profile, setProfile] = useState({ contactEmail: '', phoneNumber: '', bio: '', skills: [], socialLinks: [] });
     const [isSaving, setIsSaving] = useState(false);
 
-    // Password Update State
     const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
     const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
     const [showPassword, setShowPassword] = useState({ current: false, new: false, confirm: false });
 
-    // Account Deletion State
     const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
@@ -190,6 +188,9 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                 </button>
                                 <button className="p-2 rounded-lg border border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 text-sm hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors">
                                     Français
+                                </button>
+                                <button className="p-2 rounded-lg border border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 text-sm hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors">
+                                    العربية
                                 </button>
                                 <button className="p-2 rounded-lg border border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 text-sm hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors">
                                     Español
