@@ -27,6 +27,7 @@ export const updatePassword = async (userId, currentPassword, newPassword) => {
     }
 
     user.password = await bcrypt.hash(newPassword, 12);
+    user.lastPasswordChange = Date.now();
     await user.save();
     return true;
 };
