@@ -1,4 +1,4 @@
-import { login, verifyToken } from '../services/authService.js';
+import { login, verifyToken, forgotPassword, resetPassword } from '../services/authService.js';
 import { AppError } from '../utils/AppError.js';
 import catchAsync from '../utils/catchAsync.js';
 import geoip from 'geoip-lite';
@@ -34,12 +34,41 @@ export const verifyTokenController = catchAsync(async (req, res) => {
     if (!token) {
         throw new AppError('Token is required', 400);
     }
-    
+
     const userCredits = await verifyToken(token);
 
     res.status(200).json({
         status: 'success',
         message: 'Token is valid',
         data: { credits: userCredits }
+    });
+});
+
+export const forgotPasswordController = catchAsync(async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+        throw new AppError('Email is required', 400);
+    }
+    await forgotPassword(email);
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Token sent to email!'
+    });
+});
+
+export const resetPasswordController = catchAsync(async (req, res) => {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!token || !password) {
+        throw new AppError('Token and password are required', 400);
+    }
+
+    await resetPassword(token, password);
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Password reset successful!'
     });
 });
