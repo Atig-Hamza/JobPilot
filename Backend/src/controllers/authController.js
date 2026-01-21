@@ -1,4 +1,4 @@
-import { login, verifyToken, forgotPassword, resetPassword } from '../services/authService.js';
+import { login, verifyToken, forgotPassword, resetPassword, getActiveDevices, revokeDevice } from '../services/authService.js';
 import { AppError } from '../utils/AppError.js';
 import catchAsync from '../utils/catchAsync.js';
 import geoip from 'geoip-lite';
@@ -70,5 +70,23 @@ export const resetPasswordController = catchAsync(async (req, res) => {
     res.status(200).json({
         status: 'success',
         message: 'Password reset successful!'
+    });
+});
+
+export const getDevicesController = catchAsync(async (req, res) => {
+    const devices = await getActiveDevices(req.user.id);
+    res.status(200).json({
+        status: 'success',
+        data: { devices }
+    });
+});
+
+export const revokeDeviceController = catchAsync(async (req, res) => {
+    const { deviceId } = req.params;
+    const devices = await revokeDevice(req.user.id, deviceId);
+    res.status(200).json({
+        status: 'success',
+        message: 'Device removed successfully',
+        data: { devices }
     });
 });
