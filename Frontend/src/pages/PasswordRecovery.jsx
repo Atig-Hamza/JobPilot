@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  ArrowRight, 
-  ArrowLeft, 
-  Mail, 
-  Check, 
+import {
+  ArrowRight,
+  ArrowLeft,
+  Mail,
+  Check,
   ChevronRight,
   ShieldCheck
 } from 'lucide-react';
@@ -63,8 +63,8 @@ const MinimalInput = ({ type = "text", placeholder, autoFocus, value, onChange, 
   <div className="group relative w-full">
     <div className="relative flex items-center">
       {Icon && <Icon size={20} className="absolute left-0 text-gray-400 group-focus-within:text-[#ffb6e6] transition-colors" />}
-      <input 
-        type={type} 
+      <input
+        type={type}
         placeholder={placeholder}
         autoFocus={autoFocus}
         value={value}
@@ -80,34 +80,46 @@ const MinimalInput = ({ type = "text", placeholder, autoFocus, value, onChange, 
 
 
 const PasswordRecovery = () => {
-  const [step, setStep] = useState(1); 
+  const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [loadingText, setLoadingText] = useState({ line1: "Verifying", line2: "credentials..." });
   const [isExiting, setIsExiting] = useState(false);
 
-  
-  useEffect(() => {
-    if (step === 2) {
-      
-      
-      
-      
-      
-      const t1 = setTimeout(() => setIsExiting(true), 2000);
-      const t2 = setTimeout(() => {
-        setLoadingText({ line1: "Generating", line2: "secure link..." });
-        setIsExiting(false);
-      }, 2600); 
-      const t3 = setTimeout(() => setIsExiting(true), 4500);
-      const t4 = setTimeout(() => setStep(3), 5100);
 
-      return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
-    }
+  useEffect(() => {
+    // Logic moved to handleSubmit
   }, [step]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if(email) setStep(2);
+    if (email) {
+      setStep(2);
+      setLoadingText({ line1: "Verifying", line2: "credentials..." });
+
+      try {
+        const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+        const response = await fetch(`${API_URL}/auth/forgot-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        if (response.ok) {
+          setLoadingText({ line1: "Generating", line2: "secure link..." });
+          setTimeout(() => {
+            setStep(3);
+          }, 1500);
+        } else {
+          console.error("Failed to send reset email");
+          setStep(1);
+          alert("Failed to send reset email. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error sending reset email:", error);
+        setStep(1);
+        alert("An error occurred. Please try again.");
+      }
+    }
   };
 
   return (
@@ -117,22 +129,22 @@ const PasswordRecovery = () => {
       {/* Navbar (Fades out during loading) */}
       <div className={`w-full px-8 py-6 flex justify-between items-center fixed top-0 left-0 z-50 pointer-events-none transition-opacity duration-500 ${step === 2 ? 'opacity-0' : 'opacity-100'}`}>
         <Link to={'/'} className="flex items-center gap-2 font-bold text-gray-900 tracking-tight text-lg select-none pointer-events-auto">
-            <img src={MainLogo} alt="JobPilot" className='w-5 h-5' />
-            JOBPILOT
+          <img src={MainLogo} alt="JobPilot" className='w-5 h-5' />
+          JOBPILOT
         </Link>
         <Link to={'/login'} className="text-sm font-bold text-gray-400 pointer-events-auto cursor-pointer hover:text-black transition-colors flex items-center gap-2 group">
-            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform"/> Back to Login
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Login
         </Link>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center w-full px-6 pt-20 pb-10">
-        
+
         {/* --- STEP 1: INPUT EMAIL --- */}
         {step === 1 && (
           <div className="w-full max-w-[480px] animate-enter">
             <div className="mb-2 inline-flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-full border border-gray-100">
-                <ShieldCheck size={12} className="text-[#ffb6e6]" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Account Security</span>
+              <ShieldCheck size={12} className="text-[#ffb6e6]" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Account Security</span>
             </div>
             <h1 className="text-[3rem] font-bold tracking-tighter mb-4 leading-none">Forgot password?</h1>
             <p className="text-gray-500 mb-12 text-lg font-medium leading-relaxed">
@@ -140,16 +152,16 @@ const PasswordRecovery = () => {
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-12">
-              <MinimalInput 
+              <MinimalInput
                 icon={Mail}
-                placeholder="name@company.com" 
-                type="email" 
-                autoFocus 
+                placeholder="name@company.com"
+                type="email"
+                autoFocus
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
 
-              <button 
+              <button
                 type="submit"
                 className="w-full bg-black text-white h-16 rounded-xl font-bold text-lg hover:bg-gray-900 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-3 group"
               >
@@ -157,9 +169,9 @@ const PasswordRecovery = () => {
                 <ArrowRight size={20} className="text-[#ffb6e6] group-hover:translate-x-1 transition-transform" />
               </button>
             </form>
-            
+
             <p className="text-center mt-8 text-xs text-gray-300 font-medium">
-              Protected by reCAPTCHA and subject to the <br/> JobPilot Privacy Policy.
+              Protected by reCAPTCHA and subject to the <br /> JobPilot Privacy Policy.
             </p>
           </div>
         )}
@@ -169,15 +181,15 @@ const PasswordRecovery = () => {
           <div className="fixed inset-0 z-50 bg-[#0a0a0a] flex flex-col items-center justify-center">
             <div className={`text-center transition-all duration-[600ms] ease-in-out px-6 ${isExiting ? 'opacity-0 blur-xl scale-95 translate-y-8' : 'opacity-100 blur-0 scale-100 translate-y-0'}`}>
               <div className="flex flex-col items-center gap-3">
-                 <h2 className="text-4xl md:text-6xl font-serif font-medium tracking-tight text-gray-600 leading-tight">
-                   {loadingText.line1}
-                 </h2>
-                 <h2 className="text-4xl md:text-6xl font-serif font-medium tracking-tight shiny-text-dark leading-tight">
-                   {loadingText.line2}
-                 </h2>
+                <h2 className="text-4xl md:text-6xl font-serif font-medium tracking-tight text-gray-600 leading-tight">
+                  {loadingText.line1}
+                </h2>
+                <h2 className="text-4xl md:text-6xl font-serif font-medium tracking-tight shiny-text-dark leading-tight">
+                  {loadingText.line2}
+                </h2>
               </div>
             </div>
-            
+
             <div className="absolute bottom-0 left-0 h-[3px] bg-[#222] w-full">
               <div className="h-full bg-white animate-[width_5s_ease-in-out_forwards] w-0"></div>
             </div>
@@ -188,32 +200,32 @@ const PasswordRecovery = () => {
         {step === 3 && (
           <div className="w-full max-w-[480px] animate-enter text-center md:text-left">
             <div className="w-16 h-16 bg-[#ffb6e6]/20 rounded-full flex items-center justify-center mb-8 mx-auto md:mx-0">
-                <Check size={32} className="text-[#ffb6e6]" strokeWidth={3} />
+              <Check size={32} className="text-[#ffb6e6]" strokeWidth={3} />
             </div>
 
             <h1 className="text-[3rem] font-bold tracking-tighter mb-4 leading-none">Check your email</h1>
             <p className="text-gray-500 mb-10 text-xl font-medium leading-relaxed">
-              We've sent a password reset link to <br/>
+              We've sent a password reset link to <br />
               <span className="text-black font-semibold border-b-2 border-[#ffb6e6]">{email}</span>
             </p>
 
             <div className="space-y-4">
-                <a 
-                    href="https://gmail.com" 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="w-full bg-black text-white h-16 rounded-xl font-bold text-lg hover:bg-gray-900 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-3 group"
-                >
-                    Open Email App
-                    <ChevronRight size={20} className="text-gray-400 group-hover:text-white transition-colors" />
-                </a>
+              <a
+                href="https://gmail.com"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full bg-black text-white h-16 rounded-xl font-bold text-lg hover:bg-gray-900 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-3 group"
+              >
+                Open Email App
+                <ChevronRight size={20} className="text-gray-400 group-hover:text-white transition-colors" />
+              </a>
 
-                <button 
-                    onClick={() => { setStep(1); setEmail(''); }}
-                    className="w-full bg-transparent text-gray-500 h-14 rounded-xl font-bold text-base hover:text-black hover:bg-gray-50 transition-all duration-200"
-                >
-                    Click to try another email
-                </button>
+              <button
+                onClick={() => { setStep(1); setEmail(''); }}
+                className="w-full bg-transparent text-gray-500 h-14 rounded-xl font-bold text-base hover:text-black hover:bg-gray-50 transition-all duration-200"
+              >
+                Click to try another email
+              </button>
             </div>
           </div>
         )}
