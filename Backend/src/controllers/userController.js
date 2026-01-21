@@ -1,2 +1,27 @@
-// User controller
-// Handle HTTP requests for user operations
+import { updatePassword, deleteUser } from '../services/userService.js';
+import { AppError } from '../utils/AppError.js';
+import catchAsync from '../utils/catchAsync.js';
+
+export const updatePasswordController = catchAsync(async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        throw new AppError('Current and new password are required', 400);
+    }
+
+    await updatePassword(req.user.id, currentPassword, newPassword);
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Password updated successfully'
+    });
+});
+
+export const deleteAccountController = catchAsync(async (req, res) => {
+    await deleteUser(req.user.id);
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Account deleted successfully'
+    });
+});
