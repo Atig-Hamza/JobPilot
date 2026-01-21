@@ -13,8 +13,55 @@ const SettingsModal = ({ isOpen, onClose }) => {
     const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
     const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
     const [showPassword, setShowPassword] = useState({ current: false, new: false, confirm: false });
+    const [isEditingPassword, setIsEditingPassword] = useState(false);
 
     const [isDeleting, setIsDeleting] = useState(false);
+
+    const [devices, setDevices] = useState([]);
+    const [isLoadingDevices, setIsLoadingDevices] = useState(false);
+
+    useEffect(() => {
+        if (activeTab === 'security') {
+            fetchDevices();
+        }
+    }, [activeTab]);
+
+    const fetchDevices = async () => {
+        setIsLoadingDevices(true);
+        try {
+            const token = localStorage.getItem('token');
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+            const res = await fetch(`${API_URL}/users/devices`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) setDevices(data.data.devices);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsLoadingDevices(false);
+        }
+    };
+
+    const handleRemoveDevice = async (deviceId) => {
+        const toastId = toast.loading("Removing device...");
+        try {
+            const token = localStorage.getItem('token');
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+            const res = await fetch(`${API_URL}/users/devices/${deviceId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                toast.success("Device removed", { id: toastId });
+                fetchDevices();
+            } else {
+                toast.error("Failed to remove device", { id: toastId });
+            }
+        } catch (e) {
+            toast.error("An error occurred", { id: toastId });
+        }
+    };
 
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem('user')) || {};
@@ -327,127 +374,231 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 );
             case 'security':
                 return (
-                    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="mb-6">
-                            <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Account Settings</h2>
-                            <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your password, security preferences, and account data.</p>
+                            <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Account Security</h2>
+                            <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your access and security activity.</p>
                         </div>
-                        <section className="bg-white dark:bg-[#111111] rounded-2xl border border-gray-200 dark:border-[#333] shadow-sm overflow-hidden">
-                            <div className="p-6 border-b border-gray-100 dark:border-[#222]">
-                                <div className="flex items-center gap-3 mb-1">
-                                    <div className="p-2 bg-pink-50 dark:bg-pink-500/10 rounded-lg">
-                                        <Lock size={18} className="text-pink-500 dark:text-pink-400" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-base font-semibold text-gray-900 dark:text-white">Password</h3>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Update your password associated with this account.</p>
-                                    </div>
+
+                        {/* Security Stats Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#222]">
+                                <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Last Login</div>
+                                <div className="text-sm font-medium dark:text-gray-200">
+                                    {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}
                                 </div>
                             </div>
-
-                            <div className="p-6 space-y-6">
-                                <div className="max-w-xl">
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Current Password</label>
-                                    <div className="relative group">
-                                        <input
-                                            type={showPassword.current ? "text" : "password"}
-                                            value={passwords.current}
-                                            onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
-                                            className="w-full pl-4 pr-12 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg outline-none focus:bg-white dark:focus:bg-black focus:border-pink-400 focus:ring-4 focus:ring-pink-500/10 transition-all duration-200 font-sans text-gray-900 dark:text-white sm:text-sm"
-                                            placeholder="••••••••"
-                                        />
-                                        <button
-                                            onClick={() => setShowPassword({ ...showPassword, current: !showPassword.current })}
-                                            className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                                        >
-                                            {showPassword.current ? <EyeOff size={16} /> : <Eye size={16} />}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">New Password</label>
-                                        <div className="relative">
-                                            <input
-                                                type={showPassword.new ? "text" : "password"}
-                                                value={passwords.new}
-                                                onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
-                                                className="w-full pl-4 pr-12 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg outline-none focus:bg-white dark:focus:bg-black focus:border-pink-400 focus:ring-4 focus:ring-pink-500/10 transition-all duration-200 font-sans text-gray-900 dark:text-white sm:text-sm"
-                                                placeholder="Enter new password"
-                                            />
-                                            <button
-                                                onClick={() => setShowPassword({ ...showPassword, new: !showPassword.new })}
-                                                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                                            >
-                                                {showPassword.new ? <EyeOff size={16} /> : <Eye size={16} />}
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Confirm Password</label>
-                                        <div className="relative">
-                                            <input
-                                                type={showPassword.confirm ? "text" : "password"}
-                                                value={passwords.confirm}
-                                                onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
-                                                className="w-full pl-4 pr-12 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg outline-none focus:bg-white dark:focus:bg-black focus:border-pink-400 focus:ring-4 focus:ring-pink-500/10 transition-all duration-200 font-sans text-gray-900 dark:text-white sm:text-sm"
-                                                placeholder="Confirm new password"
-                                            />
-                                            <button
-                                                onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })}
-                                                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                                            >
-                                                {showPassword.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                                            </button>
-                                        </div>
-                                    </div>
+                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#222]">
+                                <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Last Password Change</div>
+                                <div className="text-sm font-medium dark:text-gray-200">
+                                    {user.lastPasswordChange ? new Date(user.lastPasswordChange).toLocaleString() : 'Never'}
                                 </div>
                             </div>
+                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#222]">
+                                <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Last Reset</div>
+                                <div className="text-sm font-medium dark:text-gray-200">
+                                    {user.lastPasswordReset ? new Date(user.lastPasswordReset).toLocaleString() : 'None'}
+                                </div>
+                            </div>
+                            <div className="col-span-2 md:col-span-3 p-4 rounded-xl bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#222] flex items-center justify-between">
+                                <div>
+                                    <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Last Activity</div>
+                                    <div className="text-sm font-medium dark:text-gray-200">
+                                        {user.lastActivity ? new Date(user.lastActivity).toLocaleString() : 'Just now'}
+                                    </div>
+                                </div>
+                                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+                            </div>
+                        </div>
 
-                            <div className="px-6 py-4 bg-gray-50 dark:bg-[#161616] border-t border-gray-100 dark:border-[#222] flex justify-between items-center">
-                                <span className="text-xs text-gray-500">Password must be at least 8 characters</span>
+                        <section className="space-y-4">
+                            <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-[#222]">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Active Sessions</h3>
                                 <button
-                                    onClick={handleUpdatePassword}
-                                    disabled={isUpdatingPassword}
-                                    className="px-5 py-2 bg-gray-900 dark:bg-white text-white dark:text-black rounded-md text-sm font-medium hover:opacity-90 transition-all shadow-lg shadow-gray-200 dark:shadow-none active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onClick={fetchDevices}
+                                    disabled={isLoadingDevices}
+                                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
                                 >
-                                    {isUpdatingPassword ? 'Saving...' : 'Save Password'}
+                                    <i className={`ph-bold ph-arrows-clockwise ${isLoadingDevices ? 'animate-spin' : ''}`}></i> Refresh
                                 </button>
+                            </div>
+
+                            <div className="space-y-3">
+                                {isLoadingDevices ? (
+                                    <div className="py-8 text-center text-gray-500">Loading devices...</div>
+                                ) : devices && devices.length > 0 ? (
+                                    devices.map((device) => (
+                                        <div key={device._id} className="group p-4 rounded-xl border border-gray-200 dark:border-[#333] hover:border-blue-500/30 dark:hover:border-blue-500/30 bg-white dark:bg-[#111] transition-all flex items-start justify-between">
+                                            <div className="flex gap-4">
+                                                <div className="mt-1 p-2 bg-gray-100 dark:bg-[#222] rounded-lg h-fit text-gray-600 dark:text-gray-300">
+                                                    <i className="ph-fill ph-desktop text-xl"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-medium text-gray-900 dark:text-white text-base">
+                                                        {device.deviceInfo || 'Unknown Device'}
+                                                    </h4>
+                                                    <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                                        <i className="ph ph-map-pin"></i>
+                                                        <span>{device.location}</span>
+                                                        <span className="text-gray-300 dark:text-gray-700">•</span>
+                                                        <span>{new Date(device.timestamp).toLocaleString()}</span>
+                                                    </div>
+                                                    {localStorage.getItem('token') === device.accessToken && (
+                                                        <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                                            Current Session
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleRemoveDevice(device._id)}
+                                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"
+                                                title="Revoke Session"
+                                            >
+                                                <i className="ph-bold ph-sign-out text-xl"></i>
+                                            </button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="py-8 text-center text-gray-500 dark:text-gray-400 border border-dashed border-gray-200 dark:border-[#333] rounded-xl">
+                                        No active sessions found.
+                                    </div>
+                                )}
                             </div>
                         </section>
 
-                        <section className="bg-white dark:bg-[#111111] rounded-2xl border border-gray-200 dark:border-[#333] shadow-sm overflow-hidden">
-                            <div className="p-6 border-b border-gray-100 dark:border-[#222]">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-blue-50 dark:bg-blue-500/10 rounded-lg">
-                                        <Shield size={18} className="text-blue-500 dark:text-blue-400" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-base font-semibold text-gray-900 dark:text-white">Security Preferences</h3>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Manage extra security layers for your account.</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="divide-y divide-gray-100 dark:divide-[#222]">
-                                <div className="p-6 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#161616] transition-colors">
-                                    <div className="space-y-0.5">
-                                        <div className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                                            Two-Factor Authentication
-                                            <span className="px-2 py-0.5 text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full uppercase tracking-wide">Recommended</span>
+                        <section className="pt-6 border-t border-gray-100 dark:border-[#222] space-y-6">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Login & Security</h3>
+
+                            <div className="bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-[#333] overflow-hidden divide-y divide-gray-100 dark:divide-[#222]">
+                                {/* Password Row */}
+                                <div className="p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-2 bg-gray-100 dark:bg-[#222] rounded-lg">
+                                                <Lock size={20} className="text-gray-900 dark:text-white" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Password</h4>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">••••••••</p>
+                                            </div>
                                         </div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md">Secure your account with TOTP (Authenticator App).</p>
+                                        {!isEditingPassword && (
+                                            <button
+                                                onClick={() => setIsEditingPassword(true)}
+                                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-[#333] rounded-lg hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-all"
+                                            >
+                                                Change
+                                            </button>
+                                        )}
                                     </div>
-                                    <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 dark:bg-[#333] transition-colors duration-200 ease-in-out">
-                                        <span className="translate-x-0 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                                    </div>
+
+                                    {/* Expandable Password Form */}
+                                    {isEditingPassword && (
+                                        <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                                            <div className="max-w-md space-y-4">
+                                                <div className="relative">
+                                                    <input
+                                                        type={showPassword.current ? "text" : "password"}
+                                                        value={passwords.current}
+                                                        onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
+                                                        className="w-full pl-4 pr-12 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg outline-none focus:border-black dark:focus:border-white transition-all text-sm"
+                                                        placeholder="Current Password"
+                                                    />
+                                                    <button
+                                                        onClick={() => setShowPassword({ ...showPassword, current: !showPassword.current })}
+                                                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                                    >
+                                                        {showPassword.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                    </button>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="relative">
+                                                        <input
+                                                            type={showPassword.new ? "text" : "password"}
+                                                            value={passwords.new}
+                                                            onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
+                                                            className="w-full pl-4 pr-12 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg outline-none focus:border-black dark:focus:border-white transition-all text-sm"
+                                                            placeholder="New Password"
+                                                        />
+                                                        <button
+                                                            onClick={() => setShowPassword({ ...showPassword, new: !showPassword.new })}
+                                                            className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                                        >
+                                                            {showPassword.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                        </button>
+                                                    </div>
+                                                    <div className="relative">
+                                                        <input
+                                                            type={showPassword.confirm ? "text" : "password"}
+                                                            value={passwords.confirm}
+                                                            onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+                                                            className="w-full pl-4 pr-12 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg outline-none focus:border-black dark:focus:border-white transition-all text-sm"
+                                                            placeholder="Confirm Password"
+                                                        />
+                                                        <button
+                                                            onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })}
+                                                            className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                                        >
+                                                            {showPassword.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-3">
+                                                <button
+                                                    onClick={handleUpdatePassword}
+                                                    disabled={isUpdatingPassword}
+                                                    className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-medium hover:opacity-90 transition-all disabled:opacity-50"
+                                                >
+                                                    {isUpdatingPassword ? 'Saving...' : 'Save Password'}
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setIsEditingPassword(false);
+                                                        setPasswords({ current: '', new: '', confirm: '' });
+                                                    }}
+                                                    className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#222] rounded-lg text-sm font-medium transition-all"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
+
+                                {/* 2FA Row */}
                                 <div className="p-6 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#161616] transition-colors">
-                                    <div className="space-y-0.5">
-                                        <div className="text-sm font-medium text-gray-900 dark:text-white">Login Notifications</div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Receive an email when your account is accessed from a new device.</p>
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2 bg-gray-100 dark:bg-[#222] rounded-lg">
+                                            <Shield size={20} className="text-gray-900 dark:text-white" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Two-Factor Authentication</h4>
+                                                <span className="px-2 py-0.5 rounded text-[10px] bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 font-bold uppercase tracking-wider">Off</span>
+                                            </div>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">Add an extra layer of security to your account.</p>
+                                        </div>
                                     </div>
-                                    <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-pink-500 transition-colors duration-200 ease-in-out">
+                                    <button className="px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10 rounded-lg transition-all">
+                                        Setup
+                                    </button>
+                                </div>
+
+                                {/* Login Notifications Row */}
+                                <div className="p-6 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#161616] transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2 bg-gray-100 dark:bg-[#222] rounded-lg">
+                                            <i className="ph-bold ph-bell-ringing text-xl text-gray-900 dark:text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-medium text-gray-900 dark:text-white">Login Notifications</h4>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">Get notified of new sign-ins.</p>
+                                        </div>
+                                    </div>
+                                    <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-green-500 transition-colors duration-200 ease-in-out">
                                         <span className="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                                     </div>
                                 </div>
