@@ -24,7 +24,7 @@ const generateInlineHtml = (htmlContent) => {
         p { margin-bottom: 16px; color: #d4d4d8; }
         .highlight { color: #db2777; font-weight: 600; }
     `
-    
+
     const fullHtml = `
     <!DOCTYPE html>
     <html>
@@ -51,7 +51,7 @@ const generateInlineHtml = (htmlContent) => {
     </body>
     </html>
     `
-    
+
     return juice(fullHtml)
 }
 
@@ -111,13 +111,13 @@ export const sendNewJoinWaitlistToAdmins = async (fullName) => {
 export const sendNewLoginAlert = async (userEmail, date, loginDetails = {}) => {
     try {
         const { ip, location, device } = loginDetails
-        
+
         const formattedDate = new Intl.DateTimeFormat('en-US', {
             dateStyle: 'full',
             timeStyle: 'medium'
         }).format(new Date(date))
 
-        const locationString = location 
+        const locationString = location
             ? `${location.city || ''}, ${location.country || ''}`.trim().replace(/^,/, '') || 'Unknown Location'
             : 'Unknown Location'
 
@@ -226,6 +226,137 @@ export const sendRejectedInviteCodeNotification = async (userEmail, code, fullNa
         return true
     } catch (error) {
         console.error('Rejected invite code notification email error:', error)
+        return false
+    }
+}
+
+export const sendPasswordResetEmail = async (userEmail, resetUrl, fullName) => {
+    try {
+        const html = generateInlineHtml(`
+            <h1>Reset Your Password</h1>
+            <p>Hi ${fullName || 'there'},</p>
+            <p>We received a request to reset your password for your JobPilot account.</p>
+            <p>You can reset it by clicking the link below:</p>
+            <p><a href="${resetUrl}" style="color: #db2777; font-weight: 600;">Reset Password</a></p>
+            <p>This link will expire in 10 minutes.</p>
+            <p>If you didn't request a password reset, you can safely ignore this email.</p>
+            <br>
+            <p style="font-weight: 600; color: #fff;">The JobPilot Team</p>
+        `)
+        await transporter.sendMail({
+            from: `"JobPilot Security" <${process.env.SMTP_USER}>`,
+            to: userEmail,
+            subject: 'Reset Your Password - JobPilot',
+            html: html
+        })
+        return true
+    } catch (error) {
+        console.error('Password reset email error:', error)
+        return false
+    }
+}
+
+export const sendPasswordResetSuccessEmail = async (userEmail, fullName) => {
+    try {
+        const html = generateInlineHtml(`
+            <h1>Password Changed Successfully</h1>
+            <p>Hi ${fullName || 'there'},</p>
+            <p>Your password for JobPilot has been successfully changed.</p>
+            <p>If you did not perform this action, please contact our support team immediately.</p>
+            <p><a href="https://myjobpilot.app/login" style="color: #db2777; font-weight: 600;">Log in to your account</a></p>
+            <br>
+            <p style="font-weight: 600; color: #fff;">The JobPilot Team</p>
+        `)
+        await transporter.sendMail({
+            from: `"JobPilot Security" <${process.env.SMTP_USER}>`,
+            to: userEmail,
+            subject: 'Password Changed Successfully - JobPilot',
+            html: html
+        })
+        return true
+    } catch (error) {
+        return false
+    }
+}
+
+export const send2FAEnabledEmail = async (userEmail, fullName) => {
+    try {
+        const html = generateInlineHtml(`
+            <h1>2FA Enabled Successfully! 🛡️</h1>
+            <p>Hi ${fullName || 'there'},</p>
+            <p>Two-Factor Authentication (2FA) has been successfully enabled for your JobPilot account.</p>
+            <p>Your account is now more secure. You will need to enter a verification code from your authenticator app each time you log in.</p>
+            <div style="background-color: #27272a; border: 1px solid #3f3f46; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                <p style="margin: 0; color: #fbbf24; font-weight: 600;">Important Reminder:</p>
+                <p style="margin: 8px 0 0 0; color: #d4d4d8;">Please ensure you have safely stored your recovery codes. If you lose access to your device, these codes are the only way to regain access to your account.</p>
+            </div>
+            <p>If you did not enable 2FA, please contact support immediately.</p>
+            <br>
+            <p style="font-weight: 600; color: #fff;">The JobPilot Security Team</p>
+        `)
+        await transporter.sendMail({
+            from: `"JobPilot Security" <${process.env.SMTP_USER}>`,
+            to: userEmail,
+            subject: 'Two-Factor Authentication Enabled - JobPilot',
+            html: html
+        })
+        return true
+    } catch (error) {
+        console.error('2FA enabled email error:', error)
+        return false
+    }
+}
+
+export const sendLoginOTPEmail = async (userEmail, code, fullName) => {
+    try {
+        const html = generateInlineHtml(`
+            <h1>Login Verification Code</h1>
+            <p>Hi ${fullName || 'there'},</p>
+            <p>Use the following code to complete your login to JobPilot:</p>
+            <div style="background-color: #27272a; border: 1px solid #3f3f46; border-radius: 8px; padding: 24px; margin: 24px 0; text-align: center;">
+                <p style="margin: 0; font-size: 32px; font-weight: 700; color: #db2777; letter-spacing: 4px;">${code}</p>
+            </div>
+            <p>This code will expire in 10 minutes.</p>
+            <p>If you did not request this code, please ignore this email.</p>
+            <br>
+            <p style="font-weight: 600; color: #fff;">The JobPilot Security Team</p>
+        `)
+        await transporter.sendMail({
+            from: `"JobPilot Security" <${process.env.SMTP_USER}>`,
+            to: userEmail,
+            subject: 'Your Login Verification Code - JobPilot',
+            html: html
+        })
+        return true
+    } catch (error) {
+        console.error('Login OTP email error:', error)
+        return false
+    }
+}
+
+export const send2FADisabledEmail = async (userEmail, fullName) => {
+    try {
+        const html = generateInlineHtml(`
+            <h1>2FA Disabled ⚠️</h1>
+            <p>Hi ${fullName || 'there'},</p>
+            <p>Two-Factor Authentication (2FA) has been disabled for your JobPilot account.</p>
+            <p>Your account is now less secure. We strongly recommend keeping 2FA enabled to protect your account from unauthorized access.</p>
+            <div style="background-color: #27272a; border: 1px solid #3f3f46; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                <p style="margin: 0; color: #ef4444; font-weight: 600;">Was this you?</p>
+                <p style="margin: 8px 0 0 0; color: #d4d4d8;">If you did not make this change, please change your password immediately and contact support.</p>
+            </div>
+            <br>
+            <p style="font-weight: 600; color: #fff;">The JobPilot Security Team</p>
+        `)
+        await transporter.sendMail({
+            from: `"JobPilot Security" <${process.env.SMTP_USER}>`,
+            to: userEmail,
+            subject: 'Two-Factor Authentication Disabled - JobPilot',
+            html: html
+        })
+        return true
+    } catch (error) {
+        console.error('2FA disabled email error:', error)
         return false
     }
 }

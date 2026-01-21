@@ -14,6 +14,7 @@ const Signup = lazy(() => import('./pages/Signup'));
 const TermsAndPrivacy = lazy(() => import('./pages/TermsAndPrivacy'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const PasswordRecovery = lazy(() => import('./pages/PasswordRecovery'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const ComingSoon = lazy(() => import('./pages/ComingSoon'));
 const NotFound = lazy(() => import('./pages/404'));
 const UserDashboard = lazy(() => import('./pages/user/UserDashboard'));
@@ -75,6 +76,7 @@ function App() {
             <Route path="/privacy" element={<Page title="Privacy & Terms - JobPilot"><TermsAndPrivacy /></Page>} />
             <Route path="/contact" element={<Page title="Contact Us - JobPilot"><ContactPage /></Page>} />
             <Route path="/password-recovery" element={<Page title="Password Recovery - JobPilot"><PasswordRecovery /></Page>} />
+            <Route path="/reset-password/:token" element={<Page title="Reset Password - JobPilot"><ResetPassword /></Page>} />
             <Route path="/soon" element={<Page title="Coming Soon - JobPilot"><ComingSoon /></Page>} />
 
             <Route element={<Authenticate allowedRoles={['user', 'admin']} />}>
