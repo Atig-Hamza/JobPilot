@@ -57,8 +57,8 @@ const CVDownloadCard = ({ html }) => {
     };
 
     return (
-        <div className="my-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#18181b] overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#202023] flex items-center justify-between">
+        <div className="my-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#181819] overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center text-black dark:text-white">
                         <FileText size={20} />
