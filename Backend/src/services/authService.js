@@ -28,8 +28,6 @@ export const login = async (email, password, loginDetails) => {
         throw new AppError('Your account has been banned. Please contact support.', 403);
     }
 
-    const safeUser = removeSensitiveInfo(user);
-
     const expiresIn = user.role === 'admin' ? '7d' : '1h';
 
     const token = jwt.sign(
@@ -38,9 +36,55 @@ export const login = async (email, password, loginDetails) => {
         { expiresIn }
     );
 
+    const deviceInfo = loginDetails.device ?
+        `${loginDetails.device.browser.name || 'Unknown Browser'} on ${loginDetails.device.os.name || 'Unknown OS'}` :
+        'Unknown Device';
+
+    const locationStr = loginDetails.location ?
+        `${loginDetails.location.city}, ${loginDetails.location.country}` :
+        'Unknown Location';
+
+    user.lastLogin = Date.now();
+
+    user.loginHistory.push({
+        ip: loginDetails.ip || 'Unknown IP',
+        location: locationStr,
+        timestamp: Date.now()
+    });
+    if (user.loginHistory.length > 50) user.loginHistory.shift();
+
+    user.AllLoginDevices.push({
+        ip: loginDetails.ip || 'Unknown IP',
+        location: locationStr,
+        accessToken: token,
+        timestamp: Date.now(),
+        deviceInfo
+    });
+
+    await user.save();
+
+    const safeUser = removeSensitiveInfo(user);
+
     sendNewLoginAlert(user.email, new Date(), loginDetails);
 
     return { token, safeUser };
+};
+
+export const getActiveDevices = async (userId) => {
+    const user = await User.findById(userId);
+    if (!user) throw new AppError('User not found', 404);
+
+    return user.AllLoginDevices;
+};
+
+export const revokeDevice = async (userId, deviceId) => {
+    const user = await User.findById(userId);
+    if (!user) throw new AppError('User not found', 404);
+
+    user.AllLoginDevices = user.AllLoginDevices.filter(d => d._id.toString() !== deviceId);
+    await user.save();
+
+    return user.AllLoginDevices;
 };
 
 export const verifyToken = async (token) => {
@@ -50,12 +94,20 @@ export const verifyToken = async (token) => {
         if (!user) {
             throw new AppError('User not found', 404);
         }
+        const isDeviceActive = user.AllLoginDevices && user.AllLoginDevices.some(device => device.accessToken === token);
+        if (!isDeviceActive) {
+            throw new AppError('This session has been revoked/logged out. Please log in again.', 401);
+        }
         if (user.isBanned) {
             throw new AppError('User is banned', 403);
         }
+        user.lastActivity = Date.now();
+        await user.save({ validateBeforeSave: false });
+
         const userCredits = user.credits;
         return userCredits;
     } catch (err) {
+        if (err instanceof AppError) throw err;
         throw new AppError('Invalid or expired token', 401);
     }
 };
@@ -115,6 +167,7 @@ export const resetPassword = async (token, newPassword) => {
     user.password = await bcrypt.hash(newPassword, 12);
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
+    user.lastPasswordReset = Date.now();
     await user.save();
 
     await sendPasswordResetSuccessEmail(user.email, user.fullName);
