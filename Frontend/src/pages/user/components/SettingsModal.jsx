@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import { useTheme } from '../../../context/ThemeContext';
 import { Lock, Trash, AlertTriangle, Eye, EyeOff, Shield } from 'lucide-react';
 
@@ -61,11 +62,11 @@ const SettingsModal = ({ isOpen, onClose }) => {
 
     const handleUpdatePassword = async () => {
         if (!passwords.current || !passwords.new || !passwords.confirm) {
-            alert("Please fill in all fields");
+            toast.error("Please fill in all fields");
             return;
         }
         if (passwords.new !== passwords.confirm) {
-            alert("New passwords do not match");
+            toast.error("New passwords do not match");
             return;
         }
         setIsUpdatingPassword(true);
@@ -85,23 +86,24 @@ const SettingsModal = ({ isOpen, onClose }) => {
             });
             const data = await res.json();
             if (res.ok) {
-                alert("Password updated successfully");
+                toast.success("Password updated successfully");
                 setPasswords({ current: '', new: '', confirm: '' });
             } else {
-                alert(data.message || "Failed to update password");
+                toast.error(data.message || "Failed to update password");
             }
         } catch (e) {
             console.error(e);
-            alert("An error occurred");
+            toast.error("An error occurred");
         } finally {
             setIsUpdatingPassword(false);
         }
     };
 
-    const handleDeleteAccount = async () => {
-        if (!confirm("Are you sure you want to delete your account? This action cannot be undone.")) return;
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+    const handleDeleteAccount = async () => {
         setIsDeleting(true);
+        const toastId = toast.loading("Deleting account...");
         try {
             const token = localStorage.getItem('token');
             const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
@@ -112,18 +114,20 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 }
             });
             if (res.ok) {
+                toast.success("Account deleted successfully", { id: toastId });
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 window.location.href = '/login';
             } else {
                 const data = await res.json();
-                alert(data.message || "Failed to delete account");
+                toast.error(data.message || "Failed to delete account", { id: toastId });
             }
         } catch (e) {
             console.error(e);
-            alert("An error occurred");
+            toast.error("An error occurred", { id: toastId });
         } finally {
             setIsDeleting(false);
+            setShowDeleteConfirm(false);
         }
     };
 
@@ -131,14 +135,13 @@ const SettingsModal = ({ isOpen, onClose }) => {
 
     const tabs = [
         { id: 'general', label: 'General', icon: 'ph-gear' },
-        { id: 'profile', label: 'Profile', icon: 'ph-user-circle' },
+        { id: 'account', label: 'Account', icon: 'ph-user' },
         { id: 'notifications', label: 'Notifications', icon: 'ph-bell' },
         { id: 'personalization', label: 'Personalization', icon: 'ph-paint-brush' },
         { id: 'data', label: 'Data Controls', icon: 'ph-database' },
         { id: 'security', label: 'Security', icon: 'ph-shield-check' },
         { id: 'billing', label: 'Billing', icon: 'ph-credit-card' },
         { id: 'integrations', label: 'Integrations', icon: 'ph-plug' },
-        { id: 'account', label: 'Account', icon: 'ph-user' },
     ];
 
     const renderContent = () => {
@@ -195,7 +198,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                         </section>
                     </div>
                 );
-            case 'profile':
+            case 'account':
                 return (
                     <div className="space-y-8 animate-in fade-in duration-300">
                         <div className="flex items-center gap-4">
@@ -321,7 +324,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                         </div>
                     </div>
                 );
-            case 'account':
+            case 'security':
                 return (
                     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="mb-6">
@@ -461,14 +464,45 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                     </p>
                                 </div>
                                 <button
-                                    onClick={handleDeleteAccount}
+                                    onClick={() => setShowDeleteConfirm(true)}
                                     disabled={isDeleting}
                                     className="px-5 py-2.5 bg-white dark:bg-red-950 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900 rounded-lg text-sm font-medium hover:bg-red-50 hover:border-red-300 dark:hover:bg-red-900/40 transition-all shadow-sm active:scale-95 whitespace-nowrap"
                                 >
-                                    {isDeleting ? 'Deleting...' : 'Delete Personal Account'}
+                                    Delete Personal Account
                                 </button>
                             </div>
                         </section>
+
+                        {showDeleteConfirm && (
+                            <div className="absolute align-middle inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                                <div className="bg-white mt-80 dark:bg-[#09090b] w-full max-w-md rounded-2xl border border-gray-200 dark:border-[#27272a] shadow-2xl p-6 space-y-6 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                                    <div className="flex flex-col items-center text-center space-y-2">
+                                        <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-full mb-2">
+                                            <AlertTriangle size={32} className="text-red-600 dark:text-red-500" />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Delete Account?</h3>
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm">
+                                            This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => setShowDeleteConfirm(false)}
+                                            className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-[#27272a] text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleDeleteAccount}
+                                            disabled={isDeleting}
+                                            className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+                                        >
+                                            {isDeleting ? 'Deleting...' : 'Yes, Delete Account'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 );
             default:
