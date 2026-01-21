@@ -31,6 +31,23 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin'],
     default: 'user'
   },
+  loginHistory: [{
+    ip: String,
+    location: String,
+    timestamp: Date
+  }],
+  AllLoginDevices: [{
+    ip: String,
+    location: String,
+    accessToken: String,
+    timestamp: Date,
+    deviceInfo: String
+  }],
+  lastLogin: Date,
+  lastLogout: Date,
+  lastActivity: Date,
+  lastPasswordChange: Date,
+  lastPasswordReset: Date,
   credits: {
     type: Number,
     default: 0
