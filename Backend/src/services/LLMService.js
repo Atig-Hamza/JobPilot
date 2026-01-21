@@ -62,7 +62,7 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl) {
         roomContexts[roomId].push({ "role": "user", "content": prompt });
 
         const stream = await openai.chat.completions.create({
-            model: "moonshotai/kimi-k2-instruct",
+            model: "moonshotai/kimi-k2-instruct-0905",
             messages: roomContexts[roomId],
             temperature: 0.6,
             top_p: 0.9,
@@ -172,7 +172,7 @@ async function generateChatTitle(roomId) {
         });
 
         const response = await openai.chat.completions.create({
-            model: "moonshotai/kimi-k2-instruct",
+            model: "moonshotai/kimi-k2-instruct-0905",
             messages: messages,
             temperature: 0.7,
             max_tokens: 50
@@ -195,7 +195,7 @@ async function generateChatTitle(roomId) {
 async function generateCompletion(prompt, systemPrompt) {
     try {
         const completion = await openai.chat.completions.create({
-            model: "moonshotai/kimi-k2-instruct",
+            model: "moonshotai/kimi-k2-instruct-0905",
             messages: [
                 { role: "system", content: systemPrompt || "You are a helpful assistant." },
                 { role: "user", content: prompt }
