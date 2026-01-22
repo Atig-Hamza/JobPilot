@@ -333,3 +333,30 @@ export const sendLoginOTPEmail = async (userEmail, code, fullName) => {
         return false
     }
 }
+
+export const send2FADisabledEmail = async (userEmail, fullName) => {
+    try {
+        const html = generateInlineHtml(`
+            <h1>2FA Disabled ⚠️</h1>
+            <p>Hi ${fullName || 'there'},</p>
+            <p>Two-Factor Authentication (2FA) has been disabled for your JobPilot account.</p>
+            <p>Your account is now less secure. We strongly recommend keeping 2FA enabled to protect your account from unauthorized access.</p>
+            <div style="background-color: #27272a; border: 1px solid #3f3f46; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                <p style="margin: 0; color: #ef4444; font-weight: 600;">Was this you?</p>
+                <p style="margin: 8px 0 0 0; color: #d4d4d8;">If you did not make this change, please change your password immediately and contact support.</p>
+            </div>
+            <br>
+            <p style="font-weight: 600; color: #fff;">The JobPilot Security Team</p>
+        `)
+        await transporter.sendMail({
+            from: `"JobPilot Security" <${process.env.SMTP_USER}>`,
+            to: userEmail,
+            subject: 'Two-Factor Authentication Disabled - JobPilot',
+            html: html
+        })
+        return true
+    } catch (error) {
+        console.error('2FA disabled email error:', error)
+        return false
+    }
+}
