@@ -306,3 +306,30 @@ export const send2FAEnabledEmail = async (userEmail, fullName) => {
         return false
     }
 }
+
+export const sendLoginOTPEmail = async (userEmail, code, fullName) => {
+    try {
+        const html = generateInlineHtml(`
+            <h1>Login Verification Code</h1>
+            <p>Hi ${fullName || 'there'},</p>
+            <p>Use the following code to complete your login to JobPilot:</p>
+            <div style="background-color: #27272a; border: 1px solid #3f3f46; border-radius: 8px; padding: 24px; margin: 24px 0; text-align: center;">
+                <p style="margin: 0; font-size: 32px; font-weight: 700; color: #db2777; letter-spacing: 4px;">${code}</p>
+            </div>
+            <p>This code will expire in 10 minutes.</p>
+            <p>If you did not request this code, please ignore this email.</p>
+            <br>
+            <p style="font-weight: 600; color: #fff;">The JobPilot Security Team</p>
+        `)
+        await transporter.sendMail({
+            from: `"JobPilot Security" <${process.env.SMTP_USER}>`,
+            to: userEmail,
+            subject: 'Your Login Verification Code - JobPilot',
+            html: html
+        })
+        return true
+    } catch (error) {
+        console.error('Login OTP email error:', error)
+        return false
+    }
+}
