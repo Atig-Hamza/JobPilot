@@ -8,7 +8,8 @@ import {
     initiateTwoFactor,
     verifyAndEnableTwoFactor,
     verifyTwoFactorLogin,
-    disableTwoFactor
+    disableTwoFactor,
+    generateAndSendLoginOTP
 } from '../services/authService.js';
 import { AppError } from '../utils/AppError.js';
 import catchAsync from '../utils/catchAsync.js';
@@ -160,5 +161,17 @@ export const login2FAController = catchAsync(async (req, res) => {
     res.status(200).json({
         status: 'success',
         data: { user: safeUser, token }
+    });
+});
+
+export const sendLoginOTPController = catchAsync(async (req, res) => {
+    const { tempToken } = req.body;
+    if (!tempToken) throw new AppError('Token is required', 400);
+
+    await generateAndSendLoginOTP(tempToken);
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Verification code sent to email'
     });
 });
