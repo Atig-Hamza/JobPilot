@@ -65,6 +65,14 @@ const userSchema = new mongoose.Schema({
   twoFactorRecoveryCodes: {
     type: [String],
     select: false
+  },
+  loginOTP: {
+    type: String,
+    select: false
+  },
+  loginOTPExpires: {
+    type: Date,
+    select: false
   }
 }, {
   timestamps: true
