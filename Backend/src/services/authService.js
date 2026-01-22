@@ -6,7 +6,8 @@ import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 import User from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
-import { sendNewLoginAlert, sendPasswordResetEmail, sendPasswordResetSuccessEmail, send2FAEnabledEmail, sendLoginOTPEmail } from './mailService.js';
+import { sendNewLoginAlert, sendPasswordResetEmail, sendPasswordResetSuccessEmail, send2FAEnabledEmail, sendLoginOTPEmail, send2FADisabledEmail } from './mailService.js';
+
 
 function removeSensitiveInfo(user) {
     const userObj = user.toObject();
@@ -347,7 +348,12 @@ export const disableTwoFactor = async (userId) => {
     user.isTwoFactorEnabled = false;
     user.twoFactorSecret = undefined;
     user.twoFactorRecoveryCodes = undefined;
+
+    user.loginOTP = undefined;
+    user.loginOTPExpires = undefined;
+
     await user.save({ validateBeforeSave: false });
+    await send2FADisabledEmail(user.email, user.fullName);
 };
 
 export const generateAndSendLoginOTP = async (tempToken) => {
