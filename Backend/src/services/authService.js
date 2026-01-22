@@ -6,7 +6,7 @@ import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 import User from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
-import { sendNewLoginAlert, sendPasswordResetEmail, sendPasswordResetSuccessEmail, send2FAEnabledEmail } from './mailService.js';
+import { sendNewLoginAlert, sendPasswordResetEmail, sendPasswordResetSuccessEmail, send2FAEnabledEmail, sendLoginOTPEmail } from './mailService.js';
 
 function removeSensitiveInfo(user) {
     const userObj = user.toObject();
@@ -264,7 +264,7 @@ export const verifyTwoFactorLogin = async (tempToken, code, loginDetails) => {
 
     if (decoded.role !== '2fa_pending') throw new AppError('Invalid session type', 401);
 
-    const user = await User.findById(decoded.id).select('+twoFactorSecret +twoFactorRecoveryCodes');
+    const user = await User.findById(decoded.id).select('+twoFactorSecret +twoFactorRecoveryCodes +loginOTP +loginOTPExpires');
     if (!user) throw new AppError('User not found', 404);
 
     let isValid = false;
@@ -303,6 +303,23 @@ export const verifyTwoFactorLogin = async (tempToken, code, loginDetails) => {
                 window: 10
             });
         }
+
+        // Check 4: Email OTP (if TOTP failed)
+        if (!isValid) {
+            if (user.loginOTP && user.loginOTPExpires && user.loginOTPExpires > Date.now()) {
+                const isMatch = await bcrypt.compare(cleanToken, user.loginOTP);
+
+                if (isMatch) {
+                    isValid = true;
+                    console.log('[OTP DEBUG] OTP Validated Successfully!');
+                    user.loginOTP = undefined;
+                    user.loginOTPExpires = undefined;
+                    await user.save({ validateBeforeSave: false });
+                }
+            } else {
+                console.log('[OTP DEBUG] OTP missing or expired.');
+            }
+        }
     } else {
         if (user.twoFactorRecoveryCodes && user.twoFactorRecoveryCodes.length > 0) {
             for (const hashedCode of user.twoFactorRecoveryCodes) {
@@ -331,4 +348,30 @@ export const disableTwoFactor = async (userId) => {
     user.twoFactorSecret = undefined;
     user.twoFactorRecoveryCodes = undefined;
     await user.save({ validateBeforeSave: false });
+};
+
+export const generateAndSendLoginOTP = async (tempToken) => {
+    let decoded;
+    try {
+        decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+    } catch (err) {
+        throw new AppError('Invalid or expired session', 401);
+    }
+
+    if (decoded.role !== '2fa_pending') throw new AppError('Invalid session type', 401);
+
+    const user = await User.findById(decoded.id);
+    if (!user) throw new AppError('User not found', 404);
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const hashedCode = await bcrypt.hash(code, 12);
+
+    user.loginOTP = hashedCode;
+    user.loginOTPExpires = Date.now() + 10 * 60 * 1000;
+    await user.save({ validateBeforeSave: false });
+
+    await sendLoginOTPEmail(user.email, code, user.fullName);
+
+    return { message: 'Code sent to email' };
 };
