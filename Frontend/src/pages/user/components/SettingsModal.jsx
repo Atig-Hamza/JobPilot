@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useTheme } from '../../../context/ThemeContext';
-import { Lock, Trash, AlertTriangle, Eye, EyeOff, Shield } from 'lucide-react';
+import { Lock, Trash, AlertTriangle, Eye, EyeOff, Shield, ChevronLeft } from 'lucide-react';
 
 const SettingsModal = ({ isOpen, onClose }) => {
     const { theme, toggleTheme } = useTheme();
@@ -19,6 +19,13 @@ const SettingsModal = ({ isOpen, onClose }) => {
 
     const [devices, setDevices] = useState([]);
     const [isLoadingDevices, setIsLoadingDevices] = useState(false);
+
+    const [securityView, setSecurityView] = useState('menu');
+    const [setupStep, setSetupStep] = useState(1);
+    const [qrData, setQrData] = useState(null);
+    const [verifyCode, setVerifyCode] = useState('');
+    const [recoveryCodes, setRecoveryCodes] = useState([]);
+    const [isVerifying2FA, setIsVerifying2FA] = useState(false);
 
     useEffect(() => {
         if (activeTab === 'security') {
@@ -60,6 +67,88 @@ const SettingsModal = ({ isOpen, onClose }) => {
             }
         } catch (e) {
             toast.error("An error occurred", { id: toastId });
+        }
+    };
+
+    const handleInit2FA = async () => {
+        const toastId = toast.loading("Initializing 2FA...");
+        try {
+            const token = localStorage.getItem('token');
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+            const res = await fetch(`${API_URL}/users/2fa/setup`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setQrData(data.data);
+                setSetupStep(1);
+                setSecurityView('2fa_setup');
+                toast.dismiss(toastId);
+            } else {
+                toast.error(data.message || "Failed to init 2FA", { id: toastId });
+            }
+        } catch (e) {
+            toast.error("Error initializing 2FA", { id: toastId });
+        }
+    };
+
+    const handleVerify2FA = async () => {
+        if (!verifyCode || verifyCode.length !== 6) {
+            toast.error("Please enter a valid 6-digit code");
+            return;
+        }
+        setIsVerifying2FA(true);
+        try {
+            const token = localStorage.getItem('token');
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+            const res = await fetch(`${API_URL}/users/2fa/verify`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ token: verifyCode })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setRecoveryCodes(data.data.recoveryCodes);
+                setSetupStep(3);
+                // Update local user state
+                const updatedUser = { ...user, isTwoFactorEnabled: true };
+                setUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser)); // Basic persist
+                toast.success("2FA Enabled!");
+            } else {
+                toast.error(data.message || "Invalid code");
+            }
+        } catch (e) {
+            toast.error("Verification failed");
+        } finally {
+            setIsVerifying2FA(false);
+        }
+    };
+
+    const handleDisable2FA = async () => {
+        if (!confirm("Are you sure you want to disable 2FA? This will reduce your account security.")) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+            const res = await fetch(`${API_URL}/users/2fa/disable`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const updatedUser = { ...user, isTwoFactorEnabled: false };
+                setUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+                toast.success("2FA Disabled");
+            } else {
+                toast.error("Failed to disable 2FA");
+            }
+        } catch (e) {
+            toast.error("Error disabling 2FA");
         }
     };
 
@@ -375,283 +464,395 @@ const SettingsModal = ({ isOpen, onClose }) => {
             case 'security':
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="mb-6">
-                            <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Account Security</h2>
-                            <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your access and security activity.</p>
-                        </div>
+                        {securityView === 'menu' ? (
+                            <>
+                                <div className="mb-6">
+                                    <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Account Security</h2>
+                                    <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your access and security activity.</p>
+                                </div>
 
-                        {/* Security Stats Grid */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#222]">
-                                <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Last Login</div>
-                                <div className="text-sm font-medium dark:text-gray-200">
-                                    {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}
-                                </div>
-                            </div>
-                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#222]">
-                                <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Last Password Change</div>
-                                <div className="text-sm font-medium dark:text-gray-200">
-                                    {user.lastPasswordChange ? new Date(user.lastPasswordChange).toLocaleString() : 'Never'}
-                                </div>
-                            </div>
-                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#222]">
-                                <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Last Reset</div>
-                                <div className="text-sm font-medium dark:text-gray-200">
-                                    {user.lastPasswordReset ? new Date(user.lastPasswordReset).toLocaleString() : 'None'}
-                                </div>
-                            </div>
-                            <div className="col-span-2 md:col-span-3 p-4 rounded-xl bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#222] flex items-center justify-between">
-                                <div>
-                                    <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Last Activity</div>
-                                    <div className="text-sm font-medium dark:text-gray-200">
-                                        {user.lastActivity ? new Date(user.lastActivity).toLocaleString() : 'Just now'}
+                                {/* Security Stats Grid */}
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#222]">
+                                        <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Last Login</div>
+                                        <div className="text-sm font-medium dark:text-gray-200">
+                                            {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}
+                                        </div>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#222]">
+                                        <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Last Password Change</div>
+                                        <div className="text-sm font-medium dark:text-gray-200">
+                                            {user.lastPasswordChange ? new Date(user.lastPasswordChange).toLocaleString() : 'Never'}
+                                        </div>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#222]">
+                                        <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Last Reset</div>
+                                        <div className="text-sm font-medium dark:text-gray-200">
+                                            {user.lastPasswordReset ? new Date(user.lastPasswordReset).toLocaleString() : 'None'}
+                                        </div>
+                                    </div>
+                                    <div className="col-span-2 md:col-span-3 p-4 rounded-xl bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#222] flex items-center justify-between">
+                                        <div>
+                                            <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Last Activity</div>
+                                            <div className="text-sm font-medium dark:text-gray-200">
+                                                {user.lastActivity ? new Date(user.lastActivity).toLocaleString() : 'Just now'}
+                                            </div>
+                                        </div>
+                                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
                                     </div>
                                 </div>
-                                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-                            </div>
-                        </div>
 
-                        <section className="space-y-4">
-                            <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-[#222]">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Active Sessions</h3>
-                                <button
-                                    onClick={fetchDevices}
-                                    disabled={isLoadingDevices}
-                                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
-                                >
-                                    <i className={`ph-bold ph-arrows-clockwise ${isLoadingDevices ? 'animate-spin' : ''}`}></i> Refresh
-                                </button>
-                            </div>
+                                <section className="space-y-4">
+                                    <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-[#222]">
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Active Sessions</h3>
+                                        <button
+                                            onClick={fetchDevices}
+                                            disabled={isLoadingDevices}
+                                            className="text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
+                                        >
+                                            <i className={`ph-bold ph-arrows-clockwise ${isLoadingDevices ? 'animate-spin' : ''}`}></i> Refresh
+                                        </button>
+                                    </div>
 
-                            <div className="space-y-3">
-                                {isLoadingDevices ? (
-                                    <div className="py-8 text-center text-gray-500">Loading devices...</div>
-                                ) : devices && devices.length > 0 ? (
-                                    devices.map((device) => (
-                                        <div key={device._id} className="group p-4 rounded-xl border border-gray-200 dark:border-[#333] hover:border-blue-500/30 dark:hover:border-blue-500/30 bg-white dark:bg-[#111] transition-all flex items-start justify-between">
-                                            <div className="flex gap-4">
-                                                <div className="mt-1 p-2 bg-gray-100 dark:bg-[#222] rounded-lg h-fit text-gray-600 dark:text-gray-300">
-                                                    <i className="ph-fill ph-desktop text-xl"></i>
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-medium text-gray-900 dark:text-white text-base">
-                                                        {device.deviceInfo || 'Unknown Device'}
-                                                    </h4>
-                                                    <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                                        <i className="ph ph-map-pin"></i>
-                                                        <span>{device.location}</span>
-                                                        <span className="text-gray-300 dark:text-gray-700">•</span>
-                                                        <span>{new Date(device.timestamp).toLocaleString()}</span>
+                                    <div className="space-y-3">
+                                        {isLoadingDevices ? (
+                                            <div className="py-8 text-center text-gray-500">Loading devices...</div>
+                                        ) : devices && devices.length > 0 ? (
+                                            devices.map((device) => (
+                                                <div key={device._id} className="group p-4 rounded-xl border border-gray-200 dark:border-[#333] hover:border-blue-500/30 dark:hover:border-blue-500/30 bg-white dark:bg-[#111] transition-all flex items-start justify-between">
+                                                    <div className="flex gap-4">
+                                                        <div className="mt-1 p-2 bg-gray-100 dark:bg-[#222] rounded-lg h-fit text-gray-600 dark:text-gray-300">
+                                                            <i className="ph-fill ph-desktop text-xl"></i>
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="font-medium text-gray-900 dark:text-white text-base">
+                                                                {device.deviceInfo || 'Unknown Device'}
+                                                            </h4>
+                                                            <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                                                <i className="ph ph-map-pin"></i>
+                                                                <span>{device.location}</span>
+                                                                <span className="text-gray-300 dark:text-gray-700">•</span>
+                                                                <span>{new Date(device.timestamp).toLocaleString()}</span>
+                                                            </div>
+                                                            {localStorage.getItem('token') === device.accessToken && (
+                                                                <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                                                    Current Session
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    {localStorage.getItem('token') === device.accessToken && (
-                                                        <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                                                            Current Session
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => handleRemoveDevice(device._id)}
-                                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"
-                                                title="Revoke Session"
-                                            >
-                                                <i className="ph-bold ph-sign-out text-xl"></i>
-                                            </button>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="py-8 text-center text-gray-500 dark:text-gray-400 border border-dashed border-gray-200 dark:border-[#333] rounded-xl">
-                                        No active sessions found.
-                                    </div>
-                                )}
-                            </div>
-                        </section>
-
-                        <section className="pt-6 border-t border-gray-100 dark:border-[#222] space-y-6">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Login & Security</h3>
-
-                            <div className="bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-[#333] overflow-hidden divide-y divide-gray-100 dark:divide-[#222]">
-                                {/* Password Row */}
-                                <div className="p-6">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="p-2 bg-gray-100 dark:bg-[#222] rounded-lg">
-                                                <Lock size={20} className="text-gray-900 dark:text-white" />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Password</h4>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400">••••••••</p>
-                                            </div>
-                                        </div>
-                                        {!isEditingPassword && (
-                                            <button
-                                                onClick={() => setIsEditingPassword(true)}
-                                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-[#333] rounded-lg hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-all"
-                                            >
-                                                Change
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {/* Expandable Password Form */}
-                                    {isEditingPassword && (
-                                        <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                                            <div className="max-w-md space-y-4">
-                                                <div className="relative">
-                                                    <input
-                                                        type={showPassword.current ? "text" : "password"}
-                                                        value={passwords.current}
-                                                        onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
-                                                        className="w-full pl-4 pr-12 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg outline-none focus:border-black dark:focus:border-white transition-all text-sm"
-                                                        placeholder="Current Password"
-                                                    />
                                                     <button
-                                                        onClick={() => setShowPassword({ ...showPassword, current: !showPassword.current })}
-                                                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                                        onClick={() => handleRemoveDevice(device._id)}
+                                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"
+                                                        title="Revoke Session"
                                                     >
-                                                        {showPassword.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                        <i className="ph-bold ph-sign-out text-xl"></i>
                                                     </button>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="relative">
-                                                        <input
-                                                            type={showPassword.new ? "text" : "password"}
-                                                            value={passwords.new}
-                                                            onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
-                                                            className="w-full pl-4 pr-12 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg outline-none focus:border-black dark:focus:border-white transition-all text-sm"
-                                                            placeholder="New Password"
-                                                        />
-                                                        <button
-                                                            onClick={() => setShowPassword({ ...showPassword, new: !showPassword.new })}
-                                                            className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                                                        >
-                                                            {showPassword.new ? <EyeOff size={16} /> : <Eye size={16} />}
-                                                        </button>
+                                            ))
+                                        ) : (
+                                            <div className="py-8 text-center text-gray-500 dark:text-gray-400 border border-dashed border-gray-200 dark:border-[#333] rounded-xl">
+                                                No active sessions found.
+                                            </div>
+                                        )}
+                                    </div>
+                                </section>
+
+                                <section className="pt-6 border-t border-gray-100 dark:border-[#222] space-y-6">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Login & Security</h3>
+
+                                    <div className="bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-[#333] overflow-hidden divide-y divide-gray-100 dark:divide-[#222]">
+                                        {/* Password Row */}
+                                        <div className="p-6">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="p-2 bg-gray-100 dark:bg-[#222] rounded-lg">
+                                                        <Lock size={20} className="text-gray-900 dark:text-white" />
                                                     </div>
-                                                    <div className="relative">
-                                                        <input
-                                                            type={showPassword.confirm ? "text" : "password"}
-                                                            value={passwords.confirm}
-                                                            onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
-                                                            className="w-full pl-4 pr-12 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg outline-none focus:border-black dark:focus:border-white transition-all text-sm"
-                                                            placeholder="Confirm Password"
-                                                        />
+                                                    <div>
+                                                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">Password</h4>
+                                                        <p className="text-sm text-gray-500 dark:text-gray-400">••••••••</p>
+                                                    </div>
+                                                </div>
+                                                {!isEditingPassword && (
+                                                    <button
+                                                        onClick={() => setIsEditingPassword(true)}
+                                                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-[#333] rounded-lg hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-all"
+                                                    >
+                                                        Change
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Expandable Password Form */}
+                                            {isEditingPassword && (
+                                                <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                                                    <div className="max-w-md space-y-4">
+                                                        <div className="relative">
+                                                            <input
+                                                                type={showPassword.current ? "text" : "password"}
+                                                                value={passwords.current}
+                                                                onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
+                                                                className="w-full pl-4 pr-12 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg outline-none focus:border-black dark:focus:border-white transition-all text-sm"
+                                                                placeholder="Current Password"
+                                                            />
+                                                            <button
+                                                                onClick={() => setShowPassword({ ...showPassword, current: !showPassword.current })}
+                                                                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                                            >
+                                                                {showPassword.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                            </button>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div className="relative">
+                                                                <input
+                                                                    type={showPassword.new ? "text" : "password"}
+                                                                    value={passwords.new}
+                                                                    onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
+                                                                    className="w-full pl-4 pr-12 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg outline-none focus:border-black dark:focus:border-white transition-all text-sm"
+                                                                    placeholder="New Password"
+                                                                />
+                                                                <button
+                                                                    onClick={() => setShowPassword({ ...showPassword, new: !showPassword.new })}
+                                                                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                                                >
+                                                                    {showPassword.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                                </button>
+                                                            </div>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type={showPassword.confirm ? "text" : "password"}
+                                                                    value={passwords.confirm}
+                                                                    onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+                                                                    className="w-full pl-4 pr-12 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg outline-none focus:border-black dark:focus:border-white transition-all text-sm"
+                                                                    placeholder="Confirm Password"
+                                                                />
+                                                                <button
+                                                                    onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })}
+                                                                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                                                >
+                                                                    {showPassword.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-3">
                                                         <button
-                                                            onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })}
-                                                            className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                                            onClick={handleUpdatePassword}
+                                                            disabled={isUpdatingPassword}
+                                                            className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-medium hover:opacity-90 transition-all disabled:opacity-50"
                                                         >
-                                                            {showPassword.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                            {isUpdatingPassword ? 'Saving...' : 'Save Password'}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setIsEditingPassword(false);
+                                                                setPasswords({ current: '', new: '', confirm: '' });
+                                                            }}
+                                                            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#222] rounded-lg text-sm font-medium transition-all"
+                                                        >
+                                                            Cancel
                                                         </button>
                                                     </div>
                                                 </div>
+                                            )}
+                                        </div>
+
+                                        {/* 2FA Row */}
+                                        <div className="p-6 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#161616] transition-colors">
+                                            <div className="flex items-center gap-4">
+                                                <div className="p-2 bg-gray-100 dark:bg-[#222] rounded-lg">
+                                                    <Shield size={20} className="text-gray-900 dark:text-white" />
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">Two-Factor Authentication</h4>
+                                                        {user.isTwoFactorEnabled ? (
+                                                            <span className="px-2 py-0.5 rounded text-[10px] bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-bold uppercase tracking-wider">On</span>
+                                                        ) : (
+                                                            <span className="px-2 py-0.5 rounded text-[10px] bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 font-bold uppercase tracking-wider">Off</span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Add an extra layer of security to your account.</p>
+                                                </div>
+                                            </div>
+                                            {user.isTwoFactorEnabled ? (
+                                                <button
+                                                    onClick={handleDisable2FA}
+                                                    className="px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-all"
+                                                >
+                                                    Disable
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={handleInit2FA}
+                                                    className="px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10 rounded-lg transition-all"
+                                                >
+                                                    Setup
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Login Notifications Row */}
+                                        <div className="p-6 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#161616] transition-colors">
+                                            <div className="flex items-center gap-4">
+                                                <div className="p-2 bg-gray-100 dark:bg-[#222] rounded-lg">
+                                                    <i className="ph-bold ph-bell-ringing text-xl text-gray-900 dark:text-white"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-sm font-medium text-gray-900 dark:text-white">Login Notifications</h4>
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Get notified of new sign-ins.</p>
+                                                </div>
+                                            </div>
+                                            <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-green-500 transition-colors duration-200 ease-in-out">
+                                                <span className="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                                <section className="bg-red-50/50 dark:bg-red-950/10 rounded-2xl border border-red-100 dark:border-red-900/30 overflow-hidden">
+                                    <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                        <div className="space-y-1">
+                                            <h3 className="text-base font-semibold text-red-900 dark:text-red-400 flex items-center gap-2">
+                                                <AlertTriangle size={18} />
+                                                Delete Account
+                                            </h3>
+                                            <p className="text-sm text-red-700 dark:text-red-300 max-w-lg">
+                                                Permanently remove your account and all of its contents from the platform. This action is not reversible.
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => setShowDeleteConfirm(true)}
+                                            disabled={isDeleting}
+                                            className="px-5 py-2.5 bg-white dark:bg-red-950 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900 rounded-lg text-sm font-medium hover:bg-red-50 hover:border-red-300 dark:hover:bg-red-900/40 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+                                        >
+                                            Delete Personal Account
+                                        </button>
+                                    </div>
+                                </section>
+
+                                {showDeleteConfirm && (
+                                    <div className="absolute align-middle inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                                        <div className="bg-white mt-80 dark:bg-[#09090b] w-full max-w-md rounded-2xl border border-gray-200 dark:border-[#27272a] shadow-2xl p-6 space-y-6 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                                            <div className="flex flex-col items-center text-center space-y-2">
+                                                <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-full mb-2">
+                                                    <AlertTriangle size={32} className="text-red-600 dark:text-red-500" />
+                                                </div>
+                                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Delete Account?</h3>
+                                                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                                                    This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                                                </p>
                                             </div>
                                             <div className="flex gap-3">
                                                 <button
-                                                    onClick={handleUpdatePassword}
-                                                    disabled={isUpdatingPassword}
-                                                    className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-medium hover:opacity-90 transition-all disabled:opacity-50"
-                                                >
-                                                    {isUpdatingPassword ? 'Saving...' : 'Save Password'}
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setIsEditingPassword(false);
-                                                        setPasswords({ current: '', new: '', confirm: '' });
-                                                    }}
-                                                    className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#222] rounded-lg text-sm font-medium transition-all"
+                                                    onClick={() => setShowDeleteConfirm(false)}
+                                                    className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-[#27272a] text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
                                                 >
                                                     Cancel
+                                                </button>
+                                                <button
+                                                    onClick={handleDeleteAccount}
+                                                    disabled={isDeleting}
+                                                    className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+                                                >
+                                                    {isDeleting ? 'Deleting...' : 'Yes, Delete Account'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                            </>
+                        ) : (
+                            /* Inline 2FA Setup Flow */
+                            <div className="border border-gray-200 dark:border-[#222] rounded-2xl p-8 bg-gray-50/50 dark:bg-[#161616] animate-in slide-in-from-right-4 duration-300">
+                                <button
+                                    onClick={() => setSecurityView('menu')}
+                                    className="mb-8 flex items-center gap-2 text-sm text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors"
+                                >
+                                    <ChevronLeft size={16} /> Back to Security
+                                </button>
+
+                                <div className="max-w-md mx-auto">
+                                    {setupStep === 1 && (
+                                        <div className="space-y-8 text-center">
+                                            <div className="space-y-2">
+                                                <div className="mx-auto w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4">
+                                                    <Shield size={24} className="text-blue-600 dark:text-blue-400" />
+                                                </div>
+                                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Setup Authenticator</h3>
+                                                <p className="text-gray-500 dark:text-gray-400">
+                                                    Scan this QR code with your authenticator app (Google Authenticator, Authy, etc).
+                                                </p>
+                                            </div>
+
+                                            {qrData && (
+                                                <div className="flex justify-center p-4 bg-white rounded-2xl border border-gray-200 shadow-sm mx-auto w-fit">
+                                                    <img src={qrData.qrCodeUrl} alt="2FA QR Code" className="w-48 h-48 mix-blend-multiply" />
+                                                </div>
+                                            )}
+
+                                            <div className="space-y-4">
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Verification Code</label>
+                                                    <input
+                                                        type="text"
+                                                        maxLength="6"
+                                                        value={verifyCode}
+                                                        onChange={(e) => setVerifyCode(e.target.value.replace(/[^0-9]/g, ''))}
+                                                        className="w-full text-center tracking-[0.5em] text-3xl font-mono py-4 bg-white dark:bg-[#09090b] border border-gray-200 dark:border-[#333] rounded-xl outline-none focus:border-black dark:focus:border-white transition-all shadow-sm"
+                                                        placeholder="000000"
+                                                    />
+                                                </div>
+                                                <button
+                                                    onClick={handleVerify2FA}
+                                                    disabled={isVerifying2FA || verifyCode.length !== 6}
+                                                    className="w-full px-4 py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100"
+                                                >
+                                                    {isVerifying2FA ? 'Verifying...' : 'Verify & Activate'}
                                                 </button>
                                             </div>
                                         </div>
                                     )}
-                                </div>
 
-                                {/* 2FA Row */}
-                                <div className="p-6 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#161616] transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-2 bg-gray-100 dark:bg-[#222] rounded-lg">
-                                            <Shield size={20} className="text-gray-900 dark:text-white" />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Two-Factor Authentication</h4>
-                                                <span className="px-2 py-0.5 rounded text-[10px] bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 font-bold uppercase tracking-wider">Off</span>
+                                    {setupStep === 3 && (
+                                        <div className="space-y-8 text-center animate-in zoom-in-95 duration-300">
+                                            <div className="space-y-2">
+                                                <div className="mx-auto w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4">
+                                                    <Shield size={24} className="text-green-600 dark:text-green-400" />
+                                                </div>
+                                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">2FA Activated!</h3>
+                                                <p className="text-gray-500 dark:text-gray-400">
+                                                    Save these recovery codes securely. You can use them to log in if you lose access to your device.
+                                                </p>
                                             </div>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">Add an extra layer of security to your account.</p>
-                                        </div>
-                                    </div>
-                                    <button className="px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10 rounded-lg transition-all">
-                                        Setup
-                                    </button>
-                                </div>
 
-                                {/* Login Notifications Row */}
-                                <div className="p-6 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#161616] transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-2 bg-gray-100 dark:bg-[#222] rounded-lg">
-                                            <i className="ph-bold ph-bell-ringing text-xl text-gray-900 dark:text-white"></i>
-                                        </div>
-                                        <div>
-                                            <h4 className="text-sm font-medium text-gray-900 dark:text-white">Login Notifications</h4>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">Get notified of new sign-ins.</p>
-                                        </div>
-                                    </div>
-                                    <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-green-500 transition-colors duration-200 ease-in-out">
-                                        <span className="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                        <section className="bg-red-50/50 dark:bg-red-950/10 rounded-2xl border border-red-100 dark:border-red-900/30 overflow-hidden">
-                            <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                <div className="space-y-1">
-                                    <h3 className="text-base font-semibold text-red-900 dark:text-red-400 flex items-center gap-2">
-                                        <AlertTriangle size={18} />
-                                        Delete Account
-                                    </h3>
-                                    <p className="text-sm text-red-700 dark:text-red-300 max-w-lg">
-                                        Permanently remove your account and all of its contents from the platform. This action is not reversible.
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={() => setShowDeleteConfirm(true)}
-                                    disabled={isDeleting}
-                                    className="px-5 py-2.5 bg-white dark:bg-red-950 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900 rounded-lg text-sm font-medium hover:bg-red-50 hover:border-red-300 dark:hover:bg-red-900/40 transition-all shadow-sm active:scale-95 whitespace-nowrap"
-                                >
-                                    Delete Personal Account
-                                </button>
-                            </div>
-                        </section>
+                                            <div className="bg-white dark:bg-[#09090b] p-6 rounded-2xl border border-gray-200 dark:border-[#333] grid grid-cols-2 gap-3 text-center font-mono text-sm shadow-sm">
+                                                {recoveryCodes.map((code, i) => (
+                                                    <div key={i} className="p-2 bg-gray-50 dark:bg-[#1a1a1a] rounded-lg border border-gray-100 dark:border-[#222] text-gray-600 dark:text-gray-300 select-all hover:bg-gray-100 dark:hover:bg-[#222] transition-colors cursor-text">
+                                                        {code}
+                                                    </div>
+                                                ))}
+                                            </div>
 
-                        {showDeleteConfirm && (
-                            <div className="absolute align-middle inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                                <div className="bg-white mt-80 dark:bg-[#09090b] w-full max-w-md rounded-2xl border border-gray-200 dark:border-[#27272a] shadow-2xl p-6 space-y-6 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-                                    <div className="flex flex-col items-center text-center space-y-2">
-                                        <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-full mb-2">
-                                            <AlertTriangle size={32} className="text-red-600 dark:text-red-500" />
+                                            <div className="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-xl text-xs text-amber-800 dark:text-amber-200 border border-amber-100 dark:border-amber-900/30 text-left">
+                                                <AlertTriangle size={20} className="shrink-0" />
+                                                <span>These codes are only displayed once. Please copy or download them now before continuing.</span>
+                                            </div>
+
+                                            <button
+                                                onClick={() => {
+                                                    setSecurityView('menu');
+                                                    setSetupStep(1);
+                                                    setVerifyCode('');
+                                                }}
+                                                className="w-full px-4 py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                            >
+                                                I have saved these codes
+                                            </button>
                                         </div>
-                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Delete Account?</h3>
-                                        <p className="text-gray-500 dark:text-gray-400 text-sm">
-                                            This action cannot be undone. This will permanently delete your account and remove your data from our servers.
-                                        </p>
-                                    </div>
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={() => setShowDeleteConfirm(false)}
-                                            className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-[#27272a] text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={handleDeleteAccount}
-                                            disabled={isDeleting}
-                                            className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
-                                        >
-                                            {isDeleting ? 'Deleting...' : 'Yes, Delete Account'}
-                                        </button>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         )}
