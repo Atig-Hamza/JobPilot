@@ -2,32 +2,21 @@ import crypto from 'crypto';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
 import User from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
-import { sendNewLoginAlert, sendPasswordResetEmail, sendPasswordResetSuccessEmail } from './mailService.js';
+import { sendNewLoginAlert, sendPasswordResetEmail, sendPasswordResetSuccessEmail, send2FAEnabledEmail } from './mailService.js';
 
 function removeSensitiveInfo(user) {
     const userObj = user.toObject();
     delete userObj.password;
+    delete userObj.twoFactorSecret;
+    delete userObj.twoFactorRecoveryCodes;
     return userObj;
 }
 
-export const login = async (email, password, loginDetails) => {
-    const user = await User.findOne({ email });
-
-    if (!user) {
-        throw new AppError('Invalid email or password', 401);
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-        throw new AppError('Invalid email or password', 401);
-    }
-
-    if (user.isBanned) {
-        throw new AppError('Your account has been banned. Please contact support.', 403);
-    }
-
+const finalizeLogin = async (user, loginDetails) => {
     const expiresIn = user.role === 'admin' ? '7d' : '1h';
 
     const token = jwt.sign(
@@ -65,9 +54,33 @@ export const login = async (email, password, loginDetails) => {
 
     const safeUser = removeSensitiveInfo(user);
 
-    sendNewLoginAlert(user.email, new Date(), loginDetails);
+    const emailSent = await sendNewLoginAlert(user.email, new Date(), loginDetails);
 
     return { token, safeUser };
+};
+
+export const login = async (email, password, loginDetails) => {
+    const user = await User.findOne({ email }).select('+twoFactorSecret');
+
+    if (!user) {
+        throw new AppError('Invalid email or password', 401);
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+        throw new AppError('Invalid email or password', 401);
+    }
+
+    if (user.isBanned) {
+        throw new AppError('Your account has been banned. Please contact support.', 403);
+    }
+
+    if (user.isTwoFactorEnabled) {
+        const tempToken = jwt.sign({ id: user._id, role: '2fa_pending' }, process.env.JWT_SECRET, { expiresIn: '10m' });
+        return { status: '2FA_REQUIRED', tempToken };
+    }
+
+    return finalizeLogin(user, loginDetails);
 };
 
 export const getActiveDevices = async (userId) => {
@@ -171,4 +184,151 @@ export const resetPassword = async (token, newPassword) => {
     await user.save();
 
     await sendPasswordResetSuccessEmail(user.email, user.fullName);
+};
+
+export const initiateTwoFactor = async (userId) => {
+    const user = await User.findById(userId);
+    if (!user) throw new AppError('User not found', 404);
+
+    const secret = speakeasy.generateSecret({ name: `JobPilot (${user.email})` });
+
+    user.twoFactorSecret = secret.base32;
+    await user.save({ validateBeforeSave: false });
+
+    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url);
+
+    return { secret: secret.base32, qrCodeUrl };
+};
+
+export const verifyAndEnableTwoFactor = async (userId, token) => {
+    const user = await User.findById(userId).select('+twoFactorSecret');
+    if (!user) throw new AppError('User not found', 404);
+
+    const secret = user.twoFactorSecret ? user.twoFactorSecret.trim() : '';
+    const cleanToken = token ? token.trim() : '';
+
+    // Check 1: Standard
+    let verified = speakeasy.totp.verify({
+        secret: secret,
+        encoding: 'base32',
+        token: cleanToken,
+        window: 6
+    });
+
+    // Check 2: -1 Hour
+    if (!verified) {
+        const minusOneHour = Math.floor(Date.now() / 1000) - 3600;
+        verified = speakeasy.totp.verify({
+            secret: secret,
+            encoding: 'base32',
+            token: cleanToken,
+            time: minusOneHour,
+            window: 10
+        });
+    }
+
+    // Check 3: +1 Hour
+    if (!verified) {
+        const plusOneHour = Math.floor(Date.now() / 1000) + 3600;
+        verified = speakeasy.totp.verify({
+            secret: secret,
+            encoding: 'base32',
+            token: cleanToken,
+            time: plusOneHour,
+            window: 10
+        });
+    }
+
+    if (!verified) throw new AppError('Invalid token', 400);
+
+    user.isTwoFactorEnabled = true;
+
+    const recoveryCodes = Array.from({ length: 10 }, () => crypto.randomBytes(4).toString('hex').toUpperCase());
+    const hashedCodes = await Promise.all(recoveryCodes.map(code => bcrypt.hash(code, 12)));
+
+    user.twoFactorRecoveryCodes = hashedCodes;
+    await user.save({ validateBeforeSave: false });
+
+    await send2FAEnabledEmail(user.email, user.fullName);
+
+    return { recoveryCodes };
+};
+
+export const verifyTwoFactorLogin = async (tempToken, code, loginDetails) => {
+    let decoded;
+    try {
+        decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+    } catch (err) {
+        throw new AppError('Invalid or expired session', 401);
+    }
+
+    if (decoded.role !== '2fa_pending') throw new AppError('Invalid session type', 401);
+
+    const user = await User.findById(decoded.id).select('+twoFactorSecret +twoFactorRecoveryCodes');
+    if (!user) throw new AppError('User not found', 404);
+
+    let isValid = false;
+    let isRecovery = false;
+
+    if (code.length === 6 && /^\d+$/.test(code)) {
+        const cleanToken = code.trim();
+        // Check 1: Standard
+        isValid = speakeasy.totp.verify({
+            secret: user.twoFactorSecret,
+            encoding: 'base32',
+            token: cleanToken,
+            window: 6
+        });
+
+        // Check 2: -1 Hour
+        if (!isValid) {
+            const minusOneHour = Math.floor(Date.now() / 1000) - 3600;
+            isValid = speakeasy.totp.verify({
+                secret: user.twoFactorSecret,
+                encoding: 'base32',
+                token: cleanToken,
+                time: minusOneHour,
+                window: 10
+            });
+        }
+
+        // Check 3: +1 Hour
+        if (!isValid) {
+            const plusOneHour = Math.floor(Date.now() / 1000) + 3600;
+            isValid = speakeasy.totp.verify({
+                secret: user.twoFactorSecret,
+                encoding: 'base32',
+                token: cleanToken,
+                time: plusOneHour,
+                window: 10
+            });
+        }
+    } else {
+        if (user.twoFactorRecoveryCodes && user.twoFactorRecoveryCodes.length > 0) {
+            for (const hashedCode of user.twoFactorRecoveryCodes) {
+                if (await bcrypt.compare(code, hashedCode)) {
+                    isValid = true;
+                    isRecovery = true;
+                    user.twoFactorRecoveryCodes = user.twoFactorRecoveryCodes.filter(c => c !== hashedCode);
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!isValid) throw new AppError('Invalid code', 401);
+
+    if (isRecovery) {
+        await user.save({ validateBeforeSave: false });
+    }
+
+    return finalizeLogin(user, loginDetails);
+};
+
+export const disableTwoFactor = async (userId) => {
+    const user = await User.findById(userId);
+    user.isTwoFactorEnabled = false;
+    user.twoFactorSecret = undefined;
+    user.twoFactorRecoveryCodes = undefined;
+    await user.save({ validateBeforeSave: false });
 };
