@@ -157,12 +157,43 @@ const LoginPage = () => {
   const [twoFactorToken, setTwoFactorToken] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [isVerifying2FA, setIsVerifying2FA] = useState(false);
+  const [isEmail2FA, setIsEmail2FA] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [canResend, setCanResend] = useState(true);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  useEffect(() => {
+    let interval;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    } else {
+      setCanResend(true);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   const handleChange = (e) => {
     setLoginData({
       ...loginData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleSendOTP = async () => {
+    if (!canResend) return;
+    try {
+      await axios.post(`${import.meta.env.VITE_BACKEND_API_URL}/auth/2fa/send-otp`, {
+        tempToken: twoFactorToken
+      });
+      setOtpSent(true);
+      setCanResend(false);
+      setResendTimer(60);
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to send OTP');
+    }
   };
 
   const processLoginSuccess = async (token, user) => {
@@ -237,23 +268,18 @@ const LoginPage = () => {
 
       <div className="hidden lg:flex relative w-full lg:w-[60%] bg-[#080808] text-white flex-col justify-between p-12 lg:p-24 overflow-hidden z-0">
         <div className="bg-noise"></div>
-
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#ffb6e6] opacity-[0.1] blur-[150px] rounded-full pointer-events-none z-0"></div>
-
         <div className="relative z-10 flex items-center gap-3">
           <img src={MainWhiteLogo} alt="JobPilot Logo" className='w-5 h-5' />
           <span className="font-semibold tracking-tight text-lg">JobPilot</span>
         </div>
-
         <div className="relative z-10 my-auto">
           <h1 className="text-6xl lg:text-8xl font-medium tracking-tighter leading-[1] text-white/90">
             Design your
             <br />
             <SplitTextReveal />
           </h1>
-
           <div className="mt-8 h-px w-24 bg-[#ffb6e6]/30"></div>
-
           <p className="mt-8 text-lg text-gray-400 max-w-md leading-relaxed">
             A workspace designed to help you navigate your career with precision, speed, and automation.
           </p>
@@ -269,12 +295,12 @@ const LoginPage = () => {
             <span>Go Back</span>
           </Link>
         </div>
+
         <div className="lg:hidden flex justify-between items-center p-6 z-20">
           <div className="flex items-center gap-2">
             <img src={MainLogo} alt="JobPilot Logo" className='w-5 h-5' />
             <span className="font-bold tracking-tight text-lg text-gray-900">JobPilot</span>
           </div>
-
           <Link to="/" className="group flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
             <span>Go Back</span>
             <div className="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-black transition-colors">
@@ -296,16 +322,20 @@ const LoginPage = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <MinimalSocialButton icon={GoogleIcon} label="Google" />
-              <MinimalSocialButton icon={Github} label="GitHub" />
-            </div>
+            {!is2FARequired && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <MinimalSocialButton icon={GoogleIcon} label="Google" />
+                  <MinimalSocialButton icon={Github} label="GitHub" />
+                </div>
 
-            <div className="flex items-center gap-4">
-              <div className="h-px flex-1 bg-gray-100"></div>
-              <span className="text-[10px] text-gray-300 font-bold uppercase tracking-widest">Or</span>
-              <div className="h-px flex-1 bg-gray-100"></div>
-            </div>
+                <div className="flex items-center gap-4">
+                  <div className="h-px flex-1 bg-gray-100"></div>
+                  <span className="text-[10px] text-gray-300 font-bold uppercase tracking-widest">Or</span>
+                  <div className="h-px flex-1 bg-gray-100"></div>
+                </div>
+              </>
+            )}
 
             {is2FARequired ? (
               <form onSubmit={handleTwoFactorSubmit} className="space-y-8 animate-in slide-in-from-right duration-300">
@@ -314,18 +344,54 @@ const LoginPage = () => {
                     <ShieldCheck className="w-6 h-6" />
                     <h2 className="text-xl font-semibold">Security Check</h2>
                   </div>
-                  <p className="text-gray-500 text-sm">Enter the 6-digit code from your authenticator app or a recovery code.</p>
+                  <p className="text-gray-500 text-sm">
+                    {isEmail2FA
+                      ? "Enter the verification code sent to your email."
+                      : "Enter the 6-digit code from your authenticator app."}
+                  </p>
                 </div>
 
-                <MinimalInput
-                  label="Authentication Code"
-                  type="text"
-                  name="code"
-                  placeholder="000000"
-                  icon={Lock}
-                  value={twoFactorCode}
-                  onChange={(e) => setTwoFactorCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
-                />
+                <div className="flex gap-2 p-1 bg-gray-100 rounded-lg mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setIsEmail2FA(false)}
+                    className={`flex-1 py-2 text-xs font-semibold rounded-md transition-all ${!isEmail2FA ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                  >
+                    Authenticator App
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEmail2FA(true)}
+                    className={`flex-1 py-2 text-xs font-semibold rounded-md transition-all ${isEmail2FA ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                  >
+                    Email Code
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {isEmail2FA && (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleSendOTP}
+                        disabled={!canResend}
+                        className="w-full py-2 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {canResend ? (otpSent ? "Resend Code" : "Send Code") : `Resend in ${resendTimer}s`}
+                      </button>
+                    </div>
+                  )}
+
+                  <MinimalInput
+                    label={isEmail2FA ? "Email Code" : "Authenticator Code"}
+                    type="text"
+                    name="code"
+                    placeholder="000000"
+                    icon={Lock}
+                    value={twoFactorCode}
+                    onChange={(e) => setTwoFactorCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
+                  />
+                </div>
 
                 <button type="submit" disabled={isVerifying2FA} className="w-full bg-[#ffb6e6] text-black h-12 rounded-lg font-bold text-sm tracking-wide flex items-center justify-center gap-2 hover:bg-[#ffb6e6]/90 hover:shadow-lg hover:shadow-[#ffb6e6]/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed">
                   {isVerifying2FA ? <Loader2 size={18} className="animate-spin" /> : <>Verify <ArrowRight size={16} /></>}
