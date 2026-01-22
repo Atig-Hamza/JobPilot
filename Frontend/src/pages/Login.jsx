@@ -153,12 +153,39 @@ const LoginPage = () => {
     password: ''
   });
   const [error, setError] = useState('');
+  const [is2FARequired, setIs2FARequired] = useState(false);
+  const [twoFactorToken, setTwoFactorToken] = useState('');
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [isVerifying2FA, setIsVerifying2FA] = useState(false);
 
   const handleChange = (e) => {
     setLoginData({
       ...loginData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const processLoginSuccess = async (token, user) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+
+    if (user.role === 'admin') {
+      navigate('/admin/portal');
+    } else {
+      try {
+        const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+        const profileRes = await axios.get(`${API_URL}/profile`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (profileRes.data.status === 'success') {
+          navigate('/user/dashboard');
+        } else {
+          navigate('/user/onboarding');
+        }
+      } catch (e) {
+        navigate('/user/onboarding');
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -169,33 +196,38 @@ const LoginPage = () => {
     try {
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_API_URL}/auth/login`, loginData);
 
-      const { token, user } = response.data.data;
-
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      if (user.role === 'admin') {
-        navigate('/admin/portal');
-      } else {
-        try {
-          const API_URL = import.meta.env.VITE_BACKEND_API_URL;
-          const profileRes = await axios.get(`${API_URL}/profile`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (profileRes.data.status === 'success') {
-            navigate('/user/dashboard');
-          } else {
-            navigate('/user/onboarding');
-          }
-        } catch (e) {
-          navigate('/user/onboarding');
-        }
+      if (response.data.status === '2FA_REQUIRED') {
+        setTwoFactorToken(response.data.tempToken);
+        setIs2FARequired(true);
+        setIsLoading(false);
+        return;
       }
+
+      const { token, user } = response.data.data;
+      await processLoginSuccess(token, user);
+
     } catch (err) {
       console.error("Login failed", err);
       setError(err.response?.data?.message || err.message || 'Login failed');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleTwoFactorSubmit = async (e) => {
+    e.preventDefault();
+    setIsVerifying2FA(true);
+    setError('');
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_API_URL}/auth/2fa/login`, {
+        tempToken: twoFactorToken,
+        code: twoFactorCode
+      });
+      const { token, user } = response.data.data;
+      await processLoginSuccess(token, user);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Invalid code');
+      setIsVerifying2FA(false);
     }
   };
 
@@ -275,43 +307,73 @@ const LoginPage = () => {
               <div className="h-px flex-1 bg-gray-100"></div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div className="space-y-6">
-                <MinimalInput
-                  label="Work Email"
-                  type="email"
-                  name="email"
-                  placeholder="Email address"
-                  icon={Mail}
-                  value={loginData.email}
-                  onChange={handleChange}
-                />
-                <MinimalInput
-                  label="Password"
-                  type="password"
-                  name="password"
-                  placeholder="Password"
-                  icon={Lock}
-                  value={loginData.password}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="flex items-center justify-between pt-2">
-                <label className="flex items-center gap-2 cursor-pointer group select-none">
-                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all duration-300 ${rememberMe ? 'bg-[#ffb6e6] border-[#ffb6e6]' : 'border-gray-300 group-hover:border-gray-500'}`}>
-                    {rememberMe && <Check size={10} className="text-black" strokeWidth={3} />}
+            {is2FARequired ? (
+              <form onSubmit={handleTwoFactorSubmit} className="space-y-8 animate-in slide-in-from-right duration-300">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-black">
+                    <ShieldCheck className="w-6 h-6" />
+                    <h2 className="text-xl font-semibold">Security Check</h2>
                   </div>
-                  <input type="checkbox" className="hidden" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
-                  <span className="text-xs font-medium text-gray-500 group-hover:text-black transition-colors">Keep me signed in</span>
-                </label>
-                <a href="/password-recovery" className="text-xs font-bold text-black hover:text-[#ffb6e6] transition-colors">Recover Password</a>
-              </div>
+                  <p className="text-gray-500 text-sm">Enter the 6-digit code from your authenticator app or a recovery code.</p>
+                </div>
 
-              <button type="submit" disabled={isLoading} className="w-full bg-[#ffb6e6] text-black h-12 rounded-lg font-bold text-sm tracking-wide flex items-center justify-center gap-2 hover:bg-[#ffb6e6]/90 hover:shadow-lg hover:shadow-[#ffb6e6]/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed">
-                {isLoading ? <Loader2 size={18} className="animate-spin" /> : <>Enter Workspace <ArrowRight size={16} /></>}
-              </button>
-            </form>
+                <MinimalInput
+                  label="Authentication Code"
+                  type="text"
+                  name="code"
+                  placeholder="000000"
+                  icon={Lock}
+                  value={twoFactorCode}
+                  onChange={(e) => setTwoFactorCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
+                />
+
+                <button type="submit" disabled={isVerifying2FA} className="w-full bg-[#ffb6e6] text-black h-12 rounded-lg font-bold text-sm tracking-wide flex items-center justify-center gap-2 hover:bg-[#ffb6e6]/90 hover:shadow-lg hover:shadow-[#ffb6e6]/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed">
+                  {isVerifying2FA ? <Loader2 size={18} className="animate-spin" /> : <>Verify <ArrowRight size={16} /></>}
+                </button>
+
+                <button type="button" onClick={() => setIs2FARequired(false)} className="w-full text-center text-xs text-gray-400 hover:text-black transition-colors">
+                  Back to login
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-8 animate-in slide-in-from-left duration-300">
+                <div className="space-y-6">
+                  <MinimalInput
+                    label="Work Email"
+                    type="email"
+                    name="email"
+                    placeholder="Email address"
+                    icon={Mail}
+                    value={loginData.email}
+                    onChange={handleChange}
+                  />
+                  <MinimalInput
+                    label="Password"
+                    type="password"
+                    name="password"
+                    placeholder="Password"
+                    icon={Lock}
+                    value={loginData.password}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer group select-none">
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all duration-300 ${rememberMe ? 'bg-[#ffb6e6] border-[#ffb6e6]' : 'border-gray-300 group-hover:border-gray-500'}`}>
+                      {rememberMe && <Check size={10} className="text-black" strokeWidth={3} />}
+                    </div>
+                    <input type="checkbox" className="hidden" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
+                    <span className="text-xs font-medium text-gray-500 group-hover:text-black transition-colors">Keep me signed in</span>
+                  </label>
+                  <a href="/password-recovery" className="text-xs font-bold text-black hover:text-[#ffb6e6] transition-colors">Recover Password</a>
+                </div>
+
+                <button type="submit" disabled={isLoading} className="w-full bg-[#ffb6e6] text-black h-12 rounded-lg font-bold text-sm tracking-wide flex items-center justify-center gap-2 hover:bg-[#ffb6e6]/90 hover:shadow-lg hover:shadow-[#ffb6e6]/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed">
+                  {isLoading ? <Loader2 size={18} className="animate-spin" /> : <>Enter Workspace <ArrowRight size={16} /></>}
+                </button>
+              </form>
+            )}
 
             <Link to={'/signup'} className="text-center text-xs text-gray-400">
               No account? <a href="#" className="text-black font-semibold hover:underline decoration-[#ffb6e6] decoration-2 underline-offset-4">Request access</a>
