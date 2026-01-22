@@ -275,7 +275,34 @@ export const sendPasswordResetSuccessEmail = async (userEmail, fullName) => {
         })
         return true
     } catch (error) {
-        console.error('Password reset success email error:', error)
+        return false
+    }
+}
+
+export const send2FAEnabledEmail = async (userEmail, fullName) => {
+    try {
+        const html = generateInlineHtml(`
+            <h1>2FA Enabled Successfully! 🛡️</h1>
+            <p>Hi ${fullName || 'there'},</p>
+            <p>Two-Factor Authentication (2FA) has been successfully enabled for your JobPilot account.</p>
+            <p>Your account is now more secure. You will need to enter a verification code from your authenticator app each time you log in.</p>
+            <div style="background-color: #27272a; border: 1px solid #3f3f46; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                <p style="margin: 0; color: #fbbf24; font-weight: 600;">Important Reminder:</p>
+                <p style="margin: 8px 0 0 0; color: #d4d4d8;">Please ensure you have safely stored your recovery codes. If you lose access to your device, these codes are the only way to regain access to your account.</p>
+            </div>
+            <p>If you did not enable 2FA, please contact support immediately.</p>
+            <br>
+            <p style="font-weight: 600; color: #fff;">The JobPilot Security Team</p>
+        `)
+        await transporter.sendMail({
+            from: `"JobPilot Security" <${process.env.SMTP_USER}>`,
+            to: userEmail,
+            subject: 'Two-Factor Authentication Enabled - JobPilot',
+            html: html
+        })
+        return true
+    } catch (error) {
+        console.error('2FA enabled email error:', error)
         return false
     }
 }
