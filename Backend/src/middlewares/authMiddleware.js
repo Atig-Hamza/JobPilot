@@ -29,7 +29,7 @@ export const protect = catchAsync(async (req, res, next) => {
     }
 
     const isDeviceActive = currentUser.AllLoginDevices && currentUser.AllLoginDevices.some(device => device.accessToken === token);
-    if (!isDeviceActive && currentUser.AllLoginDevices.length > 0) {
+    if (!isDeviceActive) {
         return next(new AppError('This session has been revoked/logged out. Please log in again.', 401));
     }
     currentUser.lastActivity = Date.now();
