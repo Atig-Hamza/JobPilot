@@ -1,7 +1,14 @@
+#
+#
 <div align="center">
 
-<img src="https://i.ibb.co/wrwd559t/logo-white-without-bg.png" alt="JobPilot Logo" width="12"/> JobPilot
+<img src="https://i.ibb.co/wrwd559t/logo-white-without-bg.png" alt="JobPilot Logo" width="64"/>
+
+# JobPilot
+#
+
 ### *The AI-Powered Job Preparation & Simulation Platform*
+
 <br/>
 
 [![React](https://img.shields.io/badge/Frontend-React%2018-blue?style=for-the-badge&logo=react)](https://reactjs.org/)
