@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://lh3.google.com/u/0/d/1epKHt90OT4ihZyjC-VmERvtFmNpgmvZs=w1920-h945-iv1?auditContext=prefetch" alt="JobPilot Logo" width="12"/> JobPilot
+<img src="https://i.ibb.co/wrwd559t/logo-white-without-bg.png" alt="JobPilot Logo" width="12"/> JobPilot
 ### *The AI-Powered Job Preparation & Simulation Platform*
 <br/>
 
