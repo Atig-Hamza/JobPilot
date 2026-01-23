@@ -1,163 +1,100 @@
 <div align="center">
 
-# 🚀 JobPilot
-### *Navigate the chaotic job market with precision, intelligence, and speed.*
+<img src="https://lh3.google.com/u/0/d/1epKHt90OT4ihZyjC-VmERvtFmNpgmvZs=w1920-h945-iv1?auditContext=prefetch" alt="JobPilot Logo" width="12"/> JobPilot
+### *The AI-Powered Job Preparation & Simulation Platform*
 <br/>
 
-[![React](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-blue?style=for-the-badge&logo=react)](https://reactjs.org/)
+[![React](https://img.shields.io/badge/Frontend-React%2018-blue?style=for-the-badge&logo=react)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Backend-Node.js-green?style=for-the-badge&logo=node.js)](https://nodejs.org/)
-[![Status](https://img.shields.io/badge/Status-Active%20Development-orange?style=for-the-badge)](https://github.com/yourusername/jobpilot)
-[![License](https://img.shields.io/badge/License-MIT-blueviolet?style=for-the-badge)]()
-
-[Features](#-features) • [Roadmap](#-roadmap-coming-soon) • [Tech Stack](#-tech-stack) • [Installation](#-getting-started) • [Screenshots](#-visual-tour)
+[![AI Powered](https://img.shields.io/badge/AI-LLM%20%2B%20Agents-purple?style=for-the-badge)](https://openai.com/)
+[![Status](https://img.shields.io/badge/Status-Active%20Beta-orange?style=for-the-badge)]()
 
 </div>
 
 ---
 
-## 🚀 About The Project
+## 📋 Product Overview
 
-**JobPilot** is a next-generation career acceleration platform designed to bridge the gap between talented individuals and their dream roles. By leveraging cutting-edge Large Language Models (LLM) and specialized web crawling agents (**JOP-1**), JobPilot automates the most tedious parts of the job search process.
+**JobPilot** is an intelligent career acceleration platform that treats job hunting as a trainable skill. We bridge the gap between preparation and execution by combining advanced Large Language Models (LLM) with autonomous web agents.
 
-Whether you are optimizing your CV, hunting for hidden job listings, or preparing for high-stakes technical interviews, JobPilot serves as your 24/7 intelligent agent.
-
----
-
-## ✨ Features (Live & In-Progress)
-
-### 🤖 **AI Command Center**
-*   **Intelligent Chat Interface**: A fluid, responsive chat experience powered by our custom LLM controller.
-*   **JOP-1 Web Crawler**: A specialized agent capable of scraping job listings from global markets in real-time. Supports country-specific filtering (USA, UK, Canada, France, Morocco, and more).
-*   **Context-Aware**: The agent remembers your conversation history within a session optimization loop.
-
-### 🎨 **Modern User Experience**
-*   **Unified Sidebar Architecture**: A responsive, collapsible navigation rail that adapts from desktop to mobile (iPhone 11 Pro compatible).
-*   **Theme Engine**: Built-in Dark Mode & Light Mode with seamless transitions.
-*   **Mobile-First Design**: Experience a native-app feel on mobile browsers with fixed inputs and touch-optimized navigation.
-
-### 📊 **Dashboard & Analytics**
-*   **Credit System**: Track your AI usage and token consumption.
-*   **Activity Logging**: Keep a history of your job searches and AI interactions.
+JobPilot serves as your 24/7 career coach, recruiter, and technical interviewer. Unlike traditional job boards, JobPilot focuses on **simulation and mastery**—allowing you to discover opportunities, optimize your materials, and practice interview scenarios in a risk-free environment before the real thing.
 
 ---
 
-## 🔮 Roadmap: Coming Soon
+## ✨ Key Features
 
-We are actively building the future of career tech. Here is what is currently in the development pipeline:
+### 💬 **AI Command Center**
+Your primary entry point is a natural language chat interface. No complex menus—just tell JobPilot what you need.
+- "Find me Senior React Developer roles in London."
+- "Simulate an interview for this Google job posting."
+- "Rewrite my CV for a startup environment."
 
-### 📄 **CV Optimization Engine (`resume_opt`)**
-> *Status: In Development 🚧*
-*   Upload your existing PDF/DOCX resume.
-*   AI analysis against specific job descriptions (ATS Compliance Check).
-*   Automated rewriting of bullet points for maximum impact.
+### 🌐 **Smart Web Search & Discovery (JOP-1)**
+Our specialized autonomous agent, **JOP-1**, crawls the live web to bring you real-time intelligence.
+- **Live Job Listings**: Find hidden opportunities across global markets.
+- **Company Research**: Automatically gather culture, tech stack, and recent news about target companies.
+- **Market Insights**: Understanding salary bands and demand for specific skills.
 
-### 👨‍💻 **Tech Interview Lab**
-> *Status: Prototype Phase 🧪*
-*   **Live Coding Environment**: Integrated code editor to practice DSA (Data Structures & Algorithms).
-*   **AI Pair Programmer**: Get real-time hints and complexity analysis ($O(n)$) from the AI.
+### 📝 **Adaptive CV Generation**
+Stop sending generic resumes. JobPilot analyzes specific job descriptions (found via web search or uploaded) and regenerates your CV to highlight relevant experience, matching ATS keywords and role requirements perfectly.
 
-### 👽 **Behavioral Simulation**
-> *Status: Planned 📅*
-*   Voice-enabled mock interviews.
-*   "Describe a difficult situation" - practice your STAR method responses with instant feedback on tone and clarity.
+### 🎭 **Immersive Interview Simulations (under development)**
+Run end-to-end interview simulations directly in your browser.
+- **HR & Behavioral**: Practice STAR method responses, "soft skills" questions, and culture-fit assessments.
+- **Technical Deep Dives**: Role-specific technical interviews tailored to the job (e.g., System Design for Architects, LeetCode style for Devs, Case Studies for PMs).
+- **Web-Based Runtime**: Coding challenges and scenarios run directly within the platform.
 
-### 📋 **Application Kanban**
-> *Status: Design Phase 🎨*
-*   Trello-style board to track applications (Applied -> Interviewing -> Offer -> Rejected).
-*   Automated email drafting for follow-ups.
+### 📊 **Evaluation & Analytics (coming soon)**
+Receive instant, unbiased feedback after every simulation.
+- **Detailed Scoring**: Granular metrics on technical accuracy, communication clarity, and confidence.
+- **Actionable Feedback**: Specific suggestions on how to improve your answers.
+- **Growth Tracking**: Monitor your improvement over time across different skills.
+
+---
+
+## 🔄 How It Works
+
+1.  **Chat & Discover**: Start by chatting with the AI. Ask it to search the web for live roles or describe your dream job to generate a training scenario.
+2.  **Prepare**: Select a target role. The AI helps you tailor your CV and analyzes the job description to identify key interview topics.
+3.  **Simulate**: Launch a full-scale interview simulation. Choose between a behavioral screen or a technical deep-dive.
+4.  **Execute**: Context-aware AI interviewers ask dynamic follow-up questions based on your responses, simulating a real human conversation.
+5.  **Analyze**: Get a comprehensive scorecard immediately after the session. Review your weak points.
+6.  **Iterate**: Use the feedback to refine your approach and run new simulations until you are ready for the real offer.
+
+---
+
+## 💡 Example Use Cases
+
+*   **The Career Switcher**: Use web search to understand requirements for a new industry (e.g., "Marketing to UX Design"), then generate a custom CV and run simulations to practice explaining your transferable skills.
+*   **The Senior Developer**: Run rapid-fire technical simulations to brush up on System Design concepts and receive critique on architectural decisions before a high-stakes tech interview.
+*   **The New Graduate**: Build confidence by practicing "Tell me about yourself" and behavioral questions with the friendly HR bot before your first screening calls.
 
 ---
 
 ## 🛠 Tech Stack
 
-### **Frontend**
-*   **Framework**: React 18 (Vite)
-*   **Styling**: Tailwind CSS
-*   **Icons**: Lucide React
-*   **Routing**: React Router DOM (v6)
-*   **State**: Context API + Local Hooks
+**JobPilot** is built as a modern, high-performance SaaS application.
 
-### **Backend**
-*   **Runtime**: Node.js
-*   **Framework**: Express.js
+*   **Frontend**: React 18 (Vite), Tailwind CSS, Lucide React
+*   **Backend**: Node.js, Express.js
 *   **Database**: MongoDB (Mongoose)
-*   **Security**: JWT Auth, BCrypt, Helmet
-*   **AI Services**: Custom LLM Integration, Puppeteer (Scraping)
+*   **AI Orchestration**: Custom LLM Controller, Context-Aware Agents
+*   **Web Agents**: Puppeteer (for real-time scraping and research)
 
 ---
 
-## ⚡ Getting Started
+## 🔮 Roadmap
 
-Follow these steps to set up the project locally.
-
-### Prerequisites
-*   Node.js (v16+)
-*   MongoDB (Local or Atlas)
-*   Git
-
-### Installation
-
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/yourusername/jobpilot.git
-    cd jobpilot
-    ```
-
-2.  **Install Dependencies (Backend)**
-    ```bash
-    cd Backend
-    npm install
-    ```
-
-3.  **Install Dependencies (Frontend)**
-    ```bash
-    cd ../Frontend
-    npm install
-    ```
-
-4.  **Environment Setup**
-    Create a `.env` file in the `Backend` folder:
-    ```env
-    PORT=5000
-    MONGO_URI=your_mongodb_connection_string
-    JWT_SECRET=your_jwt_secret
-    ```
-
-5.  **Run the App**
-    *   **Backend**: `npm run dev` (inside `Backend/`)
-    *   **Frontend**: `npm run dev` (inside `Frontend/`)
-
----
-
-## 📸 Visual Tour
-
-| **Dashboard (Dark)** | **Mobile View** |
-|:---:|:---:|
-| *Space for Screenshot* | *Space for Screenshot* |
-| Comprehensive analytics and AI chat. | Optimized layout for small devices. |
-
-| **Sidebar Navigation** | **AI Agent** |
-|:---:|:---:|
-| *Space for Screenshot* | *Space for Screenshot* |
-| Smooth collapsible animations. | Real-time job scraping results. |
-
----
-
-## 🤝 Contributing
-
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
+*   **Multi-Modal Interviews**: Voice-enabled real-time verbal conversations for a more realistic experience.
+*   **Whiteboard Mode**: Interactive canvas for system design interviews.
+*   **Browser Extension**: JOP-1 integration directly into LinkedIn and Indeed.
+*   **Peer Matchmaking**: Connect with other users for mock P2P interviews.
 
 ---
 
 <div align="center">
 
-**Built with ❤️ for Job Seekers everywhere.**
+**Master the Interview. Land the Job.**
 
 &copy; 2026 JobPilot Team
 
