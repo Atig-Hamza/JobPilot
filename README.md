@@ -86,7 +86,6 @@ Receive instant, unbiased feedback after every simulation.
 *   **Backend**: Node.js, Express.js
 *   **Database**: MongoDB (Mongoose)
 *   **AI Orchestration**: Custom LLM Controller, Context-Aware Agents
-*   **Web Agents**: Puppeteer (for real-time scraping and research)
 
 ---
 
