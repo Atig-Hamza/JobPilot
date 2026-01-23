@@ -18,7 +18,7 @@ function removeSensitiveInfo(user) {
 }
 
 const finalizeLogin = async (user, loginDetails) => {
-    const expiresIn = user.role === 'admin' ? '7d' : '1h';
+    const expiresIn = user.role === 'admin' ? '7d' : '1d';
 
     const token = jwt.sign(
         { id: user._id, role: user.role },
