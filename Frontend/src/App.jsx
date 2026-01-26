@@ -27,6 +27,8 @@ const AccessManagement = lazy(() => import('./pages/admin/AccessManagement'));
 const InterviewCoach = lazy(() => import('./pages/user/InterviewCoach'));
 const Onboarding = lazy(() => import('./pages/user/Onboarding'));
 
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
 const Page = ({ title, children }) => (
   <>
     <PageTitle title={title} />
@@ -44,7 +46,7 @@ function App() {
   const { theme } = useTheme();
 
   return (
-    <>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <Toaster
         position="top-center"
         toastOptions={{
@@ -98,7 +100,7 @@ function App() {
           </Route>
         </Routes>
       </Router>
-    </>
+    </GoogleOAuthProvider>
   );
 }
 
