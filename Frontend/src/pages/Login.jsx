@@ -12,6 +12,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import { useGoogleLogin } from '@react-oauth/google';
 import MainWhiteLogo from '../assets/Main/logo-white-without-bg.png';
 import MainLogo from '../assets/Main/logo-without-bg.png';
 
@@ -136,8 +137,8 @@ const MinimalInput = ({ label, type, placeholder, icon: Icon, value, onChange, n
 );
 
 
-const MinimalSocialButton = ({ icon: Icon, label }) => (
-  <button type="button" className="flex-1 flex items-center justify-center gap-3 bg-gray-50/50 hover:bg-gray-100 py-3 px-4 rounded-lg border border-gray-200 text-sm font-semibold text-gray-600 transition-all duration-200 active:scale-[0.98]">
+const MinimalSocialButton = ({ icon: Icon, label, onClick }) => (
+  <button type="button" onClick={onClick} className="flex-1 flex items-center justify-center gap-3 bg-gray-50/50 hover:bg-gray-100 py-3 px-4 rounded-lg border border-gray-200 text-sm font-semibold text-gray-600 transition-all duration-200 active:scale-[0.98]">
     {Icon && <Icon size={18} />}
     <span>{label}</span>
   </button>
@@ -245,6 +246,53 @@ const LoginPage = () => {
     }
   };
 
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsLoading(true);
+      try {
+        const response = await axios.post(`${import.meta.env.VITE_BACKEND_API_URL}/auth/google`, {
+          token: tokenResponse.access_token
+        });
+
+        const result = response.data.data || {};
+
+        if (result.status === 'WAITLISTED') {
+          setError('You are currently on the waitlist. We will notify you when your access is ready.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (result.status === 'PRE_WAITLIST') {
+          navigate('/signup');
+          return;
+        }
+
+        if (response.data.status === '2FA_REQUIRED') {
+          setTwoFactorToken(response.data.tempToken);
+          setIs2FARequired(true);
+          setIsLoading(false);
+          return;
+        }
+
+        const { token, user, isNewUser } = response.data.data;
+
+        if (isNewUser) {
+          navigate('/user/onboarding');
+        } else {
+          await processLoginSuccess(token, user);
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || 'Google Login Failed');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: errorResponse => {
+      console.error(errorResponse);
+      setError('Google login failed');
+    }
+  });
+
   const handleTwoFactorSubmit = async (e) => {
     e.preventDefault();
     setIsVerifying2FA(true);
@@ -325,7 +373,7 @@ const LoginPage = () => {
             {!is2FARequired && (
               <>
                 <div className="grid grid-cols-2 gap-3">
-                  <MinimalSocialButton icon={GoogleIcon} label="Google" />
+                  <MinimalSocialButton icon={GoogleIcon} label="Google" onClick={handleGoogleLogin} />
                   <MinimalSocialButton icon={Github} label="GitHub" />
                 </div>
 
