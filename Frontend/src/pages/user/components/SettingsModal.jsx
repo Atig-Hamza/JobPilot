@@ -528,8 +528,9 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                                             <h4 className="font-medium text-gray-900 dark:text-white text-base">
                                                                 {device.deviceInfo || 'Unknown Device'}
                                                             </h4>
-                                                            <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                                            <div className="flex items-center gap-1 mt-1 text-sm text-gray-500 dark:text-gray-400">
                                                                 <i className="ph ph-map-pin"></i>
+                                                                <span>{device.ip}</span>
                                                                 <span>{device.location}</span>
                                                                 <span className="text-gray-300 dark:text-gray-700">•</span>
                                                                 <span>{new Date(device.timestamp).toLocaleString()}</span>
