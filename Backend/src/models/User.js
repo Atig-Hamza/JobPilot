@@ -14,6 +14,18 @@ const userSchema = new mongoose.Schema({
     trim: true,
     lowercase: true
   },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  authProvider: {
+    type: String,
+    default: 'local'
+  },
+  avatar: {
+    type: String
+  },
   password: {
     type: String,
     required: true

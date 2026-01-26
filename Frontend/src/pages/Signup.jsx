@@ -15,6 +15,7 @@ import {
   User
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useGoogleLogin } from '@react-oauth/google';
 import MainLogo from '../assets/Main/logo-without-bg.png';
 
 
@@ -223,8 +224,8 @@ const CustomGenderSelect = ({ value, onChange }) => {
   );
 };
 
-const SocialBtn = ({ icon: Icon, component, label }) => (
-  <button className="flex items-center justify-center gap-3 w-full py-3.5 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm transition-all duration-200 group active:scale-[0.99] bg-white">
+const SocialBtn = ({ icon: Icon, component, label, onClick }) => (
+  <button onClick={onClick} className="flex items-center justify-center gap-3 w-full py-3.5 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm transition-all duration-200 group active:scale-[0.99] bg-white">
     {component ? component : <Icon size={20} className="text-gray-900" />}
     <span className="text-sm font-semibold text-gray-700 group-hover:text-black transition-colors tracking-tight">{label}</span>
   </button>
@@ -271,7 +272,10 @@ const SignUpFlow = () => {
     gender: '',
     inviteCode: '',
     howDidYouFindUs: '',
-    whyJoin: ''
+    whyJoin: '',
+    googleId: '',
+    authProvider: 'local',
+    avatar: ''
   });
 
   const handleInputChange = (field, value) => {
@@ -282,14 +286,14 @@ const SignUpFlow = () => {
   };
 
   const isFormValid = () => {
-    if (!formData.firstName?.trim() || 
-        !formData.lastName?.trim() || 
-        !formData.email?.trim() || 
-        !formData.password || 
-        !formData.gender) {
+    if (!formData.firstName?.trim() ||
+      !formData.lastName?.trim() ||
+      !formData.email?.trim() ||
+      !formData.password ||
+      !formData.gender) {
       return false;
     }
-    
+
     const { day, month, year } = formData.dob;
     // ensure strict string/number presence
     if (!day || !month || !year) return false;
@@ -301,7 +305,7 @@ const SignUpFlow = () => {
     if (isNaN(d) || isNaN(m) || isNaN(y)) return false;
     if (m < 1 || m > 12) return false;
     if (d < 1 || d > 31) return false;
-    
+
     const currentYear = new Date().getFullYear();
     if (y < 1900 || y > currentYear) return false;
 
@@ -315,31 +319,32 @@ const SignUpFlow = () => {
   const handleJoinWaitlist = async () => {
     const toastId = toast.loading('Securing your spot...');
     try {
-      const year = formData.dob.year;
-      const month = String(formData.dob.month).padStart(2, '0');
-      const day = String(formData.dob.day).padStart(2, '0');
-      const dateString = `${year}-${month}-${day}`;
-      
-      const dateOfBirth = new Date(dateString);
+      let dateOfBirth = null;
+      const { year, month, day } = formData.dob || {};
 
-      if (isNaN(dateOfBirth.getTime())) {
-        throw new Error("Invalid date of birth provided.");
+      if (year && month && day) {
+        const dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        dateOfBirth = new Date(dateString);
+
+        if (isNaN(dateOfBirth.getTime())) {
+          throw new Error("Invalid date of birth provided.");
+        }
       }
 
       const payload = {
         ...formData,
         dob: dateOfBirth
       };
-      
+
       const apiUrl = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
-      
+
       await axios.post(`${apiUrl}/waitlist`, payload);
 
       toast.success(
         <div className="flex flex-col gap-1">
-            <span className="font-bold">You're on the list!</span>
-            <span className="text-xs">We'll notify you when you can fly.</span>
-        </div>, 
+          <span className="font-bold">You're on the list!</span>
+          <span className="text-xs">We'll notify you when you can fly.</span>
+        </div>,
         { id: toastId, duration: 5000 }
       );
 
@@ -348,7 +353,7 @@ const SignUpFlow = () => {
       }, 2000);
     } catch (err) {
       console.error(err);
-      const message = err.response?.data?.message || "Connection refused. Are engines on?";
+      const message = err.response?.data?.message || err.message || "Connection refused. Are engines on?";
       toast.error(message, { id: toastId });
     }
   };
@@ -365,6 +370,68 @@ const SignUpFlow = () => {
       return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
     }
   }, [step]);
+
+  const handleGoogleSignup = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      const toastId = toast.loading('Connecting with Google...');
+      try {
+        const response = await axios.post(`${import.meta.env.VITE_BACKEND_API_URL}/auth/google`, {
+          token: tokenResponse.access_token
+        });
+
+        const result = response.data.data || {};
+
+        if (result.status === 'WAITLISTED') {
+          toast.success("You're on the list! We'll notify you when you're in.", { id: toastId });
+          navigate('/');
+          return;
+        }
+
+        if (result.status === 'PRE_WAITLIST') {
+          const { googleData } = result;
+
+          setFormData(prev => ({
+            ...prev,
+            email: googleData.email,
+            firstName: googleData.firstName,
+            lastName: googleData.lastName,
+            googleId: googleData.googleId,
+            authProvider: 'google',
+            avatar: googleData.avatar,
+            password: 'google-auth-secured'
+          }));
+
+          toast.dismiss(toastId);
+          setStep(3);
+          return;
+        }
+
+        const { token, user, isNewUser } = response.data.data;
+
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+
+        if (response.data.status === '2FA_REQUIRED') {
+          toast.error("Please login to verify 2FA", { id: toastId });
+          navigate('/login');
+          return;
+        }
+
+        toast.success("Welcome aboard!", { id: toastId });
+
+        if (isNewUser) {
+          navigate('/user/onboarding');
+        } else {
+          navigate('/user/dashboard');
+        }
+
+      } catch (err) {
+        console.error(err);
+        toast.error(err.response?.data?.message || "Google Signup Failed", { id: toastId });
+      }
+    },
+    onError: () => toast.error("Google Signup Failed")
+  });
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans flex flex-col selection:bg-[#ffb6e6] selection:text-black relative">
@@ -385,20 +452,20 @@ const SignUpFlow = () => {
 
       <Toaster position="top-center" toastOptions={{
         style: {
-           background: '#333',
-           color: '#fff',
-           fontSize: '14px',
-           borderRadius: '8px',
+          background: '#333',
+          color: '#fff',
+          fontSize: '14px',
+          borderRadius: '8px',
         },
         success: {
-            style: {
-                background: 'black',
-                border: '1px solid #222',
-            },
-            iconTheme: {
-                primary: '#ffb6e6',
-                secondary: 'black',
-            },
+          style: {
+            background: 'black',
+            border: '1px solid #222',
+          },
+          iconTheme: {
+            primary: '#ffb6e6',
+            secondary: 'black',
+          },
         }
       }} />
 
@@ -411,7 +478,7 @@ const SignUpFlow = () => {
             <p className="text-gray-500 mb-8 text-lg font-medium">Create your JobPilot account.</p>
 
             <div className="space-y-4 mb-10">
-              <SocialBtn component={<GoogleIcon />} label="Continue with Google" />
+              <SocialBtn component={<GoogleIcon />} label="Continue with Google" onClick={() => handleGoogleSignup()} />
               <SocialBtn icon={Github} label="Continue with GitHub" />
             </div>
 
@@ -467,11 +534,10 @@ const SignUpFlow = () => {
                 if (isFormValid()) setStep(2);
               }}
               disabled={!isFormValid()}
-              className={`w-full bg-black text-white h-14 rounded-xl font-bold text-base transition-all duration-200 flex items-center justify-center gap-2 group ${
-                !isFormValid() 
-                  ? 'opacity-50 cursor-not-allowed' 
-                  : 'hover:bg-gray-900 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98]'
-              }`}
+              className={`w-full bg-black text-white h-14 rounded-xl font-bold text-base transition-all duration-200 flex items-center justify-center gap-2 group ${!isFormValid()
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:bg-gray-900 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98]'
+                }`}
             >
               Continue
               <ArrowRight size={18} className={`text-[#ffb6e6] transition-transform ${isFormValid() ? 'group-hover:translate-x-1' : ''}`} />

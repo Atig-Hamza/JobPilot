@@ -5,8 +5,10 @@ import jwt from 'jsonwebtoken';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 import User from '../models/User.js';
+import Waitlist from '../models/Waitlist.js';
 import { AppError } from '../utils/AppError.js';
 import { sendNewLoginAlert, sendPasswordResetEmail, sendPasswordResetSuccessEmail, send2FAEnabledEmail, sendLoginOTPEmail, send2FADisabledEmail } from './mailService.js';
+import { OAuth2Client } from 'google-auth-library';
 
 
 function removeSensitiveInfo(user) {
@@ -73,7 +75,7 @@ export const login = async (email, password, loginDetails) => {
     }
 
     if (user.isBanned) {
-        throw new AppError('Your account has been banned. Please contact support.', 403);
+        throw new AppError('Your account has been banned or deleted. Please contact support.', 403);
     }
 
     if (user.isTwoFactorEnabled) {
@@ -82,6 +84,66 @@ export const login = async (email, password, loginDetails) => {
     }
 
     return finalizeLogin(user, loginDetails);
+};
+
+export const verifyGoogleToken = async (accessToken) => {
+    try {
+        const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+        client.setCredentials({ access_token: accessToken });
+
+        const userinfo = await client.request({
+            url: 'https://www.googleapis.com/oauth2/v3/userinfo'
+        });
+
+        return userinfo.data;
+    } catch (error) {
+        throw new AppError('Invalid Google Token', 401);
+    }
+};
+
+export const loginWithGoogle = async (accessToken, loginDetails) => {
+    const payload = await verifyGoogleToken(accessToken);
+    const { email, sub: googleId, name, picture } = payload;
+
+    let user = await User.findOne({ email });
+    let isNewUser = false;
+
+    if (user) {
+        if (!user.googleId) {
+            user.googleId = googleId;
+            user.authProvider = 'google';
+            if (!user.avatar) user.avatar = picture;
+            await user.save({ validateBeforeSave: false });
+        }
+    } else {
+        const existingWaitlist = await Waitlist.findOne({ email });
+        if (existingWaitlist) {
+            return { status: 'WAITLISTED', message: 'You are already on the waitlist.' };
+        }
+        return {
+            status: 'PRE_WAITLIST',
+            googleData: {
+                email,
+                firstName: name ? name.split(' ')[0] : '',
+                lastName: name ? name.split(' ').slice(1).join(' ') : '',
+                googleId,
+                authProvider: 'google',
+                avatar: picture
+            }
+        };
+    }
+
+    if (user.isBanned) {
+        throw new AppError('Your account has been banned or deleted. Please contact support.', 403);
+    }
+
+    if (user.isTwoFactorEnabled) {
+        const tempToken = jwt.sign({ id: user._id, role: '2fa_pending' }, process.env.JWT_SECRET, { expiresIn: '10m' });
+        return { status: '2FA_REQUIRED', tempToken };
+    }
+
+    const { token, safeUser } = await finalizeLogin(user, loginDetails);
+    return { token, safeUser, isNewUser: false };
 };
 
 export const getActiveDevices = async (userId) => {

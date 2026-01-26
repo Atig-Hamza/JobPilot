@@ -17,18 +17,23 @@ export const addToWaitlist = async (data) => {
         throw new AppError('Email is already on the waitlist', 400);
     }
 
-    const newEntry = await Waitlist.create(data);
+    const sanitizedData = { ...data };
+
+    ['gender', 'dob', 'inviteCode', 'howDidYouFindUs', 'whyJoin'].forEach(field => {
+        if (!sanitizedData[field] || sanitizedData[field] === '') {
+            delete sanitizedData[field];
+        }
+    });
+
+    const newEntry = await Waitlist.create(sanitizedData);
 
     if (data.inviteCode) {
         await hasInviteCode(email, data.inviteCode, name, data.id);
+        await hasCorrectInviteCode(name, email, data.password);
+        await sendApprovedInviteCodeNotification(email, data.inviteCode, name);
+    } else {
+        await sendWaitlistEmail({ email, name });
     }
-    
-    if (!data.inviteCode) {
-        sendWaitlistEmail({ email, name });
-    }
-    
-    await hasCorrectInviteCode(name, email, data.password);
-    await sendApprovedInviteCodeNotification(email, data.inviteCode, name);
 
     return newEntry;
 };

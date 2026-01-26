@@ -21,12 +21,12 @@ const waitlistSchema = new mongoose.Schema({
     },
     dob: {
         type: Date,
-        required: true
+        required: false
     },
     gender: {
         type: String,
         enum: ['Male', 'Female', 'Prefer not to say', 'Non-binary'],
-        required: true
+        required: false
     },
     inviteCode: {
         type: String,
@@ -34,7 +34,19 @@ const waitlistSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true
+        required: false
+    },
+    googleId: {
+        type: String,
+        required: false
+    },
+    authProvider: {
+        type: String,
+        default: 'local'
+    },
+    avatar: {
+        type: String,
+        required: false
     },
     howDidYouFindUs: {
         type: String,
@@ -50,7 +62,7 @@ const waitlistSchema = new mongoose.Schema({
     timestamps: true
 });
 
-waitlistSchema.pre('save', async function(next) {
+waitlistSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return;
     this.password = await bcrypt.hash(this.password, 12);
 });
