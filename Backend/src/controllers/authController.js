@@ -9,7 +9,8 @@ import {
     verifyAndEnableTwoFactor,
     verifyTwoFactorLogin,
     disableTwoFactor,
-    generateAndSendLoginOTP
+    generateAndSendLoginOTP,
+    loginWithGoogle
 } from '../services/authService.js';
 import { AppError } from '../utils/AppError.js';
 import catchAsync from '../utils/catchAsync.js';
@@ -48,6 +49,54 @@ export const loginController = catchAsync(async (req, res) => {
     res.status(200).json({
         status: 'success',
         data: { user: safeUser, token }
+    });
+});
+
+export const googleLoginController = catchAsync(async (req, res) => {
+    const { token: googleToken } = req.body;
+
+    if (!googleToken) {
+        throw new AppError('Google token is required', 400);
+    }
+
+    const ip = getClientIp(req);
+    const location = geoip.lookup(ip) || null;
+    const parser = new UAParser(req.headers['user-agent']);
+    const device = parser.getResult();
+
+    const result = await loginWithGoogle(googleToken, {
+        ip,
+        location,
+        device
+    });
+
+    if (result.status === '2FA_REQUIRED') {
+        return res.status(200).json({
+            status: '2FA_REQUIRED',
+            message: 'Two-factor authentication required',
+            tempToken: result.tempToken
+        });
+    }
+
+    if (result.status === 'PRE_WAITLIST') {
+        return res.status(200).json({
+            status: 'success',
+            data: result
+        });
+    }
+
+    if (result.status === 'WAITLISTED') {
+        return res.status(200).json({
+            status: 'success',
+            data: result
+        });
+    }
+
+    const { token, safeUser, isNewUser } = result;
+
+    res.status(200).json({
+        status: 'success',
+        data: { user: safeUser, token, isNewUser }
     });
 });
 
