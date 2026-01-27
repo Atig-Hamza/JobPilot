@@ -242,7 +242,18 @@ const ChatMessage = ({ msg, isStreaming }) => {
                             components={{
                                 code({ node, inline, className, children, ...props }) {
                                     const match = /language-(\w+)/.exec(className || '')
-                                    return !inline ? (
+                                    const content = String(children).replace(/\n$/, '')
+                                    const isInlineOrShortText = !inline && (!match || match[1] === 'text') && !content.includes('\n');
+
+                                    if (inline || isInlineOrShortText) {
+                                        return (
+                                            <code className={`bg-gray-200 dark:bg-zinc-700 text-gray-800 dark:text-gray-200 px-1 py-0.2 rounded-md text-[0.9em] font-medium border border-transparent ${isInlineOrShortText ? 'inline-block my-1' : ''}`} {...props}>
+                                                {children}
+                                            </code>
+                                        )
+                                    }
+
+                                    return (
                                         <div className="rounded-lg overflow-hidden my-4 relative group border border-gray-200 dark:border-gray-800">
                                             <div className="bg-gray-50 dark:bg-[#18181b] px-4 py-2 flex justify-between items-center border-b border-gray-200 dark:border-gray-800">
                                                 <span className="text-xs font-mono text-gray-500 dark:text-gray-400 capitalize">{match ? match[1] : 'text'}</span>
@@ -254,13 +265,9 @@ const ChatMessage = ({ msg, isStreaming }) => {
                                                 customStyle={{ margin: 0, borderRadius: '0 0 0.5rem 0.5rem', padding: '1.25rem' }}
                                                 {...props}
                                             >
-                                                {String(children).replace(/\n$/, '')}
+                                                {content}
                                             </SyntaxHighlighter>
                                         </div>
-                                    ) : (
-                                        <code className="bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-gray-200 px-1.5 py-0.5 rounded text-[0.9em] font-mono border border-gray-200 dark:border-gray-700" {...props}>
-                                            {children}
-                                        </code>
                                     )
                                 },
                                 p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed text-gray-900 dark:text-gray-200">{children}</p>,
@@ -286,15 +293,24 @@ const ChatMessage = ({ msg, isStreaming }) => {
                             components={{
                                 code({ node, inline, className, children, ...props }) {
                                     const match = /language-(\w+)/.exec(className || '')
-                                    return !inline ? (
+                                    const content = String(children).replace(/\n$/, '')
+                                    const isInlineOrShortText = !inline && (!match || match[1] === 'text') && !content.includes('\n');
+
+                                    if (inline || isInlineOrShortText) {
+                                        return (
+                                            <code className={`bg-gray-200 dark:bg-zinc-700 text-gray-800 dark:text-gray-200 px-1 py-0.2 rounded-md text-[0.9em] font-medium border border-transparent ${isInlineOrShortText ? 'inline-block my-1' : ''}`} {...props}>
+                                                {children}
+                                            </code>
+                                        )
+                                    }
+
+                                    return (
                                         <div className="rounded-lg overflow-hidden my-4 relative group border border-gray-200 dark:border-gray-800">
                                             <div className="bg-gray-50 dark:bg-[#18181b] px-4 py-2 flex justify-between items-center border-b border-gray-200 dark:border-gray-800">
                                                 <span className="text-xs font-mono text-gray-500 dark:text-gray-400 capitalize">{match ? match[1] : 'text'}</span>
                                             </div>
-                                            <SyntaxHighlighter style={theme === 'dark' ? oneDark : oneLight} language={match ? match[1] : 'text'} PreTag="div" customStyle={{ margin: 0, borderRadius: '0 0 0.5rem 0.5rem', padding: '1.25rem' }} {...props}>{String(children).replace(/\n$/, '')}</SyntaxHighlighter>
+                                            <SyntaxHighlighter style={theme === 'dark' ? oneDark : oneLight} language={match ? match[1] : 'text'} PreTag="div" customStyle={{ margin: 0, borderRadius: '0 0 0.5rem 0.5rem', padding: '1.25rem' }} {...props}>{content}</SyntaxHighlighter>
                                         </div>
-                                    ) : (
-                                        <code className="bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-gray-200 px-1.5 py-0.5 rounded text-[0.9em] font-mono border border-gray-200 dark:border-gray-700" {...props}>{children}</code>
                                     )
                                 },
                                 p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed text-gray-900 dark:text-gray-200">{children}</p>,
@@ -332,12 +348,21 @@ const ChatMessage = ({ msg, isStreaming }) => {
                         code({ node, inline, className, children, ...props }) {
                             const match = /language-(\w+)/.exec(className || '')
                             const content = String(children).replace(/\n$/, '')
+                            const isInlineOrShortText = !inline && (!match || match[1] === 'text') && !content.includes('\n');
 
                             if (content.includes('CV_START') || (content.includes('<!DOCTYPE html>') && content.includes('<title>Professional Resume</title>'))) {
                                 return <CVDownloadCard html={content} />
                             }
 
-                            return !inline ? (
+                            if (inline || isInlineOrShortText) {
+                                return (
+                                    <code className={`bg-gray-200 dark:bg-zinc-700 text-gray-800 dark:text-gray-200 px-1 py-0.2 rounded-md text-[0.9em] font-medium border border-transparent ${isInlineOrShortText ? 'inline-block my-1' : ''}`} {...props}>
+                                        {children}
+                                    </code>
+                                )
+                            }
+
+                            return (
                                 <div className="rounded-lg overflow-hidden my-4 relative group border border-gray-200 dark:border-gray-800">
                                     <div className="bg-gray-50 dark:bg-[#18181b] px-4 py-2 flex justify-between items-center border-b border-gray-200 dark:border-gray-800">
                                         <span className="text-xs font-mono text-gray-500 dark:text-gray-400 capitalize">{match ? match[1] : 'text'}</span>
@@ -356,10 +381,6 @@ const ChatMessage = ({ msg, isStreaming }) => {
                                         {content}
                                     </SyntaxHighlighter>
                                 </div>
-                            ) : (
-                                <code className="bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-gray-200 px-1.5 py-0.5 rounded text-[0.9em] font-mono border border-gray-200 dark:border-gray-700" {...props}>
-                                    {children}
-                                </code>
                             )
                         },
                         p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed text-gray-900 dark:text-gray-200">{children}</p>,
