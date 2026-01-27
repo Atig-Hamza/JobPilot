@@ -9,7 +9,7 @@ const waitlistSchema = new mongoose.Schema({
     },
     lastName: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     },
     email: {
