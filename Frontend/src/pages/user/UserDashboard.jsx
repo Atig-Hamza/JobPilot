@@ -521,14 +521,6 @@ const JobPilotDashboard = () => {
                                                     <i className="ph ph-file-doc text-[14px]" />
                                                     CV creation
                                                 </button>
-
-                                                <button className="flex items-center gap-1.5 px-2.5 py-2 rounded-full text-[13px] leading-none transition-colors
-        bg-gray-100 dark:bg-[#222] hover:bg-gray-200 dark:hover:bg-[#2a2a2a] 
-        text-gray-500 dark:text-[#888888] hover:text-black dark:hover:text-white"
-                                                >
-                                                    <i className="ph ph-magnifying-glass text-[14px]" />
-                                                    Expert mode
-                                                </button>
                                             </div>
                                         </div>
 
