@@ -6,7 +6,7 @@ import { hasCorrectInviteCode } from './authService.js';
 
 export const addToWaitlist = async (data) => {
     const { email, firstName, lastName } = data;
-    const name = `${firstName} ${lastName}`;
+    const name = `${firstName} ${lastName || ''}`.trim();
 
     if (!email) {
         throw new AppError('Email is required', 400);
