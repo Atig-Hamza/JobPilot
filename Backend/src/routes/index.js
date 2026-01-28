@@ -9,6 +9,7 @@ import historyRoutes from './historyRoutes.js';
 import profileRoutes from './profileRoutes.js';
 import cvRoutes from './cvRoutes.js';
 import jobRoutes from './jobRoutes.js';
+import announcementRoutes from './announcementRoutes.js';
 
 const router = express.Router();
 
@@ -22,6 +23,7 @@ router.use('/auth', authRoutes);
 router.use('/codes', codeRoutes);
 router.use('/history', historyRoutes);
 router.use('/jobs', jobRoutes);
+router.use('/announcements', announcementRoutes);
 
 export default router;
 
