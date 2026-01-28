@@ -17,11 +17,10 @@ const CVDownloadCard = ({ html }) => {
 
     const handleDownload = async () => {
         setIsGenerating(true);
-        const toastId = toast.loading('Generating PDF...');
+        const toastId = toast.loading('Preparing download...');
 
         try {
-            const cleanHtml = html.replace('<!-- CV_START -->', '').replace('<!-- CV_END -->', '');
-
+            const cleanHtml = html.replace('', '').replace('', '');
             const API_URL = import.meta.env.VITE_BACKEND_API_URL;
             const userStr = localStorage.getItem('User');
             const token = userStr ? JSON.parse(userStr).token : localStorage.getItem('token');
@@ -44,7 +43,7 @@ const CVDownloadCard = ({ html }) => {
 
             if (data.status === 'success' && data.data.url) {
                 window.open(data.data.url, '_blank');
-                toast.success('PDF Generated!', { id: toastId });
+                toast.success('Download started', { id: toastId });
             } else {
                 throw new Error('Invalid response');
             }
@@ -57,33 +56,43 @@ const CVDownloadCard = ({ html }) => {
     };
 
     return (
-        <div className="my-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#181819] overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center text-black dark:text-white">
-                        <FileText size={20} />
+        <div className="w-full">
+            <div className="group relative flex w-full items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-2 pr-3 shadow-[0px_2px_8px_rgba(0,0,0,0.04)] transition-all hover:border-gray-300 hover:shadow-[0px_4px_16px_rgba(0,0,0,0.08)] dark:border-white/10 dark:bg-[#121212] dark:shadow-none">
+
+                <div className="flex flex-1 items-center gap-4 overflow-hidden">
+                    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gray-50 border border-gray-100 dark:bg-[#1c1c1c] dark:border-white/5">
+                        <FileText
+                            size={24}
+                            className="text-gray-700 dark:text-gray-300 transition-transform duration-300 group-hover:scale-110"
+                            strokeWidth={1.5}
+                        />
+                        <div className="absolute right-1 top-1 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#1c1c1c]" />
                     </div>
-                    <div>
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">CV Generated</h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Ready to download</p>
+                    <div className="flex flex-col gap-0.5 overflow-hidden">
+                        <h3 className="truncate text-base font-semibold text-gray-900 dark:text-white">
+                            Resume_Export.pdf
+                        </h3>
+                        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                            <span className="font-medium">PDF Document</span>
+                            <span className="h-1 w-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+                            <span>Professional</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div className="p-4 bg-white dark:bg-[#18181b]">
                 <button
                     onClick={handleDownload}
                     disabled={isGenerating}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-black dark:bg-white text-white dark:text-black font-medium text-sm hover:opacity-90 disabled:opacity-50 transition-all"
+                    className="relative flex h-11 shrink-0 items-center gap-2 overflow-hidden rounded-xl bg-black px-6 text-sm font-medium text-white transition-all hover:bg-gray-800 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 dark:bg-white dark:text-black dark:hover:bg-gray-200 dark:disabled:bg-white/10 dark:disabled:text-gray-500"
                 >
                     {isGenerating ? (
                         <>
                             <Loader2 size={16} className="animate-spin" />
-                            Generating PDF...
+                            <span>Exporting...</span>
                         </>
                     ) : (
                         <>
-                            <Download size={16} />
-                            Download PDF
+                            <span>Download</span>
+                            <Download size={16} strokeWidth={2} />
                         </>
                     )}
                 </button>
