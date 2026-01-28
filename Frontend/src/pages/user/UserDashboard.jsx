@@ -45,6 +45,7 @@ const JobPilotDashboard = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [roomId, setRoomId] = useState(() => urlRoomId || generateRoomId());
     const [selectedCountry, setSelectedCountry] = useState('all');
+    const [showAttachMenu, setShowAttachMenu] = useState(false); // Add state for attachment menu
 
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -117,7 +118,7 @@ const JobPilotDashboard = () => {
 
         let optimisticContent = text;
         if (uploadedFile && uploadedFile.file && uploadedFile.type.startsWith('image/')) {
-             optimisticContent = `[Image: ${uploadedFile.preview}]\n${text}`;
+            optimisticContent = `[Image: ${uploadedFile.preview}]\n${text}`;
         }
 
         setMessages(prev => [...prev, { role: 'user', content: optimisticContent }]);
@@ -321,7 +322,18 @@ const JobPilotDashboard = () => {
 
     const handleUploadClick = () => {
         fileInputRef.current?.click();
+        setShowAttachMenu(false);
     };
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (showAttachMenu && !event.target.closest('.attach-menu-container')) {
+                setShowAttachMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showAttachMenu]);
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -329,7 +341,7 @@ const JobPilotDashboard = () => {
             if (uploadedFile?.preview) {
                 URL.revokeObjectURL(uploadedFile.preview);
             }
-            
+
             setUploadedFile({
                 name: file.name,
                 size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
@@ -504,7 +516,42 @@ const JobPilotDashboard = () => {
                             </div>
 
                             <div className="w-full max-w-3xl relative mb-6">
-                                <div className="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#222222] rounded-2xl p-4 min-h-[140px] flex flex-col justify-between shadow-xl dark:shadow-2xl focus-within:border-gray-300 dark:focus-within:border-zinc-600 transition-all">
+
+                                {uploadedFile && (
+                                    <div className="absolute -top-16 left-0 bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#222222] rounded-xl p-2 flex items-center gap-3 animate-in slide-in-from-bottom-2 shadow-lg z-10 w-auto min-w-[200px] max-w-full">
+                                        {uploadedFile.preview ? (
+                                            <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-700">
+                                                <img
+                                                    src={uploadedFile.preview}
+                                                    alt="Preview"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
+                                                <i className="ph ph-file-text text-xl text-indigo-500 dark:text-indigo-400"></i>
+                                            </div>
+                                        )}
+
+                                        <div className="flex flex-col min-w-0 mr-2 flex-1">
+                                            <span className="text-xs font-medium text-gray-900 dark:text-gray-200 truncate">
+                                                {uploadedFile.name}
+                                            </span>
+                                            <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                                {uploadedFile.size} • Ready to upload
+                                            </span>
+                                        </div>
+
+                                        <button
+                                            onClick={removeFile}
+                                            className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors"
+                                        >
+                                            <i className="ph-bold ph-x text-xs"></i>
+                                        </button>
+                                    </div>
+                                )}
+
+                                <div className="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#222222] rounded-2xl p-4 min-h-[140px] flex flex-col justify-between shadow-xl dark:shadow-2xl focus-within:border-gray-300 dark:focus-within:border-zinc-600 transition-all relative">
 
                                     <div className="space-y-4">
                                         <textarea
@@ -518,11 +565,44 @@ const JobPilotDashboard = () => {
 
                                     <div className="flex items-end justify-between mt-2">
                                         <div className="flex items-center gap-4">
-                                            <div className="flex items-center gap-3 text-gray-400 dark:text-zinc-500">
-                                                <button className="hover:text-gray-900 dark:hover:text-white transition-colors" title="Upload Image" onClick={handleUploadClick}>
-                                                    <i className="ph ph-image text-lg"></i>
+                                            <div className="flex items-center gap-3 text-gray-400 dark:text-zinc-500 relative attach-menu-container">
+                                                <button
+                                                    className={`hover:text-gray-900 dark:hover:text-white transition-colors p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 ${showAttachMenu ? 'text-gray-900 dark:text-white bg-gray-100 dark:bg-white/10' : ''}`}
+                                                    title="Add Attachment"
+                                                    onClick={() => setShowAttachMenu(!showAttachMenu)}
+                                                >
+                                                    <i className="ph-bold ph-plus text-lg"></i>
                                                 </button>
+
                                                 <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" />
+
+                                                {showAttachMenu && (
+                                                    <div className="absolute bottom-full left-0 mb-2 w-48 bg-white dark:bg-[#18181b] border border-gray-200 dark:border-gray-950 rounded-lg shadow-lg overflow-hidden py-1 z-50 animate-in slide-in-from-bottom-2 fade-in duration-200 flex flex-col">
+                                                        <button
+                                                            onClick={handleUploadClick}
+                                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2 transition-colors"
+                                                        >
+                                                            <i className="ph ph-upload-simple text-base"></i>
+                                                            <span>Upload File</span>
+                                                        </button>
+
+                                                        <button
+                                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2 transition-colors opacity-50 cursor-not-allowed"
+                                                            title="Coming Soon"
+                                                        >
+                                                            <i className="ph ph-image text-base"></i>
+                                                            <span>Generate Image</span>
+                                                        </button>
+
+                                                        <button
+                                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2 transition-colors opacity-50 cursor-not-allowed"
+                                                            title="Coming Soon"
+                                                        >
+                                                            <i className="ph ph-microphone text-base"></i>
+                                                            <span>Voice Input</span>
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="flex items-center gap-2">
@@ -633,10 +713,10 @@ const JobPilotDashboard = () => {
                                 <div className="absolute -top-16 left-0 bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#333] rounded-xl p-2 flex items-center gap-3 animate-in slide-in-from-bottom-2 shadow-sm">
                                     {uploadedFile.preview ? (
                                         <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-700">
-                                            <img 
-                                                src={uploadedFile.preview} 
-                                                alt="Preview" 
-                                                className="w-full h-full object-cover" 
+                                            <img
+                                                src={uploadedFile.preview}
+                                                alt="Preview"
+                                                className="w-full h-full object-cover"
                                             />
                                         </div>
                                     ) : (
@@ -644,7 +724,7 @@ const JobPilotDashboard = () => {
                                             <i className="ph ph-file-text text-xl text-indigo-500 dark:text-indigo-400"></i>
                                         </div>
                                     )}
-                                    
+
                                     <div className="flex flex-col min-w-0 mr-2">
                                         <span className="text-xs font-medium text-gray-900 dark:text-gray-200 max-w-[150px] truncate">
                                             {uploadedFile.name}
@@ -654,8 +734,8 @@ const JobPilotDashboard = () => {
                                         </span>
                                     </div>
 
-                                    <button 
-                                        onClick={removeFile} 
+                                    <button
+                                        onClick={removeFile}
                                         className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors"
                                     >
                                         <i className="ph-bold ph-x text-xs"></i>
@@ -693,8 +773,8 @@ const JobPilotDashboard = () => {
                                         onClick={isGenerating ? handleStopGeneration : handleSendMessage}
                                         disabled={!isGenerating && !inputValue.trim()}
                                         className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${(isGenerating || inputValue.trim())
-                                                ? 'bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200'
-                                                : 'bg-gray-100 dark:bg-[#333] text-gray-300 dark:text-[#666] cursor-not-allowed'
+                                            ? 'bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200'
+                                            : 'bg-gray-100 dark:bg-[#333] text-gray-300 dark:text-[#666] cursor-not-allowed'
                                             }`}
                                     >
                                         {isGenerating ? (
