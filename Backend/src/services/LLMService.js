@@ -7,45 +7,23 @@ const openai = new OpenAi({
     baseURL: 'https://integrate.api.nvidia.com/v1',
 });
 
+const LLM_Model='qwen/qwen3-coder-480b-a35b-instruct'
+
 const roomContexts = {};
 
 const CV_TEMPLATE = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional Resume</title>
-    <style>
-        @page { margin: 0; size: A4; }
-        body { font-family: 'Inter', sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #fff; }
-        .container { width: 210mm; margin: 0 auto; padding: 20mm; box-sizing: border-box; background: white; min-height: 297mm; }
-        
-        /* Smarter Page Breaks */
-        .section { margin-bottom: 25px; page-break-inside: avoid; break-inside: avoid; }
-        .experience-item { margin-bottom: 20px; page-break-inside: avoid; break-inside: avoid; }
-        .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; page-break-inside: avoid; }
-        h1, h2, h3, h4 { page-break-after: avoid; }
-        
-        .name { font-size: 32px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #2d3748; margin: 0; }
-        .contact-info { margin-top: 10px; font-size: 14px; color: #666; display: flex; gap: 15px; flex-wrap: wrap; }
-        .section-title { font-size: 16px; font-weight: 700; text-transform: uppercase; color: #2d3748; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 15px; letter-spacing: 0.5px; }
-        .job-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .job-title { font-weight: 700; color: #1a202c; }
-        .company { color: #4a5568; font-weight: 500; }
-        .date { color: #718096; font-size: 14px; white-space: nowrap; }
-        .description-list { margin: 5px 0 0 18px; padding: 0; }
-        .description-list li { margin-bottom: 5px; font-size: 14px; color: #4a5568; }
-        .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
-        .skill-tag { background: #f7fafc; padding: 4px 8px; border-radius: 4px; font-size: 13px; color: #4a5568; border: 1px solid #edf2f7; text-align: center; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Content will be injected here -->
-    </div>
-</body>
-</html>
+Generate a professional, modern Single-Page CV in HTML/CSS with a strict A4 aspect ratio (210mm x 297mm).
+Design Requirements:
+1. **Layout**: Use a clean two-column grid (Sidebar + Main Content). Ensure vertical balance so the page looks filled and professional.
+2. **Styling**: use raw, semantic CSS (No Bootstrap/Tailwind). Use a sophisticated, modern color palette (e.g., Slate Blue/Charcoal/White or Navy/Cream/Gold).
+3. **Typography**: Use clean sans-serif fonts (Inter, Roboto, or Open Sans) loaded via Google Fonts.
+4. **Icons**: Use Phosphor Icons or FontAwesome (CDN) for contact details and section headers.
+5. **Print-Ready**: Include a @media print block that forces -webkit-print-color-adjust: exact, sets zero margins, and hides non-CV elements.
+6. **Single Page Constraint**: STRICTLY prioritize fitting everything on ONE A4 page. 
+    - Adjust font-sizes (e.g., smaller body text 9pt-10pt) and reduce margins/padding if content is long.
+    - Compact section spacing.
+    - Only extend to a second page if absolutely unavoidable.
+7. **Restrictions**: Max width 210mm. Min-height 297mm. No scrolling.
 `;
 
 async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl) {
@@ -54,7 +32,11 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl) {
             roomContexts[roomId] = [];
 
             const enhancedSystemPrompt = (systemPrompt || "You are a helpful career assistant.") +
-                "\n\nWhen asked to generate a CV, use the following HTML structure/style as an inspiration/template. output pure HTML inside <!-- CV_START --> and <!-- CV_END --> markers:\n" + CV_TEMPLATE;
+                "\n\nCOMMAND: When the user asks for a CV, Resume, or Cover Letter, you must respond as follows:\n" +
+                "1. **Conversational Part**: Briefly tell the user you are generating their professional PDF document. Do NOT mention HTML, code, or technical details.\n" +
+                "2. **Generation Part**: Immediately after the text, output the full HTML code inside <!-- CV_START --> and <!-- CV_END --> tags.\n" +
+                "3. **Content**: Fill the CV with the user's data (inferred or provided) or realistic placeholders if missing.\n\n" +
+                "TEMPLATE INSTRUCTIONS:\n" + CV_TEMPLATE;
 
             roomContexts[roomId].push({ "role": "system", "content": enhancedSystemPrompt });
         }
@@ -62,7 +44,7 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl) {
         roomContexts[roomId].push({ "role": "user", "content": prompt });
 
         const stream = await openai.chat.completions.create({
-            model: "moonshotai/kimi-k2-instruct-0905",
+            model: LLM_Model,
             messages: roomContexts[roomId],
             temperature: 0.6,
             top_p: 0.9,
@@ -172,7 +154,7 @@ async function generateChatTitle(roomId) {
         });
 
         const response = await openai.chat.completions.create({
-            model: "moonshotai/kimi-k2-instruct-0905",
+            model: LLM_Model,
             messages: messages,
             temperature: 0.7,
             max_tokens: 50
@@ -195,7 +177,7 @@ async function generateChatTitle(roomId) {
 async function generateCompletion(prompt, systemPrompt) {
     try {
         const completion = await openai.chat.completions.create({
-            model: "moonshotai/kimi-k2-instruct-0905",
+            model: LLM_Model,
             messages: [
                 { role: "system", content: systemPrompt || "You are a helpful assistant." },
                 { role: "user", content: prompt }
