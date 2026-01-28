@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import UserLayout from './components/UserLayout';
 import ChatInterface from './components/ChatInterface';
+import AnnouncementPopup from './components/AnnouncementPopup';
 import { useTheme } from '../../context/ThemeContext';
 import Mainlogo from '../../assets/Main/logo-without-bg.png';
 import MainlogoWhite from '../../assets/Main/logo-white-without-bg.png';
@@ -45,7 +46,9 @@ const JobPilotDashboard = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [roomId, setRoomId] = useState(() => urlRoomId || generateRoomId());
     const [selectedCountry, setSelectedCountry] = useState('all');
-    const [showAttachMenu, setShowAttachMenu] = useState(false); // Add state for attachment menu
+    const [showAttachMenu, setShowAttachMenu] = useState(false);
+    const [announcement, setAnnouncement] = useState(null);
+    const [showAnnouncement, setShowAnnouncement] = useState(false);
 
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -93,6 +96,37 @@ const JobPilotDashboard = () => {
             setInputValue("");
         }
     }, [urlRoomId, roomId]);
+
+    useEffect(() => {
+        const fetchAnnouncement = async () => {
+            try {
+                const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_URL}/announcements/latest`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (response.ok && data.data && data.data.announcement) {
+                    const ann = data.data.announcement;
+                    const isRead = sessionStorage.getItem(`announcementRead_${ann._id}`);
+                    if (!isRead) {
+                        setAnnouncement(ann);
+                        setShowAnnouncement(true);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch announcement", error);
+            }
+        };
+        fetchAnnouncement();
+    }, []);
+
+    const handleCloseAnnouncement = () => {
+        if (announcement) {
+            sessionStorage.setItem(`announcementRead_${announcement._id}`, 'true');
+        }
+        setShowAnnouncement(false);
+    };
 
     const scrollToBottom = (behavior = "smooth") => {
         messagesEndRef.current?.scrollIntoView({ behavior: behavior });
@@ -792,6 +826,11 @@ const JobPilotDashboard = () => {
                     </div>
                 </div>
             )}
+            <AnnouncementPopup
+                isOpen={showAnnouncement}
+                onClose={handleCloseAnnouncement}
+                announcement={announcement}
+            />
         </UserLayout>
     );
 };
