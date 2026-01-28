@@ -567,7 +567,7 @@ const JobPilotDashboard = () => {
                                         <div className="flex items-center gap-4">
                                             <div className="flex items-center gap-3 text-gray-400 dark:text-zinc-500 relative attach-menu-container">
                                                 <button
-                                                    className={`hover:text-gray-900 dark:hover:text-white transition-colors p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 ${showAttachMenu ? 'text-gray-900 dark:text-white bg-gray-100 dark:bg-white/10' : ''}`}
+                                                    className={`hover:text-gray-900 dark:hover:text-white transition-colors py-1 px-2  rounded-full hover:bg-gray-100 dark:hover:bg-white/10 ${showAttachMenu ? 'text-gray-900 dark:text-white bg-gray-100 dark:bg-white/10' : ''}`}
                                                     title="Add Attachment"
                                                     onClick={() => setShowAttachMenu(!showAttachMenu)}
                                                 >
