@@ -5,7 +5,21 @@ import { getProfileByUserId } from "../services/profileService.js";
 
 
 export async function handleLLMRequest(req, res) {
-    const { prompt, roomId, user } = req.body;
+    let { prompt, roomId, user } = req.body;
+    
+    if (typeof user === 'string') {
+        try {
+            user = JSON.parse(user);
+        } catch (e) {
+            console.error('Error parsing user JSON:', e);
+        }
+    }
+
+    if (req.file) {
+        const imagePath = `/media/aiuploads/${req.file.filename}`;
+        prompt = `[Image: ${imagePath}]\n${prompt}`;
+    }
+
     const profile = await getProfileByUserId(req.user.id);
     const systemPrompt = `
 ### SYSTEM CONFIGURATION: JOB PILOT AGENT
