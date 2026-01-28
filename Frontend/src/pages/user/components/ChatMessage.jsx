@@ -225,6 +225,41 @@ const ChatMessage = ({ msg, isStreaming }) => {
         }
     };
 
+    const renderUserContent = () => {
+        let content = msg.content || '';
+        let imageUrl = null;
+
+        const imageMatch = content.match(/\[Image: (.*?)\]/);
+        if (imageMatch) {
+            const relativePath = imageMatch[1];
+            if (relativePath.startsWith('http') || relativePath.startsWith('blob:')) {
+                imageUrl = relativePath;
+            } else {
+                const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+                const domain = API_URL.replace(/\/api\/?$/, '');
+                imageUrl = `${domain}${relativePath}`;
+            }
+            content = content.replace(imageMatch[0], '').trim();
+        }
+
+        return (
+            <div className="flex flex-col items-end gap-2 max-w-[90%] md:max-w-[80%]">
+                {imageUrl && (
+                    <div className="mb-2 bg-gray-100 dark:bg-[#161616] p-2 rounded-xl">
+                        <img src={imageUrl} alt="Uploaded" className="max-w-xs rounded-lg max-h-64 object-cover" />
+                    </div>
+                )}
+                {content && (
+                    <div className="bg-gray-100 dark:bg-[#161616] text-gray-900 px-4 md:px-5 py-2 md:py-3 rounded-2xl rounded-tr-sm">
+                        <p className="text-[14px] md:text-[15px] leading-relaxed whitespace-pre-wrap text-left font-medium tracking-wide dark:text-gray-100">
+                            {content}
+                        </p>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     const renderMessageContent = () => {
         const content = msg.content;
 
@@ -442,13 +477,7 @@ const ChatMessage = ({ msg, isStreaming }) => {
     return (
         <div className={msg.role === 'user' ? "flex justify-end w-full group" : "flex items-start gap-3 md:gap-5 w-full animate-in fade-in slide-in-from-bottom-2 duration-500"}>
             {msg.role === 'user' ? (
-                <div className="flex flex-col items-end gap-2 max-w-[90%] md:max-w-[80%]">
-                    <div className="bg-gray-100 dark:bg-[#161616] text-gray-900 px-4 md:px-5 py-2 md:py-3 rounded-2xl rounded-tr-sm">
-                        <p className="text-[14px] md:text-[15px] leading-relaxed whitespace-pre-wrap text-left font-medium tracking-wide dark:text-gray-100">
-                            {msg.content}
-                        </p>
-                    </div>
-                </div>
+                renderUserContent()
             ) : (
                 <div className="flex-1 flex flex-col min-w-0 max-w-full">
                     {renderMessageContent()}
