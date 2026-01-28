@@ -5,7 +5,21 @@ import { getProfileByUserId } from "../services/profileService.js";
 
 
 export async function handleLLMRequest(req, res) {
-    const { prompt, roomId, user } = req.body;
+    let { prompt, roomId, user } = req.body;
+    
+    if (typeof user === 'string') {
+        try {
+            user = JSON.parse(user);
+        } catch (e) {
+            console.error('Error parsing user JSON:', e);
+        }
+    }
+
+    if (req.file) {
+        const imagePath = `/media/aiuploads/${req.file.filename}`;
+        prompt = `[Image: ${imagePath}]\n${prompt}`;
+    }
+
     const profile = await getProfileByUserId(req.user.id);
     const systemPrompt = `
 ### SYSTEM CONFIGURATION: JOB PILOT AGENT
@@ -38,6 +52,7 @@ You are Job Pilot, an AI assistant specialized in helping users optimize their j
 - **Markdown Enforced:** All outputs must use valid Markdown.
 - **Structure:** Use clear headings, bullet points, and bold text for readability.
 - **Emojis:** Use emojis sometimes to enhance engagement like in main titles and in options sometimes, but avoid overuse.
+- **Backtick:** Use triple backticks for code blocks when sharing code snippets and one backtick for inline keywords.
 
 ## 4. IDENTITY & BEHAVIOR
 **Role:** Job Pilot (Feature-Guided Chat Assistant).

@@ -17,11 +17,10 @@ const CVDownloadCard = ({ html }) => {
 
     const handleDownload = async () => {
         setIsGenerating(true);
-        const toastId = toast.loading('Generating PDF...');
+        const toastId = toast.loading('Preparing download...');
 
         try {
-            const cleanHtml = html.replace('<!-- CV_START -->', '').replace('<!-- CV_END -->', '');
-
+            const cleanHtml = html.replace('', '').replace('', '');
             const API_URL = import.meta.env.VITE_BACKEND_API_URL;
             const userStr = localStorage.getItem('User');
             const token = userStr ? JSON.parse(userStr).token : localStorage.getItem('token');
@@ -44,7 +43,7 @@ const CVDownloadCard = ({ html }) => {
 
             if (data.status === 'success' && data.data.url) {
                 window.open(data.data.url, '_blank');
-                toast.success('PDF Generated!', { id: toastId });
+                toast.success('Download started', { id: toastId });
             } else {
                 throw new Error('Invalid response');
             }
@@ -57,33 +56,43 @@ const CVDownloadCard = ({ html }) => {
     };
 
     return (
-        <div className="my-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#181819] overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center text-black dark:text-white">
-                        <FileText size={20} />
+        <div className="w-full">
+            <div className="group relative flex w-full items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-2 pr-3 shadow-[0px_2px_8px_rgba(0,0,0,0.04)] transition-all hover:border-gray-300 hover:shadow-[0px_4px_16px_rgba(0,0,0,0.08)] dark:border-white/10 dark:bg-[#121212] dark:shadow-none">
+
+                <div className="flex flex-1 items-center gap-4 overflow-hidden">
+                    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gray-50 border border-gray-100 dark:bg-[#1c1c1c] dark:border-white/5">
+                        <FileText
+                            size={24}
+                            className="text-gray-700 dark:text-gray-300 transition-transform duration-300 group-hover:scale-110"
+                            strokeWidth={1.5}
+                        />
+                        <div className="absolute right-1 top-1 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#1c1c1c]" />
                     </div>
-                    <div>
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">CV Generated</h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Ready to download</p>
+                    <div className="flex flex-col gap-0.5 overflow-hidden">
+                        <h3 className="truncate text-base font-semibold text-gray-900 dark:text-white">
+                            Resume_Export.pdf
+                        </h3>
+                        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                            <span className="font-medium">PDF Document</span>
+                            <span className="h-1 w-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+                            <span>Professional</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div className="p-4 bg-white dark:bg-[#18181b]">
                 <button
                     onClick={handleDownload}
                     disabled={isGenerating}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-black dark:bg-white text-white dark:text-black font-medium text-sm hover:opacity-90 disabled:opacity-50 transition-all"
+                    className="relative flex h-11 shrink-0 items-center gap-2 overflow-hidden rounded-xl bg-black px-6 text-sm font-medium text-white transition-all hover:bg-gray-800 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 dark:bg-white dark:text-black dark:hover:bg-gray-200 dark:disabled:bg-white/10 dark:disabled:text-gray-500"
                 >
                     {isGenerating ? (
                         <>
                             <Loader2 size={16} className="animate-spin" />
-                            Generating PDF...
+                            <span>Exporting...</span>
                         </>
                     ) : (
                         <>
-                            <Download size={16} />
-                            Download PDF
+                            <span>Download</span>
+                            <Download size={16} strokeWidth={2} />
                         </>
                     )}
                 </button>
@@ -216,6 +225,41 @@ const ChatMessage = ({ msg, isStreaming }) => {
         }
     };
 
+    const renderUserContent = () => {
+        let content = msg.content || '';
+        let imageUrl = null;
+
+        const imageMatch = content.match(/\[Image: (.*?)\]/);
+        if (imageMatch) {
+            const relativePath = imageMatch[1];
+            if (relativePath.startsWith('http') || relativePath.startsWith('blob:')) {
+                imageUrl = relativePath;
+            } else {
+                const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+                const domain = API_URL.replace(/\/api\/?$/, '');
+                imageUrl = `${domain}${relativePath}`;
+            }
+            content = content.replace(imageMatch[0], '').trim();
+        }
+
+        return (
+            <div className="flex flex-col items-end gap-2 max-w-[90%] md:max-w-[80%]">
+                {imageUrl && (
+                    <div className="mb-2 bg-gray-100 dark:bg-[#161616] p-2 rounded-xl">
+                        <img src={imageUrl} alt="Uploaded" className="max-w-xs rounded-lg max-h-64 object-cover" />
+                    </div>
+                )}
+                {content && (
+                    <div className="bg-gray-100 dark:bg-[#161616] text-gray-900 px-4 md:px-5 py-2 md:py-3 rounded-2xl rounded-tr-sm">
+                        <p className="text-[14px] md:text-[15px] leading-relaxed whitespace-pre-wrap text-left font-medium tracking-wide dark:text-gray-100">
+                            {content}
+                        </p>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     const renderMessageContent = () => {
         const content = msg.content;
 
@@ -242,7 +286,23 @@ const ChatMessage = ({ msg, isStreaming }) => {
                             components={{
                                 code({ node, inline, className, children, ...props }) {
                                     const match = /language-(\w+)/.exec(className || '')
-                                    return !inline ? (
+                                    const content = String(children).replace(/\n$/, '')
+                                    const isInlineOrShortText = !inline && (!match || match[1] === 'text') && !content.includes('\n');
+
+                                    if (inline || isInlineOrShortText) {
+                                        return (
+                                            <code className={`relative
+    bg-gray-100 dark:bg-gray-800/50 
+    text-gray-900 dark:text-gray-100
+    px-1 py-0.5 rounded-lg
+    font-medium
+    ${isInlineOrShortText ? 'inline-block my-1' : ''}`} {...props}>
+                                                {children}
+                                            </code>
+                                        )
+                                    }
+
+                                    return (
                                         <div className="rounded-lg overflow-hidden my-4 relative group border border-gray-200 dark:border-gray-800">
                                             <div className="bg-gray-50 dark:bg-[#18181b] px-4 py-2 flex justify-between items-center border-b border-gray-200 dark:border-gray-800">
                                                 <span className="text-xs font-mono text-gray-500 dark:text-gray-400 capitalize">{match ? match[1] : 'text'}</span>
@@ -254,13 +314,9 @@ const ChatMessage = ({ msg, isStreaming }) => {
                                                 customStyle={{ margin: 0, borderRadius: '0 0 0.5rem 0.5rem', padding: '1.25rem' }}
                                                 {...props}
                                             >
-                                                {String(children).replace(/\n$/, '')}
+                                                {content}
                                             </SyntaxHighlighter>
                                         </div>
-                                    ) : (
-                                        <code className="bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-gray-200 px-1.5 py-0.5 rounded text-[0.9em] font-mono border border-gray-200 dark:border-gray-700" {...props}>
-                                            {children}
-                                        </code>
                                     )
                                 },
                                 p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed text-gray-900 dark:text-gray-200">{children}</p>,
@@ -286,15 +342,29 @@ const ChatMessage = ({ msg, isStreaming }) => {
                             components={{
                                 code({ node, inline, className, children, ...props }) {
                                     const match = /language-(\w+)/.exec(className || '')
-                                    return !inline ? (
+                                    const content = String(children).replace(/\n$/, '')
+                                    const isInlineOrShortText = !inline && (!match || match[1] === 'text') && !content.includes('\n');
+
+                                    if (inline || isInlineOrShortText) {
+                                        return (
+                                            <code className={`relative
+    bg-gray-100 dark:bg-gray-800/50 
+    text-gray-900 dark:text-gray-100
+    px-1 py-0.5 rounded-lg
+    font-medium
+    ${isInlineOrShortText ? 'inline-block my-1' : ''}`} {...props}>
+                                                {children}
+                                            </code>
+                                        )
+                                    }
+
+                                    return (
                                         <div className="rounded-lg overflow-hidden my-4 relative group border border-gray-200 dark:border-gray-800">
                                             <div className="bg-gray-50 dark:bg-[#18181b] px-4 py-2 flex justify-between items-center border-b border-gray-200 dark:border-gray-800">
                                                 <span className="text-xs font-mono text-gray-500 dark:text-gray-400 capitalize">{match ? match[1] : 'text'}</span>
                                             </div>
-                                            <SyntaxHighlighter style={theme === 'dark' ? oneDark : oneLight} language={match ? match[1] : 'text'} PreTag="div" customStyle={{ margin: 0, borderRadius: '0 0 0.5rem 0.5rem', padding: '1.25rem' }} {...props}>{String(children).replace(/\n$/, '')}</SyntaxHighlighter>
+                                            <SyntaxHighlighter style={theme === 'dark' ? oneDark : oneLight} language={match ? match[1] : 'text'} PreTag="div" customStyle={{ margin: 0, borderRadius: '0 0 0.5rem 0.5rem', padding: '1.25rem' }} {...props}>{content}</SyntaxHighlighter>
                                         </div>
-                                    ) : (
-                                        <code className="bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-gray-200 px-1.5 py-0.5 rounded text-[0.9em] font-mono border border-gray-200 dark:border-gray-700" {...props}>{children}</code>
                                     )
                                 },
                                 p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed text-gray-900 dark:text-gray-200">{children}</p>,
@@ -332,12 +402,26 @@ const ChatMessage = ({ msg, isStreaming }) => {
                         code({ node, inline, className, children, ...props }) {
                             const match = /language-(\w+)/.exec(className || '')
                             const content = String(children).replace(/\n$/, '')
+                            const isInlineOrShortText = !inline && (!match || match[1] === 'text') && !content.includes('\n');
 
                             if (content.includes('CV_START') || (content.includes('<!DOCTYPE html>') && content.includes('<title>Professional Resume</title>'))) {
                                 return <CVDownloadCard html={content} />
                             }
 
-                            return !inline ? (
+                            if (inline || isInlineOrShortText) {
+                                return (
+                                    <code className={`relative
+    bg-gray-100 dark:bg-gray-800/50 
+    text-gray-900 dark:text-gray-100
+    px-1 py-0.5 rounded-lg
+    font-medium
+    ${isInlineOrShortText ? 'inline-block my-1' : ''}`} {...props}>
+                                        {children}
+                                    </code>
+                                )
+                            }
+
+                            return (
                                 <div className="rounded-lg overflow-hidden my-4 relative group border border-gray-200 dark:border-gray-800">
                                     <div className="bg-gray-50 dark:bg-[#18181b] px-4 py-2 flex justify-between items-center border-b border-gray-200 dark:border-gray-800">
                                         <span className="text-xs font-mono text-gray-500 dark:text-gray-400 capitalize">{match ? match[1] : 'text'}</span>
@@ -356,10 +440,6 @@ const ChatMessage = ({ msg, isStreaming }) => {
                                         {content}
                                     </SyntaxHighlighter>
                                 </div>
-                            ) : (
-                                <code className="bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-gray-200 px-1.5 py-0.5 rounded text-[0.9em] font-mono border border-gray-200 dark:border-gray-700" {...props}>
-                                    {children}
-                                </code>
                             )
                         },
                         p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed text-gray-900 dark:text-gray-200">{children}</p>,
@@ -397,13 +477,7 @@ const ChatMessage = ({ msg, isStreaming }) => {
     return (
         <div className={msg.role === 'user' ? "flex justify-end w-full group" : "flex items-start gap-3 md:gap-5 w-full animate-in fade-in slide-in-from-bottom-2 duration-500"}>
             {msg.role === 'user' ? (
-                <div className="flex flex-col items-end gap-2 max-w-[90%] md:max-w-[80%]">
-                    <div className="bg-gray-100 dark:bg-[#161616] text-gray-900 px-4 md:px-5 py-2 md:py-3 rounded-2xl rounded-tr-sm">
-                        <p className="text-[14px] md:text-[15px] leading-relaxed whitespace-pre-wrap text-left font-medium tracking-wide dark:text-gray-100">
-                            {msg.content}
-                        </p>
-                    </div>
-                </div>
+                renderUserContent()
             ) : (
                 <div className="flex-1 flex flex-col min-w-0 max-w-full">
                     {renderMessageContent()}

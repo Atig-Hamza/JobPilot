@@ -45,6 +45,7 @@ const JobPilotDashboard = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [roomId, setRoomId] = useState(() => urlRoomId || generateRoomId());
     const [selectedCountry, setSelectedCountry] = useState('all');
+    const [showAttachMenu, setShowAttachMenu] = useState(false); // Add state for attachment menu
 
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -102,10 +103,11 @@ const JobPilotDashboard = () => {
     }, [messages, isLoading]);
 
     const handleSendMessage = async (customText = null, forcedMode = null) => {
-        const text = customText || inputValue;
+        const isManualEntry = typeof customText !== 'string';
+        const text = isManualEntry ? inputValue : customText;
         const currentMode = forcedMode || activeMode;
 
-        if (!text.trim()) return;
+        if (!text || !text.trim()) return;
 
         const currentCredits = parseInt(localStorage.getItem('credits') || '0', 10);
         if (currentCredits > 0) {
@@ -114,7 +116,12 @@ const JobPilotDashboard = () => {
             window.dispatchEvent(new CustomEvent('credits-updated', { detail: newCredits }));
         }
 
-        setMessages(prev => [...prev, { role: 'user', content: text }]);
+        let optimisticContent = text;
+        if (uploadedFile && uploadedFile.file && uploadedFile.type.startsWith('image/')) {
+            optimisticContent = `[Image: ${uploadedFile.preview}]\n${text}`;
+        }
+
+        setMessages(prev => [...prev, { role: 'user', content: optimisticContent }]);
 
         let apiPrompt = text;
         if (currentMode === 'jop1_scrape') {
@@ -122,7 +129,7 @@ const JobPilotDashboard = () => {
         }
 
         setChatStarted(true);
-        if (!customText) setInputValue("");
+        if (isManualEntry) setInputValue("");
         if (forcedMode && forcedMode !== activeMode) {
             setActiveMode(forcedMode);
         }
@@ -158,16 +165,31 @@ const JobPilotDashboard = () => {
                     signal
                 });
             } else {
-                response = await fetch(`${API_URL}/llm/generate`, {
+                let options = {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
                     },
-                    body: JSON.stringify({ prompt: apiPrompt, roomId: roomId, user: JSON.parse(localStorage.getItem('user')) }),
                     signal
-                });
+                };
+
+                if (uploadedFile && uploadedFile.file && uploadedFile.type.startsWith('image/')) {
+                    const formData = new FormData();
+                    formData.append('prompt', apiPrompt);
+                    formData.append('roomId', roomId);
+                    formData.append('user', JSON.stringify(JSON.parse(localStorage.getItem('user'))));
+                    formData.append('image', uploadedFile.file);
+                    options.body = formData;
+                } else {
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify({ prompt: apiPrompt, roomId: roomId, user: JSON.parse(localStorage.getItem('user')) });
+                }
+
+                response = await fetch(`${API_URL}/llm/generate`, options);
             }
+
+            setUploadedFile(null);
+            if (fileInputRef.current) fileInputRef.current.value = "";
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
@@ -300,21 +322,41 @@ const JobPilotDashboard = () => {
 
     const handleUploadClick = () => {
         fileInputRef.current?.click();
+        setShowAttachMenu(false);
     };
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (showAttachMenu && !event.target.closest('.attach-menu-container')) {
+                setShowAttachMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showAttachMenu]);
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
         if (file) {
+            if (uploadedFile?.preview) {
+                URL.revokeObjectURL(uploadedFile.preview);
+            }
+
             setUploadedFile({
                 name: file.name,
                 size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-                type: file.type
+                type: file.type,
+                file: file,
+                preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : null
             });
         }
     };
 
     const removeFile = (e) => {
         e?.stopPropagation();
+        if (uploadedFile?.preview) {
+            URL.revokeObjectURL(uploadedFile.preview);
+        }
         setUploadedFile(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
@@ -410,7 +452,7 @@ const JobPilotDashboard = () => {
                                                 <button className="hover:text-gray-900 dark:hover:text-white transition-colors p-1" title="Upload Image" onClick={handleUploadClick}>
                                                     <i className="ph ph-image text-xl"></i>
                                                 </button>
-                                                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.doc,.docx" />
+                                                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" />
 
                                                 <button onClick={() => handleModeChange(activeMode === "jop1_scrape" ? "general" : "jop1_scrape")}
                                                     className={`p-1 transition-colors ${activeMode === 'jop1_scrape' ? 'text-blue-500' : 'hover:text-black dark:hover:text-white'}`}>
@@ -420,7 +462,7 @@ const JobPilotDashboard = () => {
                                         </div>
 
                                         <button
-                                            onClick={handleSendMessage}
+                                            onClick={() => handleSendMessage()}
                                             className="w-8 h-8 rounded-full bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black flex flex-shrink-0 items-center justify-center transition-all group ml-2"
                                         >
                                             <i className="ph-bold ph-arrow-up"></i>
@@ -474,7 +516,42 @@ const JobPilotDashboard = () => {
                             </div>
 
                             <div className="w-full max-w-3xl relative mb-6">
-                                <div className="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#222222] rounded-2xl p-4 min-h-[140px] flex flex-col justify-between shadow-xl dark:shadow-2xl focus-within:border-gray-300 dark:focus-within:border-zinc-600 transition-all">
+
+                                {uploadedFile && (
+                                    <div className="absolute -top-16 left-0 bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#222222] rounded-xl p-2 flex items-center gap-3 animate-in slide-in-from-bottom-2 shadow-lg z-10 w-auto min-w-[200px] max-w-full">
+                                        {uploadedFile.preview ? (
+                                            <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-700">
+                                                <img
+                                                    src={uploadedFile.preview}
+                                                    alt="Preview"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
+                                                <i className="ph ph-file-text text-xl text-indigo-500 dark:text-indigo-400"></i>
+                                            </div>
+                                        )}
+
+                                        <div className="flex flex-col min-w-0 mr-2 flex-1">
+                                            <span className="text-xs font-medium text-gray-900 dark:text-gray-200 truncate">
+                                                {uploadedFile.name}
+                                            </span>
+                                            <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                                {uploadedFile.size} • Ready to upload
+                                            </span>
+                                        </div>
+
+                                        <button
+                                            onClick={removeFile}
+                                            className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors"
+                                        >
+                                            <i className="ph-bold ph-x text-xs"></i>
+                                        </button>
+                                    </div>
+                                )}
+
+                                <div className="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#222222] rounded-2xl p-4 min-h-[140px] flex flex-col justify-between shadow-xl dark:shadow-2xl focus-within:border-gray-300 dark:focus-within:border-zinc-600 transition-all relative">
 
                                     <div className="space-y-4">
                                         <textarea
@@ -488,11 +565,44 @@ const JobPilotDashboard = () => {
 
                                     <div className="flex items-end justify-between mt-2">
                                         <div className="flex items-center gap-4">
-                                            <div className="flex items-center gap-3 text-gray-400 dark:text-zinc-500">
-                                                <button className="hover:text-gray-900 dark:hover:text-white transition-colors" title="Upload Image" onClick={handleUploadClick}>
-                                                    <i className="ph ph-image text-lg"></i>
+                                            <div className="flex items-center gap-3 text-gray-400 dark:text-zinc-500 relative attach-menu-container">
+                                                <button
+                                                    className={`hover:text-gray-900 dark:hover:text-white transition-colors py-1 px-2  rounded-full hover:bg-gray-100 dark:hover:bg-white/10 ${showAttachMenu ? 'text-gray-900 dark:text-white bg-gray-100 dark:bg-white/10' : ''}`}
+                                                    title="Add Attachment"
+                                                    onClick={() => setShowAttachMenu(!showAttachMenu)}
+                                                >
+                                                    <i className="ph-bold ph-plus text-lg"></i>
                                                 </button>
-                                                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.doc,.docx" />
+
+                                                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" />
+
+                                                {showAttachMenu && (
+                                                    <div className="absolute bottom-full left-0 mb-2 w-48 bg-white dark:bg-[#18181b] border border-gray-200 dark:border-gray-950 rounded-lg shadow-lg overflow-hidden py-1 z-50 animate-in slide-in-from-bottom-2 fade-in duration-200 flex flex-col">
+                                                        <button
+                                                            onClick={handleUploadClick}
+                                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2 transition-colors"
+                                                        >
+                                                            <i className="ph ph-upload-simple text-base"></i>
+                                                            <span>Upload File</span>
+                                                        </button>
+
+                                                        <button
+                                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2 transition-colors opacity-50 cursor-not-allowed"
+                                                            title="Coming Soon"
+                                                        >
+                                                            <i className="ph ph-image text-base"></i>
+                                                            <span>Generate Image</span>
+                                                        </button>
+
+                                                        <button
+                                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2 transition-colors opacity-50 cursor-not-allowed"
+                                                            title="Coming Soon"
+                                                        >
+                                                            <i className="ph ph-microphone text-base"></i>
+                                                            <span>Voice Input</span>
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="flex items-center gap-2">
@@ -520,14 +630,6 @@ const JobPilotDashboard = () => {
                                                 >
                                                     <i className="ph ph-file-doc text-[14px]" />
                                                     CV creation
-                                                </button>
-
-                                                <button className="flex items-center gap-1.5 px-2.5 py-2 rounded-full text-[13px] leading-none transition-colors
-        bg-gray-100 dark:bg-[#222] hover:bg-gray-200 dark:hover:bg-[#2a2a2a] 
-        text-gray-500 dark:text-[#888888] hover:text-black dark:hover:text-white"
-                                                >
-                                                    <i className="ph ph-magnifying-glass text-[14px]" />
-                                                    Expert mode
                                                 </button>
                                             </div>
                                         </div>
@@ -608,11 +710,35 @@ const JobPilotDashboard = () => {
                     <div className="absolute bottom-0 left-0 w-full p-2 md:p-4 bg-gradient-to-t from-white via-white dark:from-[#050505] dark:via-[#050505] to-transparent z-20">
                         <div className="w-full max-w-3xl mx-auto relative">
                             {uploadedFile && (
-                                <div className="absolute -top-12 left-0 bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#333] rounded-lg px-3 py-1.5 flex items-center gap-2 animate-in slide-in-from-bottom-2 shadow-sm">
-                                    <i className="ph ph-file-text text-indigo-500 dark:text-indigo-400"></i>
-                                    <span className="text-xs text-gray-700 dark:text-gray-300 max-w-[150px] truncate">{uploadedFile.name}</span>
-                                    <button onClick={(e) => { e.stopPropagation(); removeFile(); }} className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400">
-                                        <i className="ph-bold ph-x"></i>
+                                <div className="absolute -top-16 left-0 bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#333] rounded-xl p-2 flex items-center gap-3 animate-in slide-in-from-bottom-2 shadow-sm">
+                                    {uploadedFile.preview ? (
+                                        <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-700">
+                                            <img
+                                                src={uploadedFile.preview}
+                                                alt="Preview"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
+                                            <i className="ph ph-file-text text-xl text-indigo-500 dark:text-indigo-400"></i>
+                                        </div>
+                                    )}
+
+                                    <div className="flex flex-col min-w-0 mr-2">
+                                        <span className="text-xs font-medium text-gray-900 dark:text-gray-200 max-w-[150px] truncate">
+                                            {uploadedFile.name}
+                                        </span>
+                                        <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                            {uploadedFile.size}
+                                        </span>
+                                    </div>
+
+                                    <button
+                                        onClick={removeFile}
+                                        className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors"
+                                    >
+                                        <i className="ph-bold ph-x text-xs"></i>
                                     </button>
                                 </div>
                             )}
@@ -640,15 +766,15 @@ const JobPilotDashboard = () => {
                                         <button className="text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors p-1" onClick={() => handleModeChange(activeMode === 'jop1_scrape' ? 'general' : 'jop1_scrape')} title="Search">
                                             <i className={`ph ${activeMode === 'jop1_scrape' ? 'ph-globe-simple text-blue-500 dark:text-blue-400' : 'ph-globe-simple'} text-lg md:text-xl`}></i>
                                         </button>
-                                        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.doc,.docx" />
+                                        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" />
                                     </div>
 
                                     <button
                                         onClick={isGenerating ? handleStopGeneration : handleSendMessage}
                                         disabled={!isGenerating && !inputValue.trim()}
                                         className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${(isGenerating || inputValue.trim())
-                                                ? 'bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200'
-                                                : 'bg-gray-100 dark:bg-[#333] text-gray-300 dark:text-[#666] cursor-not-allowed'
+                                            ? 'bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200'
+                                            : 'bg-gray-100 dark:bg-[#333] text-gray-300 dark:text-[#666] cursor-not-allowed'
                                             }`}
                                     >
                                         {isGenerating ? (
