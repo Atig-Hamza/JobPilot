@@ -247,7 +247,12 @@ const ChatMessage = ({ msg, isStreaming }) => {
 
                                     if (inline || isInlineOrShortText) {
                                         return (
-                                            <code className={`bg-gray-200 dark:bg-zinc-700 text-gray-800 dark:text-gray-200 px-1 py-0.2 rounded-md text-[0.9em] font-medium border border-transparent ${isInlineOrShortText ? 'inline-block my-1' : ''}`} {...props}>
+                                            <code className={`relative
+    bg-gray-100 dark:bg-gray-800/50 
+    text-gray-900 dark:text-gray-100
+    px-1 py-0.5 rounded-lg
+    font-medium
+    ${isInlineOrShortText ? 'inline-block my-1' : ''}`} {...props}>
                                                 {children}
                                             </code>
                                         )
@@ -298,7 +303,12 @@ const ChatMessage = ({ msg, isStreaming }) => {
 
                                     if (inline || isInlineOrShortText) {
                                         return (
-                                            <code className={`bg-gray-200 dark:bg-zinc-700 text-gray-800 dark:text-gray-200 px-1 py-0.2 rounded-md text-[0.9em] font-medium border border-transparent ${isInlineOrShortText ? 'inline-block my-1' : ''}`} {...props}>
+                                            <code className={`relative
+    bg-gray-100 dark:bg-gray-800/50 
+    text-gray-900 dark:text-gray-100
+    px-1 py-0.5 rounded-lg
+    font-medium
+    ${isInlineOrShortText ? 'inline-block my-1' : ''}`} {...props}>
                                                 {children}
                                             </code>
                                         )
@@ -356,7 +366,12 @@ const ChatMessage = ({ msg, isStreaming }) => {
 
                             if (inline || isInlineOrShortText) {
                                 return (
-                                    <code className={`bg-gray-200 dark:bg-zinc-700 text-gray-800 dark:text-gray-200 px-1 py-0.2 rounded-md text-[0.9em] font-medium border border-transparent ${isInlineOrShortText ? 'inline-block my-1' : ''}`} {...props}>
+                                    <code className={`relative
+    bg-gray-100 dark:bg-gray-800/50 
+    text-gray-900 dark:text-gray-100
+    px-1 py-0.5 rounded-lg
+    font-medium
+    ${isInlineOrShortText ? 'inline-block my-1' : ''}`} {...props}>
                                         {children}
                                     </code>
                                 )
