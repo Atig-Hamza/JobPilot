@@ -1,5 +1,6 @@
-import React from 'react';
-import { Search, Plus, MoreHorizontal, Calendar, Sliders, ArrowUpRight, Users, Activity, DollarSign, ShieldCheck, Mail } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Plus, MoreHorizontal, Calendar, Sliders, ArrowUpRight, Users, Activity, DollarSign, ShieldCheck, Mail, Megaphone } from 'lucide-react';
+import CreateAnnouncementModal from './components/CreateAnnouncementModal';
 
 const StatCard = ({ icon, label, value, trend, trendUp }) => (
     <div className="bg-white dark:bg-[#09090b] p-6 rounded-3xl border border-gray-100 dark:border-[#27272a] shadow-sm hover:shadow-md transition-all duration-300 group">
@@ -22,6 +23,8 @@ const StatCard = ({ icon, label, value, trend, trendUp }) => (
 );
 
 const AdminDashboard = () => {
+    const [isAnnouncementModalOpen, setIsAnnouncementModalOpen] = useState(false);
+
     return (
         <div className="space-y-8 pb-10">
             {/* Header */}
@@ -31,6 +34,13 @@ const AdminDashboard = () => {
                     <p className="text-gray-500 dark:text-gray-400 mt-2 font-medium">Monitor system performance and user growth.</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
+                    <button
+                        onClick={() => setIsAnnouncementModalOpen(true)}
+                        className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-bold hover:shadow-lg hover:shadow-purple-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                    >
+                        <Megaphone size={18} />
+                        <span>New Announcement</span>
+                    </button>
                     <button className="px-5 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl font-bold hover:shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
                         <Activity size={18} />
                         <span>System Health</span>
@@ -40,28 +50,28 @@ const AdminDashboard = () => {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard 
+                <StatCard
                     icon={{ component: <Users size={24} />, bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600 dark:text-blue-400' }}
                     label="Total Users"
                     value="12,345"
                     trend="+12% vs last month"
                     trendUp={true}
                 />
-                <StatCard 
+                <StatCard
                     icon={{ component: <Mail size={24} />, bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'text-purple-600 dark:text-purple-400' }}
                     label="Waitlist Requests"
                     value="2,543"
                     trend="+45 this week"
                     trendUp={true}
                 />
-                <StatCard 
+                <StatCard
                     icon={{ component: <ShieldCheck size={24} />, bg: 'bg-pink-50 dark:bg-pink-900/20', text: 'text-pink-600 dark:text-pink-400' }}
                     label="Access Codes"
                     value="843"
                     trend="+18% usage"
                     trendUp={true}
                 />
-                 <StatCard 
+                <StatCard
                     icon={{ component: <DollarSign size={24} />, bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-400' }}
                     label="Revenue (ARR)"
                     value="$1.2M"
@@ -85,7 +95,7 @@ const AdminDashboard = () => {
                             <MoreHorizontal size={20} />
                         </button>
                     </div>
-                    
+
                     <div className="space-y-4">
                         {[
                             { user: "Sarah Miller", action: "requested access", time: "2 mins ago", type: "waitlist" },
@@ -150,11 +160,16 @@ const AdminDashboard = () => {
 
                     <div className="mt-10 pt-8 border-t border-gray-100 dark:border-[#27272a]">
                         <button className="w-full py-3.5 bg-gray-50 dark:bg-[#18181b] rounded-2xl text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#27272a] transition-colors border border-dashed border-gray-300 dark:border-[#3f3f46]">
-                             Download System Logs
+                            Download System Logs
                         </button>
                     </div>
                 </div>
             </div>
+
+            <CreateAnnouncementModal
+                isOpen={isAnnouncementModalOpen}
+                onClose={() => setIsAnnouncementModalOpen(false)}
+            />
         </div>
     );
 };
