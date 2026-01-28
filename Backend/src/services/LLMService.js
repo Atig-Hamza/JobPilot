@@ -1,5 +1,7 @@
 import 'dotenv/config';
 import OpenAi from 'openai';
+import fs from 'fs';
+import path from 'path';
 import { generatePdfFromHtml, savePdfLocally } from './pdfService.js';
 
 const openai = new OpenAi({
@@ -41,10 +43,52 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl) {
             roomContexts[roomId].push({ "role": "system", "content": enhancedSystemPrompt });
         }
 
-        roomContexts[roomId].push({ "role": "user", "content": prompt });
+        let currentModel = LLM_Model;
+        let messageContent = prompt;
+
+        const imageMatch = typeof prompt === 'string' ? prompt.match(/\[Image: (.*?)\]/) : null;
+
+        if (imageMatch) {
+            const imagePath = imageMatch[1];
+            const textPrompt = prompt.replace(imageMatch[0], '').trim();
+
+            try {
+                const cleanPath = imagePath.replace(/^\/?media\//, '');
+                const absolutePath = path.join(process.cwd(), 'media', cleanPath);
+
+                if (fs.existsSync(absolutePath)) {
+                    const fileBuffer = fs.readFileSync(absolutePath);
+                    const base64Image = fileBuffer.toString('base64');
+                    let mimeType = path.extname(absolutePath).slice(1).toLowerCase();
+                    if (mimeType === 'jpg') mimeType = 'jpeg';
+
+                    messageContent = [
+                        { type: "text", text: textPrompt },
+                        {
+                            type: "image_url",
+                            image_url: {
+                                "url": `data:image/${mimeType};base64,${base64Image}`
+                            }
+                        }
+                    ];
+                }
+            } catch (err) {
+                console.error("Error preparing image for LLM:", err);
+            }
+        }
+
+        roomContexts[roomId].push({ "role": "user", "content": messageContent });
+
+        const hasImages = roomContexts[roomId].some(msg => 
+            Array.isArray(msg.content) && msg.content.some(c => c.type === 'image_url')
+        );
+
+        if (hasImages) {
+            currentModel = "meta/llama-3.2-90b-vision-instruct";
+        }
 
         const stream = await openai.chat.completions.create({
-            model: LLM_Model,
+            model: currentModel,
             messages: roomContexts[roomId],
             temperature: 0.6,
             top_p: 0.9,
