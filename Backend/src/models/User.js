@@ -107,6 +107,44 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: true
     }
+  },
+  aiPersonalization: {
+    useEmojis: {
+      type: Boolean,
+      default: true
+    },
+    responseStyle: {
+      type: String,
+      enum: ['professional', 'friendly', 'concise', 'detailed'],
+      default: 'friendly'
+    },
+    creativity: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 60
+    },
+    focusArea: {
+      type: String,
+      enum: ['general', 'technical', 'creative', 'business'],
+      default: 'general'
+    },
+    language: {
+      type: String,
+      default: 'English'
+    },
+    includeExamples: {
+      type: Boolean,
+      default: true
+    },
+    autoSuggest: {
+      type: Boolean,
+      default: true
+    },
+    customInstructions: {
+      type: String,
+      default: ''
+    }
   }
 }, {
   timestamps: true
