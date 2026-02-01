@@ -71,5 +71,54 @@ export const useCreditCode = async (code, userId) => {
     user.credits += creditCode.credits;
     await user.save();
 
-    return true;
+    return { credits: creditCode.credits, newBalance: user.credits };
+}
+
+export const sendCreditsToFriend = async (senderId, recipientEmail, amount) => {
+    const sender = await User.findById(senderId);
+    if (!sender) {
+        throw new Error('Sender not found');
+    }
+
+    if (sender.role !== 'admin' && amount > 500) {
+        throw new Error('Maximum transfer limit is 500 credits');
+    }
+
+    if (amount <= 0) {
+        throw new Error('Amount must be greater than 0');
+    }
+
+    if (sender.credits < amount) {
+        throw new Error('Insufficient credits');
+    }
+
+    const recipient = await User.findOne({ email: recipientEmail.toLowerCase() });
+    if (!recipient) {
+        throw new Error('Recipient not found');
+    }
+
+    if (sender._id.equals(recipient._id)) {
+        throw new Error('Cannot send credits to yourself');
+    }
+
+    sender.credits -= amount;
+    recipient.credits += amount;
+
+    await sender.save();
+    await recipient.save();
+
+    return {
+        sender: {
+            id: sender._id,
+            fullName: sender.fullName,
+            newBalance: sender.credits
+        },
+        recipient: {
+            id: recipient._id,
+            fullName: recipient.fullName,
+            email: recipient.email,
+            newBalance: recipient.credits
+        },
+        amount
+    };
 }
