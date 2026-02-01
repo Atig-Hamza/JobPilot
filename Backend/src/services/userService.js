@@ -70,3 +70,34 @@ export const updateNotificationPreferences = async (userId, preferences) => {
     await user.save();
     return user.notificationPreferences;
 };
+
+export const getAiPersonalization = async (userId) => {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new AppError('User not found', 404);
+    }
+    return user.aiPersonalization || {
+        useEmojis: true,
+        responseStyle: 'friendly',
+        creativity: 60,
+        focusArea: 'general',
+        language: 'English',
+        includeExamples: true,
+        autoSuggest: true,
+        customInstructions: ''
+    };
+};
+
+export const updateAiPersonalization = async (userId, settings) => {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new AppError('User not found', 404);
+    }
+
+    user.aiPersonalization = {
+        ...user.aiPersonalization,
+        ...settings
+    };
+    await user.save();
+    return user.aiPersonalization;
+};
