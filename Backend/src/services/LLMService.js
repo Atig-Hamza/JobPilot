@@ -9,7 +9,7 @@ const openai = new OpenAi({
     baseURL: 'https://integrate.api.nvidia.com/v1',
 });
 
-const LLM_Model='qwen/qwen3-coder-480b-a35b-instruct'
+const LLM_Model = 'moonshotai/kimi-k2.5'
 
 const roomContexts = {};
 
@@ -79,7 +79,7 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl) {
 
         roomContexts[roomId].push({ "role": "user", "content": messageContent });
 
-        const hasImages = roomContexts[roomId].some(msg => 
+        const hasImages = roomContexts[roomId].some(msg =>
             Array.isArray(msg.content) && msg.content.some(c => c.type === 'image_url')
         );
 
@@ -169,7 +169,7 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl) {
                 const savedFile = await savePdfLocally(pdfBuffer);
                 const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
                 const downloadUrl = `${host}${savedFile.relativePath}`;
-                
+
                 await onToken({ type: 'content', content: "\n<!-- CV_END -->" });
                 await onToken({ type: 'content', content: `\n\n**Success!** Your CV is ready.\n\n[Download PDF](${downloadUrl})` });
             } catch (pdfError) {
@@ -187,18 +187,36 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl) {
     }
 }
 
-async function generateChatTitle(roomId) {
+async function generateChatTitle(roomId, conversationHistory = null) {
     try {
-        if (!roomContexts[roomId]) return null;
+        let messages = [];
 
-        const messages = [...roomContexts[roomId]];
+        if (roomContexts[roomId] && roomContexts[roomId].length > 0) {
+            messages = [...roomContexts[roomId]];
+        }
+        else if (conversationHistory && conversationHistory.length > 0) {
+            messages = [
+                { role: "system", content: "You are a helpful career assistant." },
+                ...conversationHistory.map(msg => {
+                    if (msg.startsWith('User: ')) {
+                        return { role: "user", content: msg.replace('User: ', '') };
+                    } else if (msg.startsWith('AI: ')) {
+                        return { role: "assistant", content: msg.replace('AI: ', '') };
+                    }
+                    return null;
+                }).filter(Boolean)
+            ];
+        } else {
+            return null;
+        }
+
         messages.push({
             role: "user",
             content: "Generate a very short title (max 4 words) for this conversation based on the context. Respond with only the title, no additional text, no markdown."
         });
 
         const response = await openai.chat.completions.create({
-            model: LLM_Model,
+            model: "meta/llama-3.2-3b-instruct",
             messages: messages,
             temperature: 0.7,
             max_tokens: 50
