@@ -8,9 +8,9 @@ export const getHistoryTitleByUserId = async (userId, page = 1, limit = 20) => {
         .sort({ updatedAt: -1 })
         .skip(skip)
         .limit(limit);
-    
+
     const total = await History.countDocuments({ userId });
-    
+
     return {
         history,
         total,
@@ -55,9 +55,9 @@ export const saveChatInteraction = async (userId, roomId, prompt, response) => {
     if (historyEntry) {
         historyEntry.content.push(`User: ${prompt}`);
         historyEntry.content.push(`AI: ${response}`);
-        
+
         if (historyEntry.content.length === 4) {
-            const newTitle = await generateChatTitle(roomId);
+            const newTitle = await generateChatTitle(roomId, historyEntry.content);
             if (newTitle) {
                 historyEntry.title = newTitle;
             }
