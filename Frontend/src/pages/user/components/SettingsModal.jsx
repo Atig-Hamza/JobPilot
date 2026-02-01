@@ -27,11 +27,72 @@ const SettingsModal = ({ isOpen, onClose }) => {
     const [recoveryCodes, setRecoveryCodes] = useState([]);
     const [isVerifying2FA, setIsVerifying2FA] = useState(false);
 
+    const [notificationPrefs, setNotificationPrefs] = useState({
+        loginAlerts: true,
+        events: true,
+        offers: true,
+        system: true,
+        news: true
+    });
+    const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
+    const [isSavingNotifications, setIsSavingNotifications] = useState(false);
+
     useEffect(() => {
         if (activeTab === 'security') {
             fetchDevices();
         }
+        if (activeTab === 'notifications') {
+            fetchNotificationPreferences();
+        }
     }, [activeTab]);
+
+    const fetchNotificationPreferences = async () => {
+        setIsLoadingNotifications(true);
+        try {
+            const token = localStorage.getItem('token');
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+            const res = await fetch(`${API_URL}/users/notification-preferences`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok && data.data?.preferences) {
+                setNotificationPrefs(data.data.preferences);
+            }
+        } catch (e) {
+            console.error('Failed to fetch notification preferences', e);
+        } finally {
+            setIsLoadingNotifications(false);
+        }
+    };
+
+    const handleUpdateNotificationPref = async (key, value) => {
+        const newPrefs = { ...notificationPrefs, [key]: value };
+        setNotificationPrefs(newPrefs);
+        setIsSavingNotifications(true);
+        try {
+            const token = localStorage.getItem('token');
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+            const res = await fetch(`${API_URL}/users/notification-preferences`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ [key]: value })
+            });
+            if (res.ok) {
+                toast.success('Preference updated');
+            } else {
+                toast.error('Failed to update preference');
+                setNotificationPrefs(notificationPrefs);
+            }
+        } catch (e) {
+            toast.error('Failed to update preference');
+            setNotificationPrefs(notificationPrefs);
+        } finally {
+            setIsSavingNotifications(false);
+        }
+    };
 
     const fetchDevices = async () => {
         setIsLoadingDevices(true);
@@ -461,6 +522,119 @@ const SettingsModal = ({ isOpen, onClose }) => {
                         </div>
                     </div>
                 );
+            case 'notifications':
+                return (
+                    <div className="space-y-6 animate-in fade-in duration-300">
+                        {isLoadingNotifications ? (
+                            <div className="flex items-center justify-center py-12">
+                                <i className="ph ph-spinner animate-spin text-2xl text-gray-400"></i>
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    Choose which notifications you want to receive.
+                                </p>
+
+                                <div className="bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-[#333] divide-y divide-gray-100 dark:divide-[#222]">
+                                    <div className="p-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2">
+                                                <i className="ph ph-sign-in text-gray-600 dark:text-gray-400 text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Login Alerts</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Get notified when someone logs into your account</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleUpdateNotificationPref('loginAlerts', !notificationPrefs.loginAlerts)}
+                                            disabled={isSavingNotifications}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${notificationPrefs.loginAlerts ? 'bg-blue-600' : 'bg-gray-200 dark:bg-[#333]'}`}
+                                        >
+                                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notificationPrefs.loginAlerts ? 'translate-x-5' : 'translate-x-0'}`}></span>
+                                        </button>
+                                    </div>
+
+                                    <div className="p-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2">
+                                                <i className="ph ph-calendar text-gray-600 dark:text-gray-400 text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Events</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Reminders for interviews, deadlines, and events</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleUpdateNotificationPref('events', !notificationPrefs.events)}
+                                            disabled={isSavingNotifications}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${notificationPrefs.events ? 'bg-blue-600' : 'bg-gray-200 dark:bg-[#333]'}`}
+                                        >
+                                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notificationPrefs.events ? 'translate-x-5' : 'translate-x-0'}`}></span>
+                                        </button>
+                                    </div>
+
+                                    <div className="p-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2">
+                                                <i className="ph ph-gift text-gray-600 dark:text-gray-400 text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Offers & Promotions</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Special offers, discounts, and promotions</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleUpdateNotificationPref('offers', !notificationPrefs.offers)}
+                                            disabled={isSavingNotifications}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${notificationPrefs.offers ? 'bg-blue-600' : 'bg-gray-200 dark:bg-[#333]'}`}
+                                        >
+                                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notificationPrefs.offers ? 'translate-x-5' : 'translate-x-0'}`}></span>
+                                        </button>
+                                    </div>
+
+                                    <div className="p-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2">
+                                                <i className="ph ph-coins text-gray-600 dark:text-gray-400 text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">System</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Credits updates, account changes, and system alerts</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleUpdateNotificationPref('system', !notificationPrefs.system)}
+                                            disabled={isSavingNotifications}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${notificationPrefs.system ? 'bg-blue-600' : 'bg-gray-200 dark:bg-[#333]'}`}
+                                        >
+                                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notificationPrefs.system ? 'translate-x-5' : 'translate-x-0'}`}></span>
+                                        </button>
+                                    </div>
+
+                                    <div className="p-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2">
+                                                <i className="ph ph-newspaper text-gray-600 dark:text-gray-400 text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">News & Updates</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Product updates, tips, and newsletters</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleUpdateNotificationPref('news', !notificationPrefs.news)}
+                                            disabled={isSavingNotifications}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${notificationPrefs.news ? 'bg-blue-600' : 'bg-gray-200 dark:bg-[#333]'}`}
+                                        >
+                                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notificationPrefs.news ? 'translate-x-5' : 'translate-x-0'}`}></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                );
             case 'security':
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -471,7 +645,6 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                     <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your access and security activity.</p>
                                 </div>
 
-                                {/* Security Stats Grid */}
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
                                     <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#222]">
                                         <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Last Login</div>
@@ -564,7 +737,6 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Login & Security</h3>
 
                                     <div className="bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-[#333] overflow-hidden divide-y divide-gray-100 dark:divide-[#222]">
-                                        {/* Password Row */}
                                         <div className="p-6">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
@@ -586,7 +758,6 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                                 )}
                                             </div>
 
-                                            {/* Expandable Password Form */}
                                             {isEditingPassword && (
                                                 <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
                                                     <div className="max-w-md space-y-4">
@@ -660,7 +831,6 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                             )}
                                         </div>
 
-                                        {/* 2FA Row */}
                                         <div className="p-6 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#161616] transition-colors">
                                             <div className="flex items-center gap-4">
                                                 <div className="p-2 bg-gray-100 dark:bg-[#222] rounded-lg">
@@ -695,7 +865,6 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                             )}
                                         </div>
 
-                                        {/* Login Notifications Row */}
                                         <div className="p-6 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#161616] transition-colors">
                                             <div className="flex items-center gap-4">
                                                 <div className="p-2 bg-gray-100 dark:bg-[#222] rounded-lg">
@@ -766,7 +935,6 @@ const SettingsModal = ({ isOpen, onClose }) => {
 
                             </>
                         ) : (
-                            /* Inline 2FA Setup Flow */
                             <div className="border border-gray-200 dark:border-[#222] rounded-2xl p-8 bg-gray-50/50 dark:bg-[#161616] animate-in slide-in-from-right-4 duration-300">
                                 <button
                                     onClick={() => setSecurityView('menu')}
