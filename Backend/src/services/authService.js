@@ -57,7 +57,9 @@ const finalizeLogin = async (user, loginDetails) => {
 
     const safeUser = removeSensitiveInfo(user);
 
-    const emailSent = await sendNewLoginAlert(user.email, new Date(), loginDetails);
+    if (user.notificationPreferences?.loginAlerts !== false) {
+        await sendNewLoginAlert(user.email, new Date(), loginDetails);
+    }
 
     return { token, safeUser };
 };

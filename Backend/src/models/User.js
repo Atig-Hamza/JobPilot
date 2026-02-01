@@ -85,6 +85,28 @@ const userSchema = new mongoose.Schema({
   loginOTPExpires: {
     type: Date,
     select: false
+  },
+  notificationPreferences: {
+    loginAlerts: {
+      type: Boolean,
+      default: true
+    },
+    events: {
+      type: Boolean,
+      default: true
+    },
+    offers: {
+      type: Boolean,
+      default: true
+    },
+    system: {
+      type: Boolean,
+      default: true
+    },
+    news: {
+      type: Boolean,
+      default: true
+    }
   }
 }, {
   timestamps: true

@@ -1,4 +1,4 @@
-import { updatePassword, deleteUser } from '../services/userService.js';
+import { updatePassword, deleteUser, getNotificationPreferences, updateNotificationPreferences } from '../services/userService.js';
 import { AppError } from '../utils/AppError.js';
 import catchAsync from '../utils/catchAsync.js';
 
@@ -23,5 +23,23 @@ export const deleteAccountController = catchAsync(async (req, res) => {
     res.status(200).json({
         status: 'success',
         message: 'Account deleted successfully'
+    });
+});
+
+export const getNotificationPreferencesController = catchAsync(async (req, res) => {
+    const preferences = await getNotificationPreferences(req.user.id);
+
+    res.status(200).json({
+        status: 'success',
+        data: { preferences }
+    });
+});
+
+export const updateNotificationPreferencesController = catchAsync(async (req, res) => {
+    const preferences = await updateNotificationPreferences(req.user.id, req.body);
+
+    res.status(200).json({
+        status: 'success',
+        data: { preferences }
     });
 });
