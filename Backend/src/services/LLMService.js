@@ -93,7 +93,8 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl) {
             temperature: 0.6,
             top_p: 0.9,
             max_tokens: 4096,
-            stream: true
+            stream: true,
+            chat_template_kwargs: { "thinking": false }
         });
 
         let fullResponse = "";
@@ -245,7 +246,8 @@ async function generateCompletion(prompt, systemPrompt) {
                 { role: "user", content: prompt }
             ],
             temperature: 0.2,
-            max_tokens: 2048
+            max_tokens: 2048,
+            chat_template_kwargs: { "thinking": false }
         });
         return completion.choices[0].message.content;
     } catch (error) {
