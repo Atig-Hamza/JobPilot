@@ -1,5 +1,6 @@
 import { useCreditCode, generateCreditCode, generateInviteCode, getAllInviteCodes, deleteInviteCode as deleteInviteCodeService, sendCreditsToFriend } from "../services/codeService.js";
 import { sendCreditsReceivedEmail } from "../services/mailService.js";
+import User from "../models/User.js";
 
 export async function createInviteCode(req, res) {
     try {
@@ -66,12 +67,15 @@ export async function sendCredits(req, res) {
 
         const result = await sendCreditsToFriend(senderId, recipientEmail, parseInt(amount));
 
-        sendCreditsReceivedEmail(
-            result.recipient.email,
-            result.recipient.fullName,
-            result.sender.fullName,
-            result.amount
-        );
+        const recipient = await User.findOne({ email: recipientEmail });
+        if (recipient?.notificationPreferences?.system !== false) {
+            sendCreditsReceivedEmail(
+                result.recipient.email,
+                result.recipient.fullName,
+                result.sender.fullName,
+                result.amount
+            );
+        }
 
         res.status(200).json({
             message: `Successfully sent ${result.amount} credits to ${result.recipient.fullName}`,
