@@ -1,12 +1,12 @@
 import { generateText } from "../services/LLMService.js";
-import { spendUserCredits } from "../services/userService.js";
+import { spendUserCredits, getAiPersonalization } from "../services/userService.js";
 import { saveChatInteraction } from "../services/historyService.js";
 import { getProfileByUserId } from "../services/profileService.js";
 
 
 export async function handleLLMRequest(req, res) {
     let { prompt, roomId, user } = req.body;
-    
+
     if (typeof user === 'string') {
         try {
             user = JSON.parse(user);
@@ -21,6 +21,14 @@ export async function handleLLMRequest(req, res) {
     }
 
     const profile = await getProfileByUserId(req.user.id);
+
+    let aiSettings = null;
+    try {
+        aiSettings = await getAiPersonalization(req.user.id);
+    } catch (e) {
+        console.error('Error fetching AI personalization:', e);
+    }
+
     const systemPrompt = `
 ### SYSTEM CONFIGURATION: JOB PILOT AGENT
 
@@ -124,7 +132,7 @@ You are a text-based advisor. You may assist with:
         };
 
         const baseUrl = `${req.protocol}://${req.get('host')}`;
-        const fullResponse = await generateText(prompt, roomId, onToken, systemPrompt, baseUrl);
+        const fullResponse = await generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSettings);
 
         await saveChatInteraction(req.user.id, roomId, prompt, fullResponse);
 
