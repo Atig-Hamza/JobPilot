@@ -28,6 +28,19 @@ const UserLayout = ({ children, activeMode, isGenerating }) => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+    const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
+    const [redeemCode, setRedeemCode] = useState('');
+    const [isRedeeming, setIsRedeeming] = useState(false);
+    const [redeemError, setRedeemError] = useState('');
+    const [redeemSuccess, setRedeemSuccess] = useState('');
+
+    const [isSendCreditsModalOpen, setIsSendCreditsModalOpen] = useState(false);
+    const [sendCreditsEmail, setSendCreditsEmail] = useState('');
+    const [sendCreditsAmount, setSendCreditsAmount] = useState('');
+    const [isSendingCredits, setIsSendingCredits] = useState(false);
+    const [sendCreditsError, setSendCreditsError] = useState('');
+    const [sendCreditsSuccess, setSendCreditsSuccess] = useState('');
+
     const user = JSON.parse(localStorage.getItem('user')) || { fullName: 'User', email: 'user@example.com' };
 
     useEffect(() => {
@@ -173,6 +186,95 @@ const UserLayout = ({ children, activeMode, isGenerating }) => {
         }
     };
 
+    const handleRedeemCode = async () => {
+        if (!redeemCode.trim()) {
+            setRedeemError('Please enter a code');
+            return;
+        }
+        setIsRedeeming(true);
+        setRedeemError('');
+        setRedeemSuccess('');
+        try {
+            const token = localStorage.getItem('token');
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+            const response = await fetch(`${API_URL}/codes/redeem`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ code: redeemCode })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setRedeemSuccess(`Successfully redeemed ${data.credits} credits!`);
+                setRedeemCode('');
+                localStorage.setItem('credits', data.newBalance);
+                setCredits(data.newBalance);
+                window.dispatchEvent(new CustomEvent('credits-updated', { detail: data.newBalance }));
+                setTimeout(() => {
+                    setIsRedeemModalOpen(false);
+                    setRedeemSuccess('');
+                }, 2000);
+            } else {
+                setRedeemError(data.message || 'Invalid code');
+            }
+        } catch (error) {
+            setRedeemError('Failed to redeem code');
+        } finally {
+            setIsRedeeming(false);
+        }
+    };
+
+    const handleSendCredits = async () => {
+        if (!sendCreditsEmail.trim()) {
+            setSendCreditsError('Please enter recipient email');
+            return;
+        }
+        if (!sendCreditsAmount || parseInt(sendCreditsAmount) <= 0) {
+            setSendCreditsError('Please enter a valid amount');
+            return;
+        }
+        if (user.role !== 'admin' && parseInt(sendCreditsAmount) > 500) {
+            setSendCreditsError('Maximum transfer limit is 500 credits');
+            return;
+        }
+        setIsSendingCredits(true);
+        setSendCreditsError('');
+        setSendCreditsSuccess('');
+        try {
+            const token = localStorage.getItem('token');
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+            const response = await fetch(`${API_URL}/codes/send-credits`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ recipientEmail: sendCreditsEmail, amount: parseInt(sendCreditsAmount) })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setSendCreditsSuccess(data.message);
+                setSendCreditsEmail('');
+                setSendCreditsAmount('');
+                localStorage.setItem('credits', data.newBalance);
+                setCredits(data.newBalance);
+                window.dispatchEvent(new CustomEvent('credits-updated', { detail: data.newBalance }));
+                setTimeout(() => {
+                    setIsSendCreditsModalOpen(false);
+                    setSendCreditsSuccess('');
+                }, 2000);
+            } else {
+                setSendCreditsError(data.message || 'Failed to send credits');
+            }
+        } catch (error) {
+            setSendCreditsError('Failed to send credits');
+        } finally {
+            setIsSendingCredits(false);
+        }
+    };
+
     return (
         <div className="flex w-full h-screen bg-white dark:bg-[#050505] text-gray-900 dark:text-[#EDEDED] font-sans antialiased overflow-hidden transition-colors duration-300">
             <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
@@ -203,6 +305,145 @@ const UserLayout = ({ children, activeMode, isGenerating }) => {
                                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-2"
                             >
                                 {isDeleting ? 'Deleting...' : 'Delete'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isRedeemModalOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={() => { setIsRedeemModalOpen(false); setRedeemCode(''); setRedeemError(''); setRedeemSuccess(''); }}
+                >
+                    <div
+                        className="bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#222] w-full max-w-sm rounded-xl shadow-2xl p-6 animate-in zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center gap-3 mb-4">
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Redeem Code</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Enter your credit code below</p>
+                            </div>
+                        </div>
+
+                        <input
+                            type="text"
+                            value={redeemCode}
+                            onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
+                            placeholder="Enter code (e.g., CREDITS2026)"
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-mono tracking-wider"
+                        />
+
+                        {redeemError && (
+                            <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                                <i className="ph ph-warning-circle"></i> {redeemError}
+                            </p>
+                        )}
+                        {redeemSuccess && (
+                            <p className="mt-2 text-sm text-emerald-500 flex items-center gap-1">
+                                <i className="ph ph-check-circle"></i> {redeemSuccess}
+                            </p>
+                        )}
+
+                        <div className="flex items-center justify-end gap-3 mt-6">
+                            <button
+                                onClick={() => { setIsRedeemModalOpen(false); setRedeemCode(''); setRedeemError(''); setRedeemSuccess(''); }}
+                                className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1a1a1a] rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleRedeemCode}
+                                disabled={isRedeeming || !redeemCode.trim()}
+                                className="px-4 py-2 text-sm font-medium text-white bg-white dark:bg-[#1a1a1a] hover:bg-[#1a1a1a] disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
+                            >
+                                {isRedeeming ? (
+                                    <><i className="ph ph-spinner animate-spin"></i> Redeeming...</>
+                                ) : (
+                                    <><i className="ph ph-check"></i> Redeem</>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isSendCreditsModalOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={() => { setIsSendCreditsModalOpen(false); setSendCreditsEmail(''); setSendCreditsAmount(''); setSendCreditsError(''); setSendCreditsSuccess(''); }}
+                >
+                    <div
+                        className="bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#222] w-full max-w-sm rounded-xl shadow-2xl p-6 animate-in zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center gap-3 mb-4">
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Send Credits</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Send credits to a friend (max 500)</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Recipient Email</label>
+                                <input
+                                    type="email"
+                                    value={sendCreditsEmail}
+                                    onChange={(e) => setSendCreditsEmail(e.target.value)}
+                                    placeholder="friend@example.com"
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Amount</label>
+                                <input
+                                    type="number"
+                                    value={sendCreditsAmount}
+                                    onChange={(e) => setSendCreditsAmount(e.target.value)}
+                                    placeholder="Enter amount"
+                                    min="1"
+                                    max={user.role === 'admin' ? undefined : 500}
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="mt-3 p-2 bg-gray-50 dark:bg-[#1a1a1a] rounded-lg">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                <i className="ph ph-info"></i> Your balance: <span className="font-bold text-gray-900 dark:text-white">{credits}</span> credits
+                            </p>
+                        </div>
+
+                        {sendCreditsError && (
+                            <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                                <i className="ph ph-warning-circle"></i> {sendCreditsError}
+                            </p>
+                        )}
+                        {sendCreditsSuccess && (
+                            <p className="mt-2 text-sm text-emerald-500 flex items-center gap-1">
+                                <i className="ph ph-check-circle"></i> {sendCreditsSuccess}
+                            </p>
+                        )}
+
+                        <div className="flex items-center justify-end gap-3 mt-6">
+                            <button
+                                onClick={() => { setIsSendCreditsModalOpen(false); setSendCreditsEmail(''); setSendCreditsAmount(''); setSendCreditsError(''); setSendCreditsSuccess(''); }}
+                                className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1a1a1a] rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSendCredits}
+                                disabled={isSendingCredits || !sendCreditsEmail.trim() || !sendCreditsAmount}
+                                className="px-4 py-2 text-sm font-medium text-white bg-white dark:bg-[#1a1a1a] hover:bg-[#1a1a1a] disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
+                            >
+                                {isSendingCredits ? (
+                                    <><i className="ph ph-spinner animate-spin"></i> Sending...</>
+                                ) : (
+                                    <><i className="ph ph-paper-plane-tilt"></i> Send</>
+                                )}
                             </button>
                         </div>
                     </div>
@@ -344,11 +585,22 @@ const UserLayout = ({ children, activeMode, isGenerating }) => {
                 {(!isSidebarCollapsed || isMobile) && (
                     <div className="px-4 pt-2 pb-2">
                         <div className="bg-gray-100 dark:bg-[#151515] border border-gray-200 dark:border-[#222222] rounded-xl p-4">
-                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Redeem Access</h4>
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Redeem Credits</h4>
                             <p className="text-[10px] text-gray-500 dark:text-[#888888] mb-3">Enter your voucher code to add credits.</p>
-                            <button className="w-full bg-white dark:bg-white text-black text-xs font-bold py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-200 border border-gray-200 dark:border-transparent transition-colors shadow-sm">
-                                Enter Code
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setIsRedeemModalOpen(true)}
+                                    className="flex-1 bg-white dark:bg-[#1a1a1a] text-black dark:text-white text-xs font-bold py-2 rounded-lg hover:bg-[#f0f0f0] dark:hover:bg-[#2a2a2a] border border-gray-200 dark:border-transparent transition-colors shadow-sm flex items-center justify-center gap-1"
+                                >
+                                    <i className="ph ph-ticket"></i> Redeem
+                                </button>
+                                <button
+                                    onClick={() => setIsSendCreditsModalOpen(true)}
+                                    className="flex-1 bg-white dark:bg-[#1a1a1a] text-black dark:text-white text-xs font-bold py-2 rounded-lg hover:bg-[#f0f0f0] dark:hover:bg-[#2a2a2a] transition-colors shadow-sm flex items-center justify-center gap-1"
+                                >
+                                    <i className="ph ph-paper-plane-tilt"></i> Send
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
