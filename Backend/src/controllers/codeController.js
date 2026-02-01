@@ -1,4 +1,5 @@
-import { useCreditCode, generateCreditCode, generateInviteCode, getAllInviteCodes, deleteInviteCode as deleteInviteCodeService } from "../services/codeService.js";
+import { useCreditCode, generateCreditCode, generateInviteCode, getAllInviteCodes, deleteInviteCode as deleteInviteCodeService, sendCreditsToFriend } from "../services/codeService.js";
+import { sendCreditsReceivedEmail } from "../services/mailService.js";
 
 export async function createInviteCode(req, res) {
     try {
@@ -43,8 +44,39 @@ export async function redeemCreditCode(req, res) {
     try {
         const { code } = req.body;
         const userId = req.user.id;
-        await useCreditCode(code, userId);
-        res.status(200).json({ message: 'Credit code redeemed successfully' });
+        const result = await useCreditCode(code, userId);
+        res.status(200).json({
+            message: 'Credit code redeemed successfully',
+            credits: result.credits,
+            newBalance: result.newBalance
+        });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+}
+
+export async function sendCredits(req, res) {
+    try {
+        const { recipientEmail, amount } = req.body;
+        const senderId = req.user.id;
+
+        if (!recipientEmail || !amount) {
+            return res.status(400).json({ message: 'Recipient email and amount are required' });
+        }
+
+        const result = await sendCreditsToFriend(senderId, recipientEmail, parseInt(amount));
+
+        sendCreditsReceivedEmail(
+            result.recipient.email,
+            result.recipient.fullName,
+            result.sender.fullName,
+            result.amount
+        );
+
+        res.status(200).json({
+            message: `Successfully sent ${result.amount} credits to ${result.recipient.fullName}`,
+            newBalance: result.sender.newBalance
+        });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }

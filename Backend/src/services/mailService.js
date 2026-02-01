@@ -360,3 +360,31 @@ export const send2FADisabledEmail = async (userEmail, fullName) => {
         return false
     }
 }
+
+export const sendCreditsReceivedEmail = async (recipientEmail, recipientName, senderName, amount) => {
+    try {
+        const html = generateInlineHtml(`
+            <h1>You Received Credits! 🎁</h1>
+            <p>Hi ${recipientName || 'there'},</p>
+            <p>Great news! <span class="highlight">${senderName}</span> has sent you credits on JobPilot.</p>
+            <div style="background-color: #27272a; border: 1px solid #3f3f46; border-radius: 8px; padding: 24px; margin: 24px 0; text-align: center;">
+                <p style="margin: 0; font-size: 14px; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Credits Received</p>
+                <p style="margin: 8px 0 0 0; font-size: 48px; color: #22c55e; font-weight: 700;">${amount}</p>
+            </div>
+            <p>These credits have been automatically added to your account balance. You can use them to access premium features on JobPilot.</p>
+            <p><a href="https://myjobpilot.app/user/dashboard" style="color: #db2777; font-weight: 600;">Go to Dashboard</a></p>
+            <br>
+            <p style="font-weight: 600; color: #fff;">The JobPilot Team</p>
+        `)
+        await transporter.sendMail({
+            from: `"JobPilot" <${process.env.SMTP_USER}>`,
+            to: recipientEmail,
+            subject: `You received ${amount} credits from ${senderName}! 🎁`,
+            html: html
+        })
+        return true
+    } catch (error) {
+        console.error('Credits received email error:', error)
+        return false
+    }
+}
