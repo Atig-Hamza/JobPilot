@@ -42,3 +42,31 @@ export const deleteUser = async (userId) => {
     await user.save();
     return true;
 };
+
+export const getNotificationPreferences = async (userId) => {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new AppError('User not found', 404);
+    }
+    return user.notificationPreferences || {
+        loginAlerts: true,
+        events: true,
+        offers: true,
+        system: true,
+        news: true
+    };
+};
+
+export const updateNotificationPreferences = async (userId, preferences) => {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new AppError('User not found', 404);
+    }
+
+    user.notificationPreferences = {
+        ...user.notificationPreferences,
+        ...preferences
+    };
+    await user.save();
+    return user.notificationPreferences;
+};
