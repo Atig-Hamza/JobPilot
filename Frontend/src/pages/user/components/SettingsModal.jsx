@@ -37,12 +37,28 @@ const SettingsModal = ({ isOpen, onClose }) => {
     const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
     const [isSavingNotifications, setIsSavingNotifications] = useState(false);
 
+    const [aiSettings, setAiSettings] = useState({
+        useEmojis: true,
+        responseStyle: 'friendly',
+        creativity: 60,
+        focusArea: 'general',
+        language: 'English',
+        includeExamples: true,
+        autoSuggest: true,
+        customInstructions: ''
+    });
+    const [isLoadingAiSettings, setIsLoadingAiSettings] = useState(false);
+    const [isSavingAiSettings, setIsSavingAiSettings] = useState(false);
+
     useEffect(() => {
         if (activeTab === 'security') {
             fetchDevices();
         }
         if (activeTab === 'notifications') {
             fetchNotificationPreferences();
+        }
+        if (activeTab === 'personalization') {
+            fetchAiSettings();
         }
     }, [activeTab]);
 
@@ -91,6 +107,54 @@ const SettingsModal = ({ isOpen, onClose }) => {
             setNotificationPrefs(notificationPrefs);
         } finally {
             setIsSavingNotifications(false);
+        }
+    };
+
+    const fetchAiSettings = async () => {
+        setIsLoadingAiSettings(true);
+        try {
+            const token = localStorage.getItem('token');
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+            const res = await fetch(`${API_URL}/users/ai-personalization`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok && data.data?.settings) {
+                setAiSettings(data.data.settings);
+            }
+        } catch (e) {
+            console.error('Failed to fetch AI settings', e);
+        } finally {
+            setIsLoadingAiSettings(false);
+        }
+    };
+
+    const handleUpdateAiSetting = async (key, value) => {
+        const newSettings = { ...aiSettings, [key]: value };
+        setAiSettings(newSettings);
+        setIsSavingAiSettings(true);
+        try {
+            const token = localStorage.getItem('token');
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+            const res = await fetch(`${API_URL}/users/ai-personalization`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ [key]: value })
+            });
+            if (res.ok) {
+                toast.success('AI setting updated');
+            } else {
+                toast.error('Failed to update AI setting');
+                setAiSettings(aiSettings);
+            }
+        } catch (e) {
+            toast.error('Failed to update AI setting');
+            setAiSettings(aiSettings);
+        } finally {
+            setIsSavingAiSettings(false);
         }
     };
 
@@ -535,7 +599,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                     Choose which notifications you want to receive.
                                 </p>
 
-                                <div className="bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-[#333] divide-y divide-gray-100 dark:divide-[#222]">
+                                <div className="divide-y divide-gray-100 dark:divide-[#222]">
                                     <div className="p-4 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="p-2">
@@ -629,6 +693,207 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                         >
                                             <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notificationPrefs.news ? 'translate-x-5' : 'translate-x-0'}`}></span>
                                         </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                );
+            case 'personalization':
+                return (
+                    <div className="space-y-6 animate-in fade-in duration-300">
+                        {isLoadingAiSettings ? (
+                            <div className="flex items-center justify-center py-12">
+                                <i className="ph ph-spinner animate-spin text-2xl text-gray-400"></i>
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    Customize how the AI assistant responds to you.
+                                </p>
+
+                                <div className="divide-y divide-gray-100 dark:divide-[#222]">
+                                    <div className="p-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2">
+                                                <i className="ph ph-smiley text-gray-600 dark:text-gray-400 text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Use Emojis</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Include emojis in AI responses</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleUpdateAiSetting('useEmojis', !aiSettings.useEmojis)}
+                                            disabled={isSavingAiSettings}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${aiSettings.useEmojis ? 'bg-blue-600' : 'bg-gray-200 dark:bg-[#333]'}`}
+                                        >
+                                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${aiSettings.useEmojis ? 'translate-x-5' : 'translate-x-0'}`}></span>
+                                        </button>
+                                    </div>
+
+                                    <div className="p-4">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="p-2">
+                                                <i className="ph ph-chat-text text-gray-600 dark:text-gray-400 text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Response Style</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">How the AI communicates with you</p>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 ml-11">
+                                            {['professional', 'friendly', 'concise', 'detailed'].map((style) => (
+                                                <button
+                                                    key={style}
+                                                    onClick={() => handleUpdateAiSetting('responseStyle', style)}
+                                                    disabled={isSavingAiSettings}
+                                                    className={`px-3 py-2 rounded-lg text-sm capitalize transition-colors ${aiSettings.responseStyle === style ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-[#222] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#333]'}`}
+                                                >
+                                                    {style}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="p-2">
+                                                <i className="ph ph-magic-wand text-gray-600 dark:text-gray-400 text-lg"></i>
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Creativity Level</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">How creative/varied the AI responses are</p>
+                                            </div>
+                                            <span className="text-sm font-medium text-blue-600">{aiSettings.creativity}%</span>
+                                        </div>
+                                        <div className="ml-11">
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="100"
+                                                value={aiSettings.creativity}
+                                                onChange={(e) => handleUpdateAiSetting('creativity', parseInt(e.target.value))}
+                                                disabled={isSavingAiSettings}
+                                                className="w-full h-2 bg-gray-200 dark:bg-[#333] rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                            />
+                                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                                <span>Precise</span>
+                                                <span>Creative</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="p-2">
+                                                <i className="ph ph-target text-gray-600 dark:text-gray-400 text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Focus Area</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Tailor advice to your career field</p>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 ml-11">
+                                            {['general', 'technical', 'creative', 'business'].map((focus) => (
+                                                <button
+                                                    key={focus}
+                                                    onClick={() => handleUpdateAiSetting('focusArea', focus)}
+                                                    disabled={isSavingAiSettings}
+                                                    className={`px-3 py-2 rounded-lg text-sm capitalize transition-colors ${aiSettings.focusArea === focus ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-[#222] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#333]'}`}
+                                                >
+                                                    {focus}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="p-2">
+                                                <i className="ph ph-translate text-gray-600 dark:text-gray-400 text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Language</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Preferred language for responses</p>
+                                            </div>
+                                        </div>
+                                        <div className="ml-11">
+                                            <select
+                                                value={aiSettings.language}
+                                                onChange={(e) => handleUpdateAiSetting('language', e.target.value)}
+                                                disabled={isSavingAiSettings}
+                                                className="w-full p-2.5 rounded-lg bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] text-sm focus:border-blue-500 outline-none"
+                                            >
+                                                <option value="English">English</option>
+                                                <option value="French">French</option>
+                                                <option value="Arabic">Arabic</option>
+                                                <option value="Spanish">Spanish</option>
+                                                <option value="German">German</option>
+                                                <option value="Chinese">Chinese</option>
+                                                <option value="Japanese">Japanese</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2">
+                                                <i className="ph ph-code text-gray-600 dark:text-gray-400 text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Include Examples</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Provide practical examples and templates</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleUpdateAiSetting('includeExamples', !aiSettings.includeExamples)}
+                                            disabled={isSavingAiSettings}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${aiSettings.includeExamples ? 'bg-blue-600' : 'bg-gray-200 dark:bg-[#333]'}`}
+                                        >
+                                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${aiSettings.includeExamples ? 'translate-x-5' : 'translate-x-0'}`}></span>
+                                        </button>
+                                    </div>
+
+                                    <div className="p-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2">
+                                                <i className="ph ph-lightbulb text-gray-600 dark:text-gray-400 text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Auto Suggestions</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Proactively suggest next steps and ideas</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleUpdateAiSetting('autoSuggest', !aiSettings.autoSuggest)}
+                                            disabled={isSavingAiSettings}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${aiSettings.autoSuggest ? 'bg-blue-600' : 'bg-gray-200 dark:bg-[#333]'}`}
+                                        >
+                                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${aiSettings.autoSuggest ? 'translate-x-5' : 'translate-x-0'}`}></span>
+                                        </button>
+                                    </div>
+
+                                    <div className="p-4">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="p-2">
+                                                <i className="ph ph-note-pencil text-gray-600 dark:text-gray-400 text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Custom Instructions</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Add personal preferences for the AI</p>
+                                            </div>
+                                        </div>
+                                        <div className="ml-11">
+                                            <textarea
+                                                value={aiSettings.customInstructions}
+                                                onChange={(e) => setAiSettings({ ...aiSettings, customInstructions: e.target.value })}
+                                                onBlur={(e) => handleUpdateAiSetting('customInstructions', e.target.value)}
+                                                disabled={isSavingAiSettings}
+                                                placeholder="e.g., Always address me by my first name, focus on my industry..."
+                                                className="w-full p-3 rounded-lg bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] text-sm min-h-[80px] focus:border-blue-500 outline-none resize-none"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </>

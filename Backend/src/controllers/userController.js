@@ -1,4 +1,4 @@
-import { updatePassword, deleteUser, getNotificationPreferences, updateNotificationPreferences } from '../services/userService.js';
+import { updatePassword, deleteUser, getNotificationPreferences, updateNotificationPreferences, getAiPersonalization, updateAiPersonalization } from '../services/userService.js';
 import { AppError } from '../utils/AppError.js';
 import catchAsync from '../utils/catchAsync.js';
 
@@ -41,5 +41,23 @@ export const updateNotificationPreferencesController = catchAsync(async (req, re
     res.status(200).json({
         status: 'success',
         data: { preferences }
+    });
+});
+
+export const getAiPersonalizationController = catchAsync(async (req, res) => {
+    const settings = await getAiPersonalization(req.user.id);
+
+    res.status(200).json({
+        status: 'success',
+        data: { settings }
+    });
+});
+
+export const updateAiPersonalizationController = catchAsync(async (req, res) => {
+    const settings = await updateAiPersonalization(req.user.id, req.body);
+
+    res.status(200).json({
+        status: 'success',
+        data: { settings }
     });
 });
