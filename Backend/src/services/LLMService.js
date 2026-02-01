@@ -9,9 +9,69 @@ const openai = new OpenAi({
     baseURL: 'https://integrate.api.nvidia.com/v1',
 });
 
-const LLM_Model = 'moonshotai/kimi-k2.5'
+const LLM_Model = 'moonshotai/kimi-k2-instruct-0905'
 
 const roomContexts = {};
+
+function buildPersonalizedPrompt(basePrompt, aiSettings) {
+    if (!aiSettings) return basePrompt;
+
+    let personalizedPrompt = basePrompt;
+
+    const styleInstructions = {
+        professional: "Respond in a formal, professional tone. Use industry-standard terminology and maintain a business-like demeanor.",
+        friendly: "Respond in a warm, approachable, and conversational tone. Be helpful and encouraging.",
+        concise: "Keep responses brief and to the point. Avoid unnecessary elaboration. Use bullet points when appropriate.",
+        detailed: "Provide comprehensive, thorough responses with explanations. Include context and background information."
+    };
+
+    const focusInstructions = {
+        general: "Provide balanced career advice covering various aspects.",
+        technical: "Focus on technical skills, coding, engineering, and technology-related career advice.",
+        creative: "Focus on creative careers, design, writing, marketing, and artistic pursuits.",
+        business: "Focus on business skills, management, entrepreneurship, and leadership."
+    };
+
+    personalizedPrompt += "\n\n--- AI PERSONALIZATION SETTINGS ---";
+
+    if (aiSettings.responseStyle && styleInstructions[aiSettings.responseStyle]) {
+        personalizedPrompt += `\n\nCOMMUNICATION STYLE: ${styleInstructions[aiSettings.responseStyle]}`;
+    }
+
+    if (aiSettings.focusArea && focusInstructions[aiSettings.focusArea]) {
+        personalizedPrompt += `\n\nFOCUS AREA: ${focusInstructions[aiSettings.focusArea]}`;
+    }
+
+    if (aiSettings.useEmojis === true) {
+        personalizedPrompt += "\n\nEMOJIS: Use relevant emojis occasionally to make responses more engaging and friendly. Don't overuse them.";
+    } else if (aiSettings.useEmojis === false) {
+        personalizedPrompt += "\n\nEMOJIS: Do NOT use any emojis in your responses.";
+    }
+
+    if (aiSettings.includeExamples === true) {
+        personalizedPrompt += "\n\nEXAMPLES: Include practical examples, templates, and sample content when relevant.";
+    } else if (aiSettings.includeExamples === false) {
+        personalizedPrompt += "\n\nEXAMPLES: Skip examples unless explicitly requested by the user.";
+    }
+
+    if (aiSettings.language && aiSettings.language !== 'English') {
+        personalizedPrompt += `\n\nLANGUAGE: Respond in ${aiSettings.language} language.`;
+    }
+
+    if (aiSettings.customInstructions && aiSettings.customInstructions.trim()) {
+        personalizedPrompt += `\n\nCUSTOM INSTRUCTIONS FROM USER: ${aiSettings.customInstructions.trim()}`;
+    }
+
+    if (aiSettings.autoSuggest === true) {
+        personalizedPrompt += "\n\nSUGGESTIONS: End responses with helpful follow-up questions or next steps when appropriate.";
+    } else if (aiSettings.autoSuggest === false) {
+        personalizedPrompt += "\n\nSUGGESTIONS: Do NOT add follow-up questions or suggestions at the end of responses unless asked.";
+    }
+
+    personalizedPrompt += "\n--- END PERSONALIZATION ---\n";
+
+    return personalizedPrompt;
+}
 
 const CV_TEMPLATE = `
 Generate a professional, modern Single-Page CV in HTML/CSS with a strict A4 aspect ratio (210mm x 297mm).
@@ -28,12 +88,16 @@ Design Requirements:
 7. **Restrictions**: Max width 210mm. Min-height 297mm. No scrolling.
 `;
 
-async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl) {
+async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSettings = null) {
     try {
         if (!roomContexts[roomId]) {
             roomContexts[roomId] = [];
 
-            const enhancedSystemPrompt = (systemPrompt || "You are a helpful career assistant.") +
+            let baseSystemPrompt = systemPrompt || "You are a helpful career assistant.";
+
+            baseSystemPrompt = buildPersonalizedPrompt(baseSystemPrompt, aiSettings);
+
+            const enhancedSystemPrompt = baseSystemPrompt +
                 "\n\nCOMMAND: When the user asks for a CV, Resume, or Cover Letter, you must respond as follows:\n" +
                 "1. **Conversational Part**: Briefly tell the user you are generating their professional PDF document. Do NOT mention HTML, code, or technical details.\n" +
                 "2. **Generation Part**: Immediately after the text, output the full HTML code inside <!-- CV_START --> and <!-- CV_END --> tags.\n" +
@@ -86,6 +150,8 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl) {
         if (hasImages) {
             currentModel = "meta/llama-3.2-90b-vision-instruct";
         }
+
+        const temperature = aiSettings?.creativity ? (aiSettings.creativity / 100) * 0.8 + 0.2 : 0.6;
 
         const stream = await openai.chat.completions.create({
             model: currentModel,
