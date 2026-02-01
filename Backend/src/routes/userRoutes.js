@@ -1,7 +1,7 @@
 import express from 'express';
 
 import { protect } from '../middlewares/authMiddleware.js';
-import { updatePasswordController, deleteAccountController, getNotificationPreferencesController, updateNotificationPreferencesController } from '../controllers/userController.js';
+import { updatePasswordController, deleteAccountController, getNotificationPreferencesController, updateNotificationPreferencesController, getAiPersonalizationController, updateAiPersonalizationController } from '../controllers/userController.js';
 import {
     getDevicesController,
     revokeDeviceController,
@@ -25,5 +25,8 @@ router.post('/2fa/disable', disable2FAController);
 
 router.get('/notification-preferences', getNotificationPreferencesController);
 router.patch('/notification-preferences', updateNotificationPreferencesController);
+
+router.get('/ai-personalization', getAiPersonalizationController);
+router.patch('/ai-personalization', updateAiPersonalizationController);
 
 export default router;
