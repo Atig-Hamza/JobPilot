@@ -19,7 +19,7 @@ function getClientForModel(model) {
     return nvidiaClient;
 }
 
-// ── Smart Model Pool (Two-Tier: NVIDIA → Mistral) ────────────────
+// ── Smart Model Pool (Round-Robin: NVIDIA ↔ Mistral) ─────────────
 const NVIDIA_POOL = [
     'moonshotai/kimi-k2-instruct-0905',
     'nvidia/nemotron-3-nano-30b-a3b',
@@ -31,7 +31,14 @@ const MISTRAL_POOL = [
 
 const MODEL_POOL = [...NVIDIA_POOL, ...MISTRAL_POOL];
 
-const TITLE_MODEL = 'nvidia/nemotron-3-nano-30b-a3b';
+const CV_MODEL_POOL = [
+    'mistral-medium-latest',
+];
+
+const TITLE_MODEL = 'mistral-medium-latest';
+const TITLE_FALLBACK = 'nvidia/nemotron-3-nano-30b-a3b';
+
+let roundRobinCounter = 0;
 
 const modelStats = new Map();
 
@@ -58,6 +65,21 @@ function pickModel(pool = MODEL_POOL) {
         const all = pool.map(m => ({ model: m, stats: getModelStats(m) }));
         all.sort((a, b) => a.stats.cooldownUntil - b.stats.cooldownUntil);
         return all[0].model;
+    }
+
+    const nvidiaReady = candidates.filter(c => !c.model.startsWith('mistral'));
+    const mistralReady = candidates.filter(c => c.model.startsWith('mistral'));
+
+    if (nvidiaReady.length > 0 && mistralReady.length > 0) {
+        roundRobinCounter++;
+        if (roundRobinCounter % 2 === 0) {
+            return mistralReady[0].model;
+        }
+        nvidiaReady.sort((a, b) => {
+            if (a.stats.failures !== b.stats.failures) return a.stats.failures - b.stats.failures;
+            return a.stats.avgLatency - b.stats.avgLatency;
+        });
+        return nvidiaReady[0].model;
     }
 
     candidates.sort((a, b) => {
@@ -313,12 +335,15 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
                 "- Do NOT generate HTML on the very first message. Have at least one natural exchange before generating.\n" +
                 "- Be conversational and adaptive — no rigid steps. Cover style, language, content, and photo naturally.\n" +
                 "- If the user says 'just do it' or seems eager, quickly confirm key preferences and proceed.\n" +
+                "- IMPORTANT: Before generating the CV, ALWAYS ask the user for confirmation. Say something like 'Everything looks good! Are you ready for me to generate your CV?' or 'I have all the details I need. Shall I go ahead and generate your CV now?'. Wait for their confirmation before proceeding.\n" +
+                "- Once the user confirms, start with an enthusiastic message like 'Let's do it! Generating your CV now...' or 'Here we go! Creating your professional CV...' followed immediately by the CV HTML.\n" +
                 "- When ready, output the full HTML inside <!-- CV_START --> and <!-- CV_END --> tags.\n" +
                 "- CRITICAL: Do NOT write ANY text after <!-- CV_END -->. The system handles the download UI automatically. Your message must END with <!-- CV_END -->.\n" +
-                "- Before the <!-- CV_START --> tag, write only a short sentence like 'Generating your CV now...'.\n" +
+                "- Before the <!-- CV_START --> tag, write only a short enthusiastic sentence (e.g. 'Here we go! Generating your CV now...').\n" +
                 "- Do NOT mention HTML, code blocks, or technical details to the user. Present it as 'generating your PDF'.\n" +
                 "- Fill the CV with the user's actual profile data. Use realistic placeholders ONLY for missing fields.\n" +
-                "- If the user uploads an image during the conversation, remember it as their profile photo for the CV.\n\n" +
+                "- If the user uploads an image during the conversation, remember it as their profile photo for the CV.\n" +
+                "- AFTER the CV is generated and delivered, ask the user if they'd like any changes or adjustments. For example: 'Would you like me to adjust anything — colors, layout, content, or style?'\n\n" +
                 photoContext +
                 "TEMPLATE INSTRUCTIONS (used only at generation step):\n" + CV_TEMPLATE;
 
@@ -369,8 +394,11 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
             });
         };
 
+        const isCvRequest = typeof prompt === 'string' && /\b(cv|resume|cover\s*letter)\b/i.test(prompt);
+        const streamPool = isCvRequest ? CV_MODEL_POOL : MODEL_POOL;
+
         const { result: stream, model: usedModel } = await withModelFallback(
-            createStream, MODEL_POOL
+            createStream, streamPool
         );
         console.log(`[LLM] Using model: ${usedModel}`);
 
@@ -429,7 +457,9 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
                                 const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
                                 const downloadUrl = `${host}${savedFile.relativePath}`;
 
-                                const downloadMsg = `\n\nYour CV has been generated successfully! Let me know if you'd like any adjustments.`;
+                                await onToken({ type: 'content', content: `<!-- CV_START -->${cleanHtml}<!-- CV_END -->` });
+
+                                const downloadMsg = `\n\nYour CV has been generated successfully!`;
                                 fullResponse += downloadMsg;
                                 await onToken({ type: 'content', content: downloadMsg });
                             } catch (pdfError) {
@@ -475,9 +505,9 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
                 const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
                 const downloadUrl = `${host}${savedFile.relativePath}`;
 
-                await onToken({ type: 'content', content: "\n<!-- CV_END -->" });
+                await onToken({ type: 'content', content: `<!-- CV_START -->${cleanHtml}<!-- CV_END -->` });
 
-                const downloadMsg = `\n\nYour CV has been generated successfully! Let me know if you'd like any adjustments.`;
+                const downloadMsg = `\n\nYour CV has been generated successfully!`;
                 fullResponse += downloadMsg;
                 await onToken({ type: 'content', content: downloadMsg });
             } catch (pdfError) {
@@ -548,34 +578,52 @@ async function generateChatTitle(roomId, conversationHistory = null) {
 
         let response;
         try {
-            response = await nvidiaClient.chat.completions.create({
+            console.log(`[Title] Trying Mistral first (${TITLE_MODEL})...`);
+            response = await mistralClient.chat.completions.create({
                 model: TITLE_MODEL,
                 messages,
                 temperature: 0.7,
-                max_tokens: 50,
+                max_tokens: 30,
             });
-        } catch (nvidiaErr) {
-            console.log(`[Title] NVIDIA failed: ${nvidiaErr.message}, falling back to Mistral...`);
-            response = await mistralClient.chat.completions.create({
-                model: 'mistral-medium-latest',
+        } catch (mistralErr) {
+            console.log(`[Title] Mistral failed: ${mistralErr.message}, falling back to NVIDIA (${TITLE_FALLBACK})...`);
+            response = await nvidiaClient.chat.completions.create({
+                model: TITLE_FALLBACK,
                 messages,
                 temperature: 0.7,
-                max_tokens: 50,
+                max_tokens: 30,
             });
         }
 
         const choice = response.choices[0]?.message;
         console.log(`[Title] Raw response:`, JSON.stringify(choice));
-        let title = (choice?.content || choice?.reasoning_content || '')?.trim();
+        let title = choice?.content?.trim() || null;
+
+        if (!title && choice?.reasoning_content) {
+            const reasoning = choice.reasoning_content;
+            const quoted = reasoning.match(/["']([^"']{2,30})["']/g);
+            if (quoted && quoted.length > 0) {
+                title = quoted[quoted.length - 1].replace(/^["']|["']$/g, '').trim();
+            }
+        }
+
+        if (!title && choice?.reasoning_content) {
+            const reasoning = choice.reasoning_content;
+            const keywords = reasoning.match(/\b(?:title|called|name)\s*(?:would be|is|:)\s*["']?([^"'.\n]{2,30})/i);
+            if (keywords) {
+                title = keywords[1].trim();
+            }
+        }
+
         if (title) {
-            title = title.replace(/^["']|["']$/g, '');
             title = title.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-            if (title.split(' ').length > 4) {
+            title = title.replace(/^["']|["']$/g, '');
+            if (title.split(' ').length > 6) {
                 title = title.split(' ').slice(0, 4).join(' ');
             }
         }
         console.log(`[Title] Generated: "${title}"`);
-        return title;
+        return title || null;
     } catch (error) {
         console.error("[Title] All providers failed:", error.message);
         return null;
