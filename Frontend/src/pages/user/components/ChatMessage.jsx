@@ -280,7 +280,7 @@ const ChatMessage = ({ msg, isStreaming }) => {
         const endMatch = content.match(/<!--\s*CV_END\s*-->/);
 
         if (startMatch && !endMatch) {
-            const beforeCv = content.substring(0, startMatch.index).replace(/```\w*\s*$/, '').trim();
+            const beforeCv = content.substring(0, startMatch.index).trim();
 
             return (
                 <div className="space-y-4 text-[#1A1A1A] dark:text-gray-200 text-[16px] leading-8 font-[450]">
@@ -296,26 +296,20 @@ const ChatMessage = ({ msg, isStreaming }) => {
             const endIndex = endMatch.index;
             const endMarkerLength = endMatch[0].length;
 
-            let beforeCv = content.substring(0, startIndex);
+            let beforeCv = content.substring(0, startIndex).trim();
             const cvContent = content.substring(startIndex, endIndex + endMarkerLength);
-            let afterCv = content.substring(endIndex + endMarkerLength);
+            const rawAfterCv = content.substring(endIndex + endMarkerLength);
 
-            beforeCv = beforeCv.replace(/```\w*\s*$/, '').trim();
-            // Clean afterCv: remove code fences, duplicate CV_END, download links, and "Success/ready" lines
-            afterCv = afterCv
-                .replace(/^\s*```/, '')
+            const afterCv = rawAfterCv
                 .replace(/<!--\s*CV_END\s*-->/g, '')
+                .replace(/```[\w]*\s*/g, '')
+                .replace(/your cv has been generated successfully[.!]?/gi, '')
                 .replace(/\*\*Success!\*\*[^\n]*/g, '')
                 .replace(/\[Download PDF\]\([^)]*\)/g, '')
                 .replace(/Your CV is ready[^\n]*/gi, '')
                 .replace(/You can download it[^\n]*/gi, '')
                 .replace(/using the button above[^\n]*/gi, '')
-                .trim();
-
-            // Only keep afterCv if there's meaningful content left (not just "let me know if you'd like adjustments")
-            const meaningfulAfterCv = afterCv
                 .replace(/let me know if you'?d? like any adjustments\.?/gi, '')
-                .replace(/your cv has been generated successfully[.!]?/gi, '')
                 .trim();
 
             return (
@@ -376,7 +370,7 @@ const ChatMessage = ({ msg, isStreaming }) => {
 
                     <CVDownloadCard html={cvContent} />
 
-                    {meaningfulAfterCv && (
+                    {afterCv && (
                         <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{
@@ -426,7 +420,7 @@ const ChatMessage = ({ msg, isStreaming }) => {
                                 hr: () => <hr className="my-8 border-gray-100 dark:border-gray-800" />,
                             }}
                         >
-                            {meaningfulAfterCv}
+                            {afterCv}
                         </ReactMarkdown>
                     )}
                 </div>
