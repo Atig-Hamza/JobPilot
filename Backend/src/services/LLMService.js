@@ -346,6 +346,7 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
                 "- CRITICAL: Do NOT write ANY text after <!-- CV_END -->. The system handles the download UI automatically. Your message must END with <!-- CV_END -->.\n" +
                 "- Before the <!-- CV_START --> tag, write only a short enthusiastic sentence (e.g. 'Here we go! Generating your CV now...').\n" +
                 "- Do NOT mention HTML, code blocks, or technical details to the user. Present it as 'generating your PDF'.\n" +
+                "- NEVER show a 'preview', 'example', or 'illustrative' version of the CV in plain text. No ASCII previews, no 'Simple CV Preview', no '(illustrative)' snippets. The CV is ONLY delivered as a generated PDF — never as text.\n" +
                 "- Fill the CV with the user's actual profile data. Use realistic placeholders ONLY for missing fields.\n" +
                 "- If the user uploads an image during the conversation, remember it as their profile photo for the CV.\n" +
                 "- AFTER the CV is generated and delivered, ask the user if they'd like any changes or adjustments. For example: 'Would you like me to adjust anything — colors, layout, content, or style?'\n\n" +
