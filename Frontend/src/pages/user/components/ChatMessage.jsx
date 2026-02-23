@@ -279,17 +279,38 @@ const ChatMessage = ({ msg, isStreaming }) => {
         const startMatch = content.match(/<!--\s*CV_START\s*-->/);
         const endMatch = content.match(/<!--\s*CV_END\s*-->/);
 
+        if (startMatch && !endMatch) {
+            const beforeCv = content.substring(0, startMatch.index).trim();
+
+            return (
+                <div className="space-y-4 text-[#1A1A1A] dark:text-gray-200 text-[16px] leading-8 font-[450]">
+                    {beforeCv && (
+                        <p className="text-gray-900 dark:text-gray-200 leading-relaxed">{beforeCv}</p>
+                    )}
+                </div>
+            );
+        }
+
         if (startMatch && endMatch) {
             const startIndex = startMatch.index;
             const endIndex = endMatch.index;
             const endMarkerLength = endMatch[0].length;
 
-            let beforeCv = content.substring(0, startIndex);
+            let beforeCv = content.substring(0, startIndex).trim();
             const cvContent = content.substring(startIndex, endIndex + endMarkerLength);
-            let afterCv = content.substring(endIndex + endMarkerLength);
+            const rawAfterCv = content.substring(endIndex + endMarkerLength);
 
-            beforeCv = beforeCv.replace(/```\w*\s*$/, '').trim();
-            afterCv = afterCv.replace(/^\s*```/, '').replace(/<!--\s*CV_END\s*-->/g, '').trim();
+            const afterCv = rawAfterCv
+                .replace(/<!--\s*CV_END\s*-->/g, '')
+                .replace(/```[\w]*\s*/g, '')
+                .replace(/your cv has been generated successfully[.!]?/gi, '')
+                .replace(/\*\*Success!\*\*[^\n]*/g, '')
+                .replace(/\[Download PDF\]\([^)]*\)/g, '')
+                .replace(/Your CV is ready[^\n]*/gi, '')
+                .replace(/You can download it[^\n]*/gi, '')
+                .replace(/using the button above[^\n]*/gi, '')
+                .replace(/let me know if you'?d? like any adjustments\.?/gi, '')
+                .trim();
 
             return (
                 <div className="space-y-6 text-[#1A1A1A] dark:text-gray-200 text-[16px] leading-8 font-[450]">

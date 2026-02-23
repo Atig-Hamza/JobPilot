@@ -4,16 +4,162 @@ import fs from 'fs';
 import path from 'path';
 import { generatePdfFromHtml, savePdfLocally } from './pdfService.js';
 
-const openai = new OpenAi({
+const nvidiaClient = new OpenAi({
     apiKey: process.env.OPENAI_API_KEY,
     baseURL: 'https://integrate.api.nvidia.com/v1',
 });
 
-const LLM_Model = 'moonshotai/kimi-k2-instruct-0905'
+const mistralClient = new OpenAi({
+    apiKey: process.env.MISTRAL_API_KEY || 'OhVD22lwGKUKbdMWpgchzQ7z02Pxqw0o',
+    baseURL: 'https://api.mistral.ai/v1',
+});
+
+function getClientForModel(model) {
+    if (model.startsWith('mistral')) return mistralClient;
+    return nvidiaClient;
+}
+
+// ── Smart Model Pool (Round-Robin: NVIDIA ↔ Mistral) ─────────────
+const NVIDIA_POOL = [
+    'moonshotai/kimi-k2-instruct-0905',
+    'nvidia/nemotron-3-nano-30b-a3b',
+];
+
+const MISTRAL_POOL = [
+    'mistral-medium-latest',
+];
+
+const MODEL_POOL = [...NVIDIA_POOL, ...MISTRAL_POOL];
+
+const CV_MODEL_POOL = [
+    'mistral-medium-latest',
+];
+
+const TITLE_MODEL = 'mistral-medium-latest';
+const TITLE_FALLBACK = 'nvidia/nemotron-3-nano-30b-a3b';
+
+let roundRobinCounter = 0;
+
+const modelStats = new Map();
+
+function getModelStats(model) {
+    if (!modelStats.has(model)) {
+        modelStats.set(model, {
+            failures: 0,
+            lastFailure: 0,
+            avgLatency: 0,
+            requestCount: 0,
+            cooldownUntil: 0,
+        });
+    }
+    return modelStats.get(model);
+}
+
+function pickModel(pool = MODEL_POOL) {
+    const now = Date.now();
+    const candidates = pool
+        .map(m => ({ model: m, stats: getModelStats(m) }))
+        .filter(c => now >= c.stats.cooldownUntil);
+
+    if (candidates.length === 0) {
+        const all = pool.map(m => ({ model: m, stats: getModelStats(m) }));
+        all.sort((a, b) => a.stats.cooldownUntil - b.stats.cooldownUntil);
+        return all[0].model;
+    }
+
+    const nvidiaReady = candidates.filter(c => !c.model.startsWith('mistral'));
+    const mistralReady = candidates.filter(c => c.model.startsWith('mistral'));
+
+    if (nvidiaReady.length > 0 && mistralReady.length > 0) {
+        roundRobinCounter++;
+        if (roundRobinCounter % 2 === 0) {
+            return mistralReady[0].model;
+        }
+        nvidiaReady.sort((a, b) => {
+            if (a.stats.failures !== b.stats.failures) return a.stats.failures - b.stats.failures;
+            return a.stats.avgLatency - b.stats.avgLatency;
+        });
+        return nvidiaReady[0].model;
+    }
+
+    candidates.sort((a, b) => {
+        if (a.stats.failures !== b.stats.failures) return a.stats.failures - b.stats.failures;
+        return a.stats.avgLatency - b.stats.avgLatency;
+    });
+
+    return candidates[0].model;
+}
+
+function recordFailure(model) {
+    const s = getModelStats(model);
+    s.failures += 1;
+    s.lastFailure = Date.now();
+    const cooldownMs = Math.min(10_000 * Math.pow(2, s.failures - 1), 5 * 60_000);
+    s.cooldownUntil = Date.now() + cooldownMs;
+    console.log(`[ModelPool] ${model} failed (x${s.failures}), cooldown ${cooldownMs / 1000}s`);
+}
+
+function recordSuccess(model, latencyMs) {
+    const s = getModelStats(model);
+    s.failures = 0;
+    s.cooldownUntil = 0;
+    s.requestCount += 1;
+    s.avgLatency = s.requestCount === 1
+        ? latencyMs
+        : s.avgLatency * 0.7 + latencyMs * 0.3;
+}
+
+function isRetryableError(err) {
+    const status = err?.status || err?.response?.status || err?.statusCode;
+    if ([429, 503, 502, 500].includes(status)) return true;
+    const code = err?.cause?.code || err?.code || '';
+    if (['ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT', 'EPIPE', 'UND_ERR_SOCKET'].includes(code)) return true;
+    const msg = (err?.message || '').toLowerCase();
+    return msg.includes('timeout') || msg.includes('rate limit') || msg.includes('queue') 
+        || msg.includes('overloaded') || msg.includes('capacity') || msg.includes('terminated') 
+        || msg.includes('econnreset') || msg.includes('socket hang up') || msg.includes('aborted');
+}
+
+async function withModelFallback(callFn, pool = MODEL_POOL, preferredModel = null) {
+    const effectivePool = preferredModel
+        ? [preferredModel, ...pool.filter(m => m !== preferredModel)]
+        : [...pool];
+
+    const tried = new Set();
+    let lastError = null;
+
+    while (tried.size < effectivePool.length) {
+        const model = tried.size === 0 && preferredModel
+            ? preferredModel
+            : pickModel(effectivePool.filter(m => !tried.has(m)));
+        tried.add(model);
+
+        try {
+            const client = getClientForModel(model);
+            console.log(`[ModelPool] Trying ${model} (${model.startsWith('mistral') ? 'Mistral' : 'NVIDIA'})...`);
+            const start = Date.now();
+            const result = await callFn(model, client);
+            recordSuccess(model, Date.now() - start);
+            console.log(`[ModelPool] ${model} succeeded (${Date.now() - start}ms)`);
+            return { result, model };
+        } catch (err) {
+            lastError = err;
+            recordFailure(model);
+            if (tried.size < effectivePool.length) {
+                console.log(`[ModelPool] Error on ${model}: ${err.message || err.code}, trying next...`);
+                continue;
+            }
+        }
+    }
+
+    throw lastError || new Error('All models exhausted');
+}
+// ── End Smart Model Pool ──────────────────────────────────────────
 
 const roomContexts = {};
 
-// Track rooms that are actively generating responses
+const roomImages = {};
+
 const generatingRooms = new Map();
 
 export function setRoomGenerating(roomId, status = true) {
@@ -27,7 +173,6 @@ export function setRoomGenerating(roomId, status = true) {
 export function isRoomGenerating(roomId) {
     const entry = generatingRooms.get(roomId);
     if (!entry) return false;
-    // Auto-expire after 5 minutes to handle stuck generations
     if (Date.now() - entry.startedAt > 5 * 60 * 1000) {
         generatingRooms.delete(roomId);
         return false;
@@ -95,31 +240,76 @@ function buildPersonalizedPrompt(basePrompt, aiSettings) {
     return personalizedPrompt;
 }
 
-const CV_TEMPLATE = `
-Generate a professional, modern Single-Page CV in HTML/CSS with a strict A4 aspect ratio (210mm x 297mm).
+function cleanCvHtml(rawBuffer) {
+    let html = rawBuffer.replace(/<!--\s*CV_END\s*-->/g, '').trim();
+    html = html.replace(/^\s*```[\w]*\s*\n?/, '').replace(/\n?\s*```\s*$/, '');
+    if (!html.trim().startsWith('<') && html.includes('<html')) {
+        html = html.substring(html.indexOf('<html'));
+    }
+    if (!html.trim().startsWith('<') && html.includes('<!DOCTYPE')) {
+        html = html.substring(html.indexOf('<!DOCTYPE'));
+    }
+    return html.trim();
+}
 
-**CRITICAL Design Requirements:**
-1. **Layout**: Use a clean two-column grid layout. Left sidebar (~30-35% width) with a colored/dark background for contact info, skills, languages. Main content area (~65-70% width) for summary, experience, education, certifications.
-2. **Styling**: Use ONLY raw inline CSS or a <style> block. NEVER use Tailwind, Bootstrap, or any external CSS framework. Use a sophisticated color palette (e.g., dark navy sidebar #1a1a2e or #2d3748 with white text, white main area with dark text).
-3. **Typography**: Load Google Fonts via @import in the <style> block: Inter or Roboto. Use font-weight variations (300, 400, 600, 700) for hierarchy.
-4. **Icons**: Use Font Awesome 6 CDN (<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">) for contact details and section headers. Use <i class="fa-solid fa-envelope"></i> style icons.
-5. **Colors for Print**: All background colors MUST use inline style or CSS with -webkit-print-color-adjust: exact. This is critical for PDF rendering.
-6. **Single Page Constraint**: STRICTLY fit everything on ONE A4 page (210mm x 297mm, max-height: 297mm).
-    - Use font-size 9pt-10pt for body text, 11-12pt for section headers, 14-16pt for the name.
-    - Use compact padding (8-12px) and margins (4-8px between sections).
-    - Use line-height: 1.3-1.5 for body text.
-7. **Structure**:
-    - The entire CV must be wrapped in a single container div with width: 210mm; min-height: 297mm; display: flex;
-    - Sidebar: position: relative, fixed height matching the container.
-    - Each section should have a clear heading with an icon, a subtle bottom border or separator.
-    - Experience items: Job Title (bold), Company + Date (lighter), bullet points for responsibilities.
-    - Skills: Use progress bars, tags/pills, or star ratings for visual appeal.
-8. **Restrictions**: 
-    - NEVER use JavaScript.
-    - NEVER add any interactive elements.
-    - The HTML must be self-contained, render perfectly without any build step.
-    - DO NOT wrap the HTML in markdown code fences.
-    - Output only the raw HTML between <!-- CV_START --> and <!-- CV_END --> markers.
+const CV_TEMPLATE = `
+Generate a polished, premium Single-Page CV/Resume in raw HTML + CSS. The result MUST look like a professionally designed document — not a basic template.
+
+## ABSOLUTE REQUIREMENTS — READ CAREFULLY
+- Output ONLY raw HTML between <!-- CV_START --> and <!-- CV_END --> markers.
+- The VERY FIRST character after <!-- CV_START --> MUST be an HTML tag (like <!DOCTYPE html> or <html>).
+- ABSOLUTELY NO markdown code fences. NEVER wrap the HTML in triple backticks. This is CRITICAL — doing so will BREAK the PDF generator.
+- NEVER use JavaScript. NEVER output plain text between the markers — only valid HTML tags.
+- NEVER use Tailwind, Bootstrap, or any external CSS framework.
+- Use a <style> block for all styling.
+- CORRECT format example: <!-- CV_START --><!DOCTYPE html><html>...</html><!-- CV_END -->
+- WRONG format (NEVER DO THIS): <!-- CV_START -->\`\`\`html<html>...</html>\`\`\`<!-- CV_END -->
+
+## PAGE FORMAT
+- A4 page: width: 210mm; height: 297mm; overflow: hidden;
+- Everything MUST fit on ONE page. If content is too long, reduce font sizes or trim less important items.
+- Use -webkit-print-color-adjust: exact; print-color-adjust: exact; on html and body.
+
+## LAYOUT
+- Use CSS Flexbox: a two-column layout with a sidebar (30-35% width) and main content (65-70%).
+- Sidebar: solid background color matching the chosen style, full height of the page, with white or light text.
+- Main area: white or very light background, dark text.
+- Both columns must have consistent internal padding (20-30px).
+
+## TYPOGRAPHY
+- Load Google Fonts via @import: use "Inter", "Poppins", or "Raleway" (pick one that matches the style).
+- Name: 20-24pt, font-weight 700, letter-spacing: 1px.
+- Section titles: 11-12pt, font-weight 600, uppercase, letter-spacing: 1.5px, with a decorative bottom border or accent line (2-3px solid accent color).
+- Body text: 9-10pt, font-weight 400, line-height: 1.4-1.5, color: #333 or #444.
+- Use font-weight contrast (300 vs 600 vs 700) extensively for visual hierarchy.
+
+## VISUAL DESIGN
+- Use Font Awesome 6 CDN icons (<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">) for contact items and section headers.
+- Section headings: icon + title with accent-colored bottom border.
+- Skills: display as styled pill/tag badges with background color, rounded corners (border-radius: 12px), padding 4px 12px.
+- Experience: Job title bold, company name + dates in lighter weight on the same or next line. Use a subtle left border accent (3px solid accent color) on each experience block for visual polish.
+- Education: Same pattern as experience — clear hierarchy between degree and institution.
+- Add subtle separators between sections (border-bottom: 1px solid rgba(0,0,0,0.08) or similar).
+- Sidebar contact items: icon + text, spaced evenly, font-size 8.5-9pt.
+
+## PROFILE PHOTO
+- If PROFILE_PHOTO_URL is available: include <img src="{{PROFILE_PHOTO_URL}}"> at the TOP of the sidebar.
+- Style: width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,0.8); display: block; margin: 0 auto 16px auto;
+- If NO photo URL is provided: do NOT include any placeholder, avatar icon, or empty circle.
+
+## CONTENT RULES
+- Pull ALL data from the user's profile context. Do NOT invent fake data.
+- Only use realistic placeholders (e.g. "Your City, Country") for genuinely missing fields.
+- Professional summary: 2-3 concise sentences max.
+- Experience bullets: 2-3 per role, action-oriented, concise.
+- Keep the CV scannable — recruiters spend 6 seconds on average.
+
+## QUALITY CHECKLIST (follow all)
+- The CV must look good enough to submit to a Fortune 500 company.
+- Color palette must be harmonious (max 2-3 colors, well contrasted).
+- No text overflow, no scrollbars, no content cut off.
+- Clear visual hierarchy: name > section titles > subtitles > body text.
+- Consistent spacing throughout — no cramped or floating sections.
 `;
 
 async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSettings = null) {
@@ -132,20 +322,40 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
 
             baseSystemPrompt = buildPersonalizedPrompt(baseSystemPrompt, aiSettings);
 
+            let photoContext = '';
+            if (roomImages[roomId]) {
+                const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
+                const fullPhotoUrl = `${host}${roomImages[roomId]}`;
+                photoContext = `\n\nPROFILE_PHOTO_URL: ${fullPhotoUrl}\nThe user has uploaded a profile photo for their CV. You MUST include an <img> tag with src="${fullPhotoUrl}" in the CV sidebar.\n`;
+            }
+
             const enhancedSystemPrompt = baseSystemPrompt +
                 "\n\nCV GENERATION COMMAND:\n" +
                 "When the user asks for a CV, Resume, or Cover Letter:\n" +
-                "- DO NOT generate the HTML immediately. Follow the interactive CV Creator flow defined in Section 6.3 of your system prompt.\n" +
-                "- Guide the user through style, language, color, and content steps ONE AT A TIME.\n" +
-                "- ONLY after the user explicitly confirms at the final step, output the full HTML inside <!-- CV_START --> and <!-- CV_END --> tags.\n" +
+                "- Do NOT generate HTML on the very first message. Have at least one natural exchange before generating.\n" +
+                "- Be conversational and adaptive — no rigid steps. Cover style, language, content, and photo naturally.\n" +
+                "- If the user says 'just do it' or seems eager, quickly confirm key preferences and proceed — but still do ONE final confirmation.\n" +
+                "- MANDATORY CONFIRMATION: You MUST ALWAYS ask the user for explicit confirmation before generating. This is NON-NEGOTIABLE. Even if the user seems ready, you MUST send a confirmation message FIRST and WAIT for their reply. Examples:\n" +
+                "  • 'I have everything I need! Ready to generate your CV? 🚀'\n" +
+                "  • 'Quick recap: [style], [language], [key details]. Shall I go ahead and create your CV now?'\n" +
+                "  • 'Everything looks great! Want me to generate your CV?'\n" +
+                "- NEVER generate the CV (<!-- CV_START -->) in the same message as the confirmation question. The confirmation question and the CV generation MUST be in separate messages.\n" +
+                "- Only generate the CV AFTER the user replies with a clear 'yes', 'go ahead', 'sure', 'do it', or similar affirmative response.\n" +
+                "- Once the user confirms, start with an enthusiastic message like 'Let's do it! Generating your CV now...' or 'Here we go! Creating your professional CV...' followed immediately by the CV HTML.\n" +
+                "- When ready, output the full HTML inside <!-- CV_START --> and <!-- CV_END --> tags.\n" +
+                "- CRITICAL: Do NOT write ANY text after <!-- CV_END -->. The system handles the download UI automatically. Your message must END with <!-- CV_END -->.\n" +
+                "- Before the <!-- CV_START --> tag, write only a short enthusiastic sentence (e.g. 'Here we go! Generating your CV now...').\n" +
                 "- Do NOT mention HTML, code blocks, or technical details to the user. Present it as 'generating your PDF'.\n" +
-                "- Fill the CV with the user's actual profile data. Use realistic placeholders ONLY for missing fields.\n\n" +
+                "- NEVER show a 'preview', 'example', or 'illustrative' version of the CV in plain text. No ASCII previews, no 'Simple CV Preview', no '(illustrative)' snippets. The CV is ONLY delivered as a generated PDF — never as text.\n" +
+                "- Fill the CV with the user's actual profile data. Use realistic placeholders ONLY for missing fields.\n" +
+                "- If the user uploads an image during the conversation, remember it as their profile photo for the CV.\n" +
+                "- AFTER the CV is generated and delivered, ask the user if they'd like any changes or adjustments. For example: 'Would you like me to adjust anything — colors, layout, content, or style?'\n\n" +
+                photoContext +
                 "TEMPLATE INSTRUCTIONS (used only at generation step):\n" + CV_TEMPLATE;
 
             roomContexts[roomId].push({ "role": "system", "content": enhancedSystemPrompt });
         }
 
-        let currentModel = LLM_Model;
         let messageContent = prompt;
 
         const imageMatch = typeof prompt === 'string' ? prompt.match(/\[Image: (.*?)\]/) : null;
@@ -154,56 +364,57 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
             const imagePath = imageMatch[1];
             const textPrompt = prompt.replace(imageMatch[0], '').trim();
 
-            try {
-                const cleanPath = imagePath.replace(/^\/?media\//, '');
-                const absolutePath = path.join(process.cwd(), 'media', cleanPath);
+            roomImages[roomId] = imagePath;
 
-                if (fs.existsSync(absolutePath)) {
-                    const fileBuffer = fs.readFileSync(absolutePath);
-                    const base64Image = fileBuffer.toString('base64');
-                    let mimeType = path.extname(absolutePath).slice(1).toLowerCase();
-                    if (mimeType === 'jpg') mimeType = 'jpeg';
-
-                    messageContent = [
-                        { type: "text", text: textPrompt },
-                        {
-                            type: "image_url",
-                            image_url: {
-                                "url": `data:image/${mimeType};base64,${base64Image}`
-                            }
-                        }
-                    ];
+            if (roomContexts[roomId] && roomContexts[roomId].length > 0) {
+                const systemMsg = roomContexts[roomId][0];
+                const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
+                const fullPhotoUrl = `${host}${imagePath}`;
+                if (!systemMsg.content.includes('PROFILE_PHOTO_URL')) {
+                    systemMsg.content += `\n\nPROFILE_PHOTO_URL: ${fullPhotoUrl}\nThe user has uploaded a profile photo for their CV. You MUST include an <img> tag with src="${fullPhotoUrl}" in the CV sidebar. Also accept {{PROFILE_PHOTO_URL}} as valid — it will be replaced with the real URL.\nAcknowledge that you received and will use their photo.\n`;
+                } else {
+                    systemMsg.content = systemMsg.content.replace(
+                        /PROFILE_PHOTO_URL: \{\{PROFILE_PHOTO_URL\}\}/,
+                        `PROFILE_PHOTO_URL: ${fullPhotoUrl}`
+                    );
                 }
-            } catch (err) {
-                console.error("Error preparing image for LLM:", err);
             }
+
+            messageContent = textPrompt || "I've uploaded my profile photo for the CV.";
         }
 
         roomContexts[roomId].push({ "role": "user", "content": messageContent });
 
-        const hasImages = roomContexts[roomId].some(msg =>
-            Array.isArray(msg.content) && msg.content.some(c => c.type === 'image_url')
-        );
-
-        if (hasImages) {
-            currentModel = "meta/llama-3.2-90b-vision-instruct";
-        }
-
         const temperature = aiSettings?.creativity ? (aiSettings.creativity / 100) * 0.8 + 0.2 : 0.6;
 
-        const stream = await openai.chat.completions.create({
-            model: currentModel,
-            messages: roomContexts[roomId],
-            temperature: 0.6,
-            top_p: 0.9,
-            max_tokens: 4096,
-            stream: true,
-            chat_template_kwargs: { "thinking": false }
-        });
+        const createStream = async (model, client) => {
+            const extraParams = model.startsWith('mistral') ? {} : { chat_template_kwargs: { "thinking": false } };
+            return await client.chat.completions.create({
+                model,
+                messages: roomContexts[roomId],
+                temperature: 0.6,
+                top_p: 0.9,
+                max_tokens: 4096,
+                stream: true,
+                ...extraParams,
+            });
+        };
+
+        const isCvRequest = typeof prompt === 'string' && /\b(cv|resume|cover\s*letter)\b/i.test(prompt);
+        const streamPool = isCvRequest ? CV_MODEL_POOL : MODEL_POOL;
+
+        const { result: stream, model: usedModel } = await withModelFallback(
+            createStream, streamPool
+        );
+        console.log(`[LLM] Using model: ${usedModel}`);
 
         let fullResponse = "";
         let cvMode = false;
         let cvBuffer = "";
+        let cvDone = false;
+        let contentBuffer = "";
+        let beforeCvText = "";
+        let cleanCvResult = "";
         let processStep = 0;
         const processMessages = [
             "Analyzing profile data...",
@@ -215,15 +426,14 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
             "Finalizing document..."
         ];
         let lastUpdateLength = 0;
+        const CV_MARKER = '<!-- CV_START -->';
 
-        for await (const chunk of stream) {
-            const token = chunk.choices[0]?.delta?.content;
-            if (token) {
-                fullResponse += token;
+        try {
+            for await (const chunk of stream) {
+                const token = chunk.choices[0]?.delta?.content;
+                if (!token) continue;
 
-                if (!cvMode && fullResponse.includes('<!-- CV_START -->')) {
-                    cvMode = true;
-                    await onToken({ type: 'process', content: "Initializing CV Generator..." });
+                if (cvDone) {
                     continue;
                 }
 
@@ -240,47 +450,115 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
                     if (cvBuffer.includes('<!-- CV_END -->')) {
                         await onToken({ type: 'process', content: "Rendering PDF..." });
 
-                        const cleanHtml = cvBuffer.replace('<!-- CV_END -->', '').trim();
+                        let cleanHtml = cleanCvHtml(cvBuffer);
+
+                        if (roomImages[roomId]) {
+                            const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
+                            const photoUrl = `${host}${roomImages[roomId]}`;
+                            cleanHtml = cleanHtml.replace(/\{\{PROFILE_PHOTO_URL\}\}/g, photoUrl);
+                        }
+
+                        cleanCvResult = cleanHtml;
 
                         try {
                             const pdfBuffer = await generatePdfFromHtml(cleanHtml);
                             const savedFile = await savePdfLocally(pdfBuffer);
-                            const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
-                            const downloadUrl = `${host}${savedFile.relativePath}`;
 
-                            await onToken({ type: 'content', content: `\n\n**Success!** Your CV is ready.\n\n[Download PDF](${downloadUrl})` });
+                            await onToken({ type: 'content', content: `<!-- CV_START -->${cleanHtml}<!-- CV_END -->` });
+                            await onToken({ type: 'content', content: `\n\nYour CV has been generated successfully!` });
                         } catch (pdfError) {
                             console.error("PDF Generation failed:", pdfError);
                             await onToken({ type: 'content', content: "\n\n(Error generating PDF file. Please try again.)" });
                         }
 
                         cvMode = false;
+                        cvDone = true;
                     }
-                } else {
-                    await onToken({ type: 'content', content: token });
+                    continue;
+                }
+
+                contentBuffer += token;
+
+                if (contentBuffer.includes(CV_MARKER)) {
+                    const markerIdx = contentBuffer.indexOf(CV_MARKER);
+                    const before = contentBuffer.substring(0, markerIdx);
+                    if (before) {
+                        beforeCvText += before;
+                        await onToken({ type: 'content', content: before });
+                    }
+                    cvMode = true;
+                    cvBuffer = contentBuffer.substring(markerIdx + CV_MARKER.length);
+                    contentBuffer = '';
+                    await onToken({ type: 'process', content: "Initializing CV Generator..." });
+                    continue;
+                }
+
+                let safeFlushEnd = contentBuffer.length;
+                for (let i = 1; i <= Math.min(CV_MARKER.length, contentBuffer.length); i++) {
+                    if (CV_MARKER.startsWith(contentBuffer.slice(-i))) {
+                        safeFlushEnd = contentBuffer.length - i;
+                        break;
+                    }
+                }
+
+                if (safeFlushEnd > 0) {
+                    const safe = contentBuffer.substring(0, safeFlushEnd);
+                    beforeCvText += safe;
+                    await onToken({ type: 'content', content: safe });
+                    contentBuffer = contentBuffer.substring(safeFlushEnd);
                 }
             }
+        } catch (streamError) {
+            console.error(`[LLM] Stream error on ${usedModel}:`, streamError.message);
+            if (beforeCvText.length > 0 || contentBuffer.length > 0) {
+                await onToken({ type: 'content', content: "\n\n*[Response was interrupted. Here's what was generated so far.]*" });
+            } else {
+                await onToken({ type: 'content', content: "Sorry, I encountered a connection issue. Please try again." });
+            }
+        }
+
+        if (contentBuffer && !cvMode && !cvDone) {
+            beforeCvText += contentBuffer;
+            await onToken({ type: 'content', content: contentBuffer });
+            contentBuffer = '';
         }
 
         if (cvMode && cvBuffer.length > 500) {
             await onToken({ type: 'process', content: "Finalizing document..." });
             try {
-                if (!fullResponse.includes('<!-- CV_END -->')) {
-                    fullResponse += "\n<!-- CV_END -->";
+                let cleanHtml = cleanCvHtml(cvBuffer);
+
+                if (roomImages[roomId]) {
+                    const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
+                    const photoUrl = `${host}${roomImages[roomId]}`;
+                    cleanHtml = cleanHtml.replace(/\{\{PROFILE_PHOTO_URL\}\}/g, photoUrl);
                 }
 
-                const cleanHtml = cvBuffer.replace('<!-- CV_END -->', '').trim();
+                cleanCvResult = cleanHtml;
+
                 const pdfBuffer = await generatePdfFromHtml(cleanHtml);
                 const savedFile = await savePdfLocally(pdfBuffer);
-                const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
-                const downloadUrl = `${host}${savedFile.relativePath}`;
 
-                await onToken({ type: 'content', content: "\n<!-- CV_END -->" });
-                await onToken({ type: 'content', content: `\n\n**Success!** Your CV is ready.\n\n[Download PDF](${downloadUrl})` });
+                await onToken({ type: 'content', content: `<!-- CV_START -->${cleanHtml}<!-- CV_END -->` });
+                await onToken({ type: 'content', content: `\n\nYour CV has been generated successfully!` });
+
+                cvDone = true;
             } catch (pdfError) {
                 console.error("PDF Generation Failsafe error:", pdfError);
                 await onToken({ type: 'content', content: "\n\n(Error generating PDF file.)" });
             }
+        }
+
+        if (cleanCvResult) {
+            fullResponse = beforeCvText + `<!-- CV_START -->${cleanCvResult}<!-- CV_END -->`;
+        } else {
+            fullResponse = beforeCvText + contentBuffer;
+        }
+
+        if (roomImages[roomId]) {
+            const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
+            const photoUrl = `${host}${roomImages[roomId]}`;
+            fullResponse = fullResponse.replace(/\{\{PROFILE_PHOTO_URL\}\}/g, photoUrl);
         }
 
         roomContexts[roomId].push({ "role": "assistant", "content": fullResponse });
@@ -298,22 +576,35 @@ async function generateChatTitle(roomId, conversationHistory = null) {
     try {
         let messages = [];
 
-        if (roomContexts[roomId] && roomContexts[roomId].length > 0) {
-            messages = [...roomContexts[roomId]];
-        }
-        else if (conversationHistory && conversationHistory.length > 0) {
+        if (conversationHistory && conversationHistory.length > 0) {
+            const parsed = conversationHistory.map(msg => {
+                if (msg.startsWith('User: ')) {
+                    return { role: "user", content: msg.replace('User: ', '').substring(0, 300) };
+                } else if (msg.startsWith('AI: ')) {
+                    let content = msg.replace('AI: ', '');
+                    content = content.replace(/<!--\s*CV_START\s*-->[\s\S]*?<!--\s*CV_END\s*-->/g, '[CV Generated]');
+                    return { role: "assistant", content: content.substring(0, 300) };
+                }
+                return null;
+            }).filter(Boolean);
+
             messages = [
                 { role: "system", content: "You are a helpful career assistant." },
-                ...conversationHistory.map(msg => {
-                    if (msg.startsWith('User: ')) {
-                        return { role: "user", content: msg.replace('User: ', '') };
-                    } else if (msg.startsWith('AI: ')) {
-                        return { role: "assistant", content: msg.replace('AI: ', '') };
-                    }
-                    return null;
-                }).filter(Boolean)
+                ...parsed
+            ];
+        } else if (roomContexts[roomId] && roomContexts[roomId].length > 0) {
+            messages = roomContexts[roomId]
+                .filter(m => m.role !== 'system')
+                .map(m => ({
+                    role: m.role === 'user' ? 'user' : 'assistant',
+                    content: (typeof m.content === 'string' ? m.content : 'image').substring(0, 300)
+                }));
+            messages = [
+                { role: "system", content: "You are a helpful career assistant." },
+                ...messages
             ];
         } else {
+            console.log('[Title] No conversation data available, skipping title generation');
             return null;
         }
 
@@ -322,42 +613,80 @@ async function generateChatTitle(roomId, conversationHistory = null) {
             content: "Generate a very short title (max 4 words) for this conversation based on the context. Respond with only the title, no additional text, no markdown."
         });
 
-        const response = await openai.chat.completions.create({
-            model: "meta/llama-3.2-3b-instruct",
-            messages: messages,
-            temperature: 0.7,
-            max_tokens: 50
-        });
+        console.log(`[Title] Generating title for room ${roomId} (${messages.length} messages)...`);
 
-        let title = response.choices[0]?.message?.content?.trim();
+        let response;
+        try {
+            console.log(`[Title] Trying Mistral first (${TITLE_MODEL})...`);
+            response = await mistralClient.chat.completions.create({
+                model: TITLE_MODEL,
+                messages,
+                temperature: 0.7,
+                max_tokens: 30,
+            });
+        } catch (mistralErr) {
+            console.log(`[Title] Mistral failed: ${mistralErr.message}, falling back to NVIDIA (${TITLE_FALLBACK})...`);
+            response = await nvidiaClient.chat.completions.create({
+                model: TITLE_FALLBACK,
+                messages,
+                temperature: 0.7,
+                max_tokens: 30,
+            });
+        }
+
+        const choice = response.choices[0]?.message;
+        console.log(`[Title] Raw response:`, JSON.stringify(choice));
+        let title = choice?.content?.trim() || null;
+
+        if (!title && choice?.reasoning_content) {
+            const reasoning = choice.reasoning_content;
+            const quoted = reasoning.match(/["']([^"']{2,30})["']/g);
+            if (quoted && quoted.length > 0) {
+                title = quoted[quoted.length - 1].replace(/^["']|["']$/g, '').trim();
+            }
+        }
+
+        if (!title && choice?.reasoning_content) {
+            const reasoning = choice.reasoning_content;
+            const keywords = reasoning.match(/\b(?:title|called|name)\s*(?:would be|is|:)\s*["']?([^"'.\n]{2,30})/i);
+            if (keywords) {
+                title = keywords[1].trim();
+            }
+        }
+
         if (title) {
+            title = title.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
             title = title.replace(/^["']|["']$/g, '');
-            if (title.split(' ').length > 4) {
+            if (title.split(' ').length > 6) {
                 title = title.split(' ').slice(0, 4).join(' ');
             }
         }
-        return title;
+        console.log(`[Title] Generated: "${title}"`);
+        return title || null;
     } catch (error) {
-        console.error("Error generating title:", error);
+        console.error("[Title] All providers failed:", error.message);
         return null;
     }
 }
 
 async function generateCompletion(prompt, systemPrompt) {
     try {
-        const completion = await openai.chat.completions.create({
-            model: LLM_Model,
-            messages: [
-                { role: "system", content: systemPrompt || "You are a helpful assistant." },
-                { role: "user", content: prompt }
-            ],
-            temperature: 0.2,
-            max_tokens: 2048,
-            chat_template_kwargs: { "thinking": false }
+        const { result: completion } = await withModelFallback(async (model, client) => {
+            const extraParams = model.startsWith('mistral') ? {} : { chat_template_kwargs: { "thinking": false } };
+            return await client.chat.completions.create({
+                model,
+                messages: [
+                    { role: "system", content: systemPrompt || "You are a helpful assistant." },
+                    { role: "user", content: prompt }
+                ],
+                temperature: 0.2,
+                max_tokens: 2048,
+                ...extraParams,
+            });
         });
         return completion.choices[0].message.content;
     } catch (error) {
-        console.error("OpenAI Completion Error:", error);
+        console.error("Completion Error (all models failed):", error);
         throw error;
     }
 }
