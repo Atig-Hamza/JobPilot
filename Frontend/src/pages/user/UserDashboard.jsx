@@ -53,6 +53,7 @@ const JobPilotDashboard = () => {
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
     const abortControllerRef = useRef(null);
+    const isGeneratingRef = useRef(false);
 
     const generationPollRef = useRef(null);
 
@@ -131,7 +132,7 @@ const JobPilotDashboard = () => {
     };
 
     useEffect(() => {
-        if (urlRoomId && (urlRoomId !== roomId || messages.length === 0)) {
+        if (urlRoomId && (urlRoomId !== roomId || messages.length === 0) && !isGeneratingRef.current) {
             fetchChatHistory(urlRoomId).then(async () => {
                 // After loading history, check if backend is still generating for this room
                 const generating = await checkGenerationStatus(urlRoomId);
@@ -233,6 +234,7 @@ const JobPilotDashboard = () => {
 
         setIsLoading(true);
         setIsGenerating(true);
+        isGeneratingRef.current = true;
 
         let aiText = '';
         let isResponseStarted = false;
@@ -367,12 +369,14 @@ const JobPilotDashboard = () => {
             }
 
             setIsGenerating(false);
+            isGeneratingRef.current = false;
             abortControllerRef.current = null;
             window.dispatchEvent(new Event('history-updated'));
         } catch (error) {
             if (error.name === 'AbortError') {
                 console.log('Generation stopped by user');
                 setIsGenerating(false);
+                isGeneratingRef.current = false;
                 setIsLoading(false);
                 setMessages(prev => {
                     return prev;
@@ -381,6 +385,7 @@ const JobPilotDashboard = () => {
                 console.error("Error fetching AI response:", error);
                 setIsLoading(false);
                 setIsGenerating(false);
+                isGeneratingRef.current = false;
 
                 setMessages(prev => {
                     if (isResponseStarted) {
@@ -401,6 +406,7 @@ const JobPilotDashboard = () => {
             abortControllerRef.current.abort();
             abortControllerRef.current = null;
             setIsGenerating(false);
+            isGeneratingRef.current = false;
             setIsLoading(false);
         }
     };
