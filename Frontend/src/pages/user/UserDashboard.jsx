@@ -54,6 +54,50 @@ const JobPilotDashboard = () => {
     const fileInputRef = useRef(null);
     const abortControllerRef = useRef(null);
 
+    const generationPollRef = useRef(null);
+
+    const checkGenerationStatus = async (targetRoomId) => {
+        try {
+            const API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api';
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_URL}/llm/status/${targetRoomId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            return data?.data?.generating === true;
+        } catch {
+            return false;
+        }
+    };
+
+    const startGenerationPolling = (targetRoomId) => {
+        // Clear any existing poll
+        if (generationPollRef.current) clearInterval(generationPollRef.current);
+        setIsGenerating(true);
+        setIsLoading(false);
+
+        // Add a placeholder AI message with process logs so the animation shows
+        setMessages(prev => {
+            const last = prev[prev.length - 1];
+            // Don't add a duplicate empty AI message
+            if (last && last.role === 'ai' && last.content === '') return prev;
+            return [...prev, { role: 'ai', content: '', processLogs: ['Resuming generation...'] }];
+        });
+
+        generationPollRef.current = setInterval(async () => {
+            const stillGenerating = await checkGenerationStatus(targetRoomId);
+            if (!stillGenerating) {
+                clearInterval(generationPollRef.current);
+                generationPollRef.current = null;
+                setIsGenerating(false);
+                setIsLoading(false);
+                // Reload the completed chat history
+                await fetchChatHistory(targetRoomId);
+                window.dispatchEvent(new Event('history-updated'));
+            }
+        }, 2000);
+    };
+
     const fetchChatHistory = async (idToFetch) => {
         if (!idToFetch) return;
 
@@ -88,13 +132,32 @@ const JobPilotDashboard = () => {
 
     useEffect(() => {
         if (urlRoomId && (urlRoomId !== roomId || messages.length === 0)) {
-            fetchChatHistory(urlRoomId);
+            fetchChatHistory(urlRoomId).then(async () => {
+                // After loading history, check if backend is still generating for this room
+                const generating = await checkGenerationStatus(urlRoomId);
+                if (generating) {
+                    startGenerationPolling(urlRoomId);
+                }
+            });
         } else if (!urlRoomId && chatStarted) {
+            if (generationPollRef.current) {
+                clearInterval(generationPollRef.current);
+                generationPollRef.current = null;
+            }
             setMessages([]);
             setChatStarted(false);
             setRoomId(generateRoomId());
             setInputValue("");
+            setIsGenerating(false);
+            setIsLoading(false);
         }
+
+        return () => {
+            if (generationPollRef.current) {
+                clearInterval(generationPollRef.current);
+                generationPollRef.current = null;
+            }
+        };
     }, [urlRoomId, roomId]);
 
     useEffect(() => {

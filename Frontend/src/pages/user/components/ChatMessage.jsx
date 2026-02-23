@@ -14,13 +14,24 @@ import toast from 'react-hot-toast';
 
 const CVDownloadCard = ({ html }) => {
     const [isGenerating, setIsGenerating] = useState(false);
+    const [downloadUrl, setDownloadUrl] = useState(null);
+    const [isReady, setIsReady] = useState(false);
 
     const handleDownload = async () => {
+        if (downloadUrl) {
+            window.open(downloadUrl, '_blank');
+            return;
+        }
+
         setIsGenerating(true);
-        const toastId = toast.loading('Preparing download...');
+        const toastId = toast.loading('Generating your CV...');
 
         try {
-            const cleanHtml = html.replace('', '').replace('', '');
+            const cleanHtml = html
+                .replace(/<!--\s*CV_START\s*-->/gi, '')
+                .replace(/<!--\s*CV_END\s*-->/gi, '')
+                .replace(/^```[a-z]*\s*/gi, '')
+                .replace(/\s*```$/gi, '');
             const API_URL = import.meta.env.VITE_BACKEND_API_URL;
             const userStr = localStorage.getItem('User');
             const token = userStr ? JSON.parse(userStr).token : localStorage.getItem('token');
@@ -42,8 +53,10 @@ const CVDownloadCard = ({ html }) => {
             const data = await response.json();
 
             if (data.status === 'success' && data.data.url) {
+                setDownloadUrl(data.data.url);
+                setIsReady(true);
                 window.open(data.data.url, '_blank');
-                toast.success('Download started', { id: toastId });
+                toast.success('Your CV is ready!', { id: toastId });
             } else {
                 throw new Error('Invalid response');
             }

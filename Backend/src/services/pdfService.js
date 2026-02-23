@@ -23,21 +23,91 @@ export const generatePdfFromHtml = async (htmlContent) => {
 
     try {
         let html = he.decode(htmlContent);
+
+        // Strip markdown code-block fences thoroughly
         html = html.replace(/^```[a-z]*\s*/gi, '').replace(/\s*```$/gi, '');
         html = html.replace(/```html/gi, '').replace(/```/g, '');
+        // Remove CV marker comments
+        html = html.replace(/<!--\s*CV_START\s*-->/gi, '').replace(/<!--\s*CV_END\s*-->/gi, '');
 
         const printStyle = `
             <style>
-                @page { margin: 0; size: A4; }
-                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; font-family: ui-sans-serif, system-ui, sans-serif; }
-                * { box-sizing: border-box; }
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Roboto:wght@300;400;500;700&display=swap');
+
+                @page {
+                    margin: 0;
+                    size: A4;
+                }
+
+                *, *::before, *::after {
+                    box-sizing: border-box;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                html, body {
+                    width: 210mm;
+                    min-height: 297mm;
+                    margin: 0;
+                    padding: 0;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                    color-adjust: exact !important;
+                    font-family: 'Inter', 'Roboto', ui-sans-serif, system-ui, -apple-system, sans-serif;
+                    font-size: 10pt;
+                    line-height: 1.5;
+                    color: #1a1a2e;
+                    background: #ffffff;
+                    overflow: hidden;
+                }
+
+                /* Ensure backgrounds render in print */
+                div, section, aside, header, footer, nav, main, article {
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+
+                /* Icon fallback sizing */
+                i, .fa, .ph, svg {
+                    display: inline-block;
+                    vertical-align: middle;
+                }
+
+                /* Prevent page breaks inside sections */
+                section, .section, .experience-item, .education-item {
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                }
+
+                /* Clean link styling for PDF */
+                a {
+                    color: inherit;
+                    text-decoration: none;
+                }
+
+                /* Ensure images don't overflow */
+                img {
+                    max-width: 100%;
+                    height: auto;
+                }
+
+                @media print {
+                    html, body {
+                        width: 210mm;
+                        height: 297mm;
+                    }
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                }
             </style>
         `;
 
         if (!html.toLowerCase().includes('<html')) {
             html = `
                 <!DOCTYPE html>
-                <html>
+                <html lang="en">
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,17 +118,24 @@ export const generatePdfFromHtml = async (htmlContent) => {
             `;
         } else {
             if (html.toLowerCase().includes('</head>')) {
-                html = html.replace('</head>', `${printStyle}</head>`);
-            } else {
-                html = html.replace('<body', `<head>${printStyle}</head><body`);
+                html = html.replace(/(<\/head>)/i, `${printStyle}$1`);
+            } else if (html.toLowerCase().includes('<body')) {
+                html = html.replace(/(<body)/i, `<head>${printStyle}</head>$1`);
             }
         }
 
         const browser = await getBrowser();
-        context = await browser.newContext();
+        context = await browser.newContext({
+            viewport: { width: 794, height: 1123 }, // A4 at 96 DPI
+        });
         page = await context.newPage();
 
-        await page.setContent(html, { waitUntil: 'networkidle' });
+        await page.setContent(html, { waitUntil: 'networkidle', timeout: 15000 });
+
+        // Wait for fonts to load
+        await page.evaluate(() => document.fonts?.ready).catch(() => {});
+        // Small extra delay for any CDN resources (icons, fonts)
+        await page.waitForTimeout(1000);
 
         const pdfBuffer = await page.pdf({
             format: 'A4',
@@ -72,8 +149,8 @@ export const generatePdfFromHtml = async (htmlContent) => {
 
         return pdfBuffer;
     } catch (error) {
-        if (page) await page.close();
-        if (context) await context.close();
+        if (page) await page.close().catch(() => {});
+        if (context) await context.close().catch(() => {});
         throw new Error(`PDF Generation failed: ${error.message}`);
     }
 };
