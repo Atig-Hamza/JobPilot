@@ -55,15 +55,24 @@ export const saveChatInteraction = async (userId, roomId, prompt, response) => {
     if (historyEntry) {
         historyEntry.content.push(`User: ${prompt}`);
         historyEntry.content.push(`AI: ${response}`);
+        await historyEntry.save();
 
         if (historyEntry.content.length === 4) {
-            const newTitle = await generateChatTitle(roomId, historyEntry.content);
-            if (newTitle) {
-                historyEntry.title = newTitle;
+            console.log(`[History] Content length is 4, triggering title generation for room ${roomId}...`);
+            try {
+                const newTitle = await generateChatTitle(roomId, [...historyEntry.content]);
+                if (newTitle) {
+                    await History.findByIdAndUpdate(historyEntry._id, { title: newTitle });
+                    console.log(`[History] Title updated for room ${roomId}: "${newTitle}"`);
+                } else {
+                    console.log(`[History] Title generation returned null for room ${roomId}`);
+                }
+            } catch (err) {
+                console.error('[History] Title generation failed:', err.message);
             }
+        } else {
+            console.log(`[History] Content length is ${historyEntry.content.length}, title gen triggers at 4`);
         }
-
-        await historyEntry.save();
     } else {
         historyEntry = new History({
             userId,
