@@ -279,6 +279,18 @@ const ChatMessage = ({ msg, isStreaming }) => {
         const startMatch = content.match(/<!--\s*CV_START\s*-->/);
         const endMatch = content.match(/<!--\s*CV_END\s*-->/);
 
+        if (startMatch && !endMatch) {
+            const beforeCv = content.substring(0, startMatch.index).replace(/```\w*\s*$/, '').trim();
+
+            return (
+                <div className="space-y-4 text-[#1A1A1A] dark:text-gray-200 text-[16px] leading-8 font-[450]">
+                    {beforeCv && (
+                        <p className="text-gray-900 dark:text-gray-200 leading-relaxed">{beforeCv}</p>
+                    )}
+                </div>
+            );
+        }
+
         if (startMatch && endMatch) {
             const startIndex = startMatch.index;
             const endIndex = endMatch.index;
