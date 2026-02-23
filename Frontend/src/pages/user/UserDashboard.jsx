@@ -369,7 +369,6 @@ const JobPilotDashboard = () => {
             setIsGenerating(false);
             abortControllerRef.current = null;
             window.dispatchEvent(new Event('history-updated'));
-            if (roomId) await fetchChatHistory(roomId);
         } catch (error) {
             if (error.name === 'AbortError') {
                 console.log('Generation stopped by user');
