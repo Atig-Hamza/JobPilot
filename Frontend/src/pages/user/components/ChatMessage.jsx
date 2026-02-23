@@ -289,7 +289,22 @@ const ChatMessage = ({ msg, isStreaming }) => {
             let afterCv = content.substring(endIndex + endMarkerLength);
 
             beforeCv = beforeCv.replace(/```\w*\s*$/, '').trim();
-            afterCv = afterCv.replace(/^\s*```/, '').replace(/<!--\s*CV_END\s*-->/g, '').trim();
+            // Clean afterCv: remove code fences, duplicate CV_END, download links, and "Success/ready" lines
+            afterCv = afterCv
+                .replace(/^\s*```/, '')
+                .replace(/<!--\s*CV_END\s*-->/g, '')
+                .replace(/\*\*Success!\*\*[^\n]*/g, '')
+                .replace(/\[Download PDF\]\([^)]*\)/g, '')
+                .replace(/Your CV is ready[^\n]*/gi, '')
+                .replace(/You can download it[^\n]*/gi, '')
+                .replace(/using the button above[^\n]*/gi, '')
+                .trim();
+
+            // Only keep afterCv if there's meaningful content left (not just "let me know if you'd like adjustments")
+            const meaningfulAfterCv = afterCv
+                .replace(/let me know if you'?d? like any adjustments\.?/gi, '')
+                .replace(/your cv has been generated successfully[.!]?/gi, '')
+                .trim();
 
             return (
                 <div className="space-y-6 text-[#1A1A1A] dark:text-gray-200 text-[16px] leading-8 font-[450]">
@@ -349,7 +364,7 @@ const ChatMessage = ({ msg, isStreaming }) => {
 
                     <CVDownloadCard html={cvContent} />
 
-                    {afterCv && (
+                    {meaningfulAfterCv && (
                         <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{
@@ -399,7 +414,7 @@ const ChatMessage = ({ msg, isStreaming }) => {
                                 hr: () => <hr className="my-8 border-gray-100 dark:border-gray-800" />,
                             }}
                         >
-                            {afterCv}
+                            {meaningfulAfterCv}
                         </ReactMarkdown>
                     )}
                 </div>
