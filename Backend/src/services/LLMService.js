@@ -334,8 +334,13 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
                 "When the user asks for a CV, Resume, or Cover Letter:\n" +
                 "- Do NOT generate HTML on the very first message. Have at least one natural exchange before generating.\n" +
                 "- Be conversational and adaptive — no rigid steps. Cover style, language, content, and photo naturally.\n" +
-                "- If the user says 'just do it' or seems eager, quickly confirm key preferences and proceed.\n" +
-                "- IMPORTANT: Before generating the CV, ALWAYS ask the user for confirmation. Say something like 'Everything looks good! Are you ready for me to generate your CV?' or 'I have all the details I need. Shall I go ahead and generate your CV now?'. Wait for their confirmation before proceeding.\n" +
+                "- If the user says 'just do it' or seems eager, quickly confirm key preferences and proceed — but still do ONE final confirmation.\n" +
+                "- MANDATORY CONFIRMATION: You MUST ALWAYS ask the user for explicit confirmation before generating. This is NON-NEGOTIABLE. Even if the user seems ready, you MUST send a confirmation message FIRST and WAIT for their reply. Examples:\n" +
+                "  • 'I have everything I need! Ready to generate your CV? 🚀'\n" +
+                "  • 'Quick recap: [style], [language], [key details]. Shall I go ahead and create your CV now?'\n" +
+                "  • 'Everything looks great! Want me to generate your CV?'\n" +
+                "- NEVER generate the CV (<!-- CV_START -->) in the same message as the confirmation question. The confirmation question and the CV generation MUST be in separate messages.\n" +
+                "- Only generate the CV AFTER the user replies with a clear 'yes', 'go ahead', 'sure', 'do it', or similar affirmative response.\n" +
                 "- Once the user confirms, start with an enthusiastic message like 'Let's do it! Generating your CV now...' or 'Here we go! Creating your professional CV...' followed immediately by the CV HTML.\n" +
                 "- When ready, output the full HTML inside <!-- CV_START --> and <!-- CV_END --> tags.\n" +
                 "- CRITICAL: Do NOT write ANY text after <!-- CV_END -->. The system handles the download UI automatically. Your message must END with <!-- CV_END -->.\n" +
@@ -406,6 +411,9 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
         let cvMode = false;
         let cvBuffer = "";
         let cvDone = false;
+        let contentBuffer = "";
+        let beforeCvText = "";
+        let cleanCvResult = "";
         let processStep = 0;
         const processMessages = [
             "Analyzing profile data...",
@@ -417,82 +425,106 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
             "Finalizing document..."
         ];
         let lastUpdateLength = 0;
+        const CV_MARKER = '<!-- CV_START -->';
 
         try {
             for await (const chunk of stream) {
                 const token = chunk.choices[0]?.delta?.content;
-                if (token) {
-                    fullResponse += token;
+                if (!token) continue;
 
-                    if (!cvMode && fullResponse.includes('<!-- CV_START -->')) {
-                        cvMode = true;
-                        await onToken({ type: 'process', content: "Initializing CV Generator..." });
-                        continue;
+                if (cvDone) {
+                    continue;
+                }
+
+                if (cvMode) {
+                    cvBuffer += token;
+
+                    if (cvBuffer.length - lastUpdateLength > 500) {
+                        lastUpdateLength = cvBuffer.length;
+                        const msg = processMessages[processStep % processMessages.length];
+                        await onToken({ type: 'process', content: msg });
+                        processStep++;
                     }
 
-                    if (cvMode) {
-                        cvBuffer += token;
+                    if (cvBuffer.includes('<!-- CV_END -->')) {
+                        await onToken({ type: 'process', content: "Rendering PDF..." });
 
-                        if (cvBuffer.length - lastUpdateLength > 500) {
-                            lastUpdateLength = cvBuffer.length;
-                            const msg = processMessages[processStep % processMessages.length];
-                            await onToken({ type: 'process', content: msg });
-                            processStep++;
+                        let cleanHtml = cleanCvHtml(cvBuffer);
+
+                        if (roomImages[roomId]) {
+                            const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
+                            const photoUrl = `${host}${roomImages[roomId]}`;
+                            cleanHtml = cleanHtml.replace(/\{\{PROFILE_PHOTO_URL\}\}/g, photoUrl);
                         }
 
-                        if (cvBuffer.includes('<!-- CV_END -->')) {
-                            await onToken({ type: 'process', content: "Rendering PDF..." });
+                        cleanCvResult = cleanHtml;
 
-                            let cleanHtml = cleanCvHtml(cvBuffer);
+                        try {
+                            const pdfBuffer = await generatePdfFromHtml(cleanHtml);
+                            const savedFile = await savePdfLocally(pdfBuffer);
 
-                            if (roomImages[roomId]) {
-                                const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
-                                const photoUrl = `${host}${roomImages[roomId]}`;
-                                cleanHtml = cleanHtml.replace(/\{\{PROFILE_PHOTO_URL\}\}/g, photoUrl);
-                            }
-
-                            try {
-                                const pdfBuffer = await generatePdfFromHtml(cleanHtml);
-                                const savedFile = await savePdfLocally(pdfBuffer);
-                                const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
-                                const downloadUrl = `${host}${savedFile.relativePath}`;
-
-                                await onToken({ type: 'content', content: `<!-- CV_START -->${cleanHtml}<!-- CV_END -->` });
-
-                                const downloadMsg = `\n\nYour CV has been generated successfully!`;
-                                fullResponse += downloadMsg;
-                                await onToken({ type: 'content', content: downloadMsg });
-                            } catch (pdfError) {
-                                console.error("PDF Generation failed:", pdfError);
-                                await onToken({ type: 'content', content: "\n\n(Error generating PDF file. Please try again.)" });
-                            }
-
-                            cvMode = false;
-                            cvDone = true;
+                            await onToken({ type: 'content', content: `<!-- CV_START -->${cleanHtml}<!-- CV_END -->` });
+                            await onToken({ type: 'content', content: `\n\nYour CV has been generated successfully!` });
+                        } catch (pdfError) {
+                            console.error("PDF Generation failed:", pdfError);
+                            await onToken({ type: 'content', content: "\n\n(Error generating PDF file. Please try again.)" });
                         }
-                    } else if (cvDone) {
-                        continue;
-                    } else {
-                        await onToken({ type: 'content', content: token });
+
+                        cvMode = false;
+                        cvDone = true;
                     }
+                    continue;
+                }
+
+                contentBuffer += token;
+
+                if (contentBuffer.includes(CV_MARKER)) {
+                    const markerIdx = contentBuffer.indexOf(CV_MARKER);
+                    const before = contentBuffer.substring(0, markerIdx);
+                    if (before) {
+                        beforeCvText += before;
+                        await onToken({ type: 'content', content: before });
+                    }
+                    cvMode = true;
+                    cvBuffer = contentBuffer.substring(markerIdx + CV_MARKER.length);
+                    contentBuffer = '';
+                    await onToken({ type: 'process', content: "Initializing CV Generator..." });
+                    continue;
+                }
+
+                let safeFlushEnd = contentBuffer.length;
+                for (let i = 1; i <= Math.min(CV_MARKER.length, contentBuffer.length); i++) {
+                    if (CV_MARKER.startsWith(contentBuffer.slice(-i))) {
+                        safeFlushEnd = contentBuffer.length - i;
+                        break;
+                    }
+                }
+
+                if (safeFlushEnd > 0) {
+                    const safe = contentBuffer.substring(0, safeFlushEnd);
+                    beforeCvText += safe;
+                    await onToken({ type: 'content', content: safe });
+                    contentBuffer = contentBuffer.substring(safeFlushEnd);
                 }
             }
         } catch (streamError) {
             console.error(`[LLM] Stream error on ${usedModel}:`, streamError.message);
-            if (fullResponse.length > 0) {
+            if (beforeCvText.length > 0 || contentBuffer.length > 0) {
                 await onToken({ type: 'content', content: "\n\n*[Response was interrupted. Here's what was generated so far.]*" });
             } else {
                 await onToken({ type: 'content', content: "Sorry, I encountered a connection issue. Please try again." });
             }
         }
 
+        if (contentBuffer && !cvMode && !cvDone) {
+            beforeCvText += contentBuffer;
+            await onToken({ type: 'content', content: contentBuffer });
+            contentBuffer = '';
+        }
+
         if (cvMode && cvBuffer.length > 500) {
             await onToken({ type: 'process', content: "Finalizing document..." });
             try {
-                if (!fullResponse.includes('<!-- CV_END -->')) {
-                    fullResponse += "\n<!-- CV_END -->";
-                }
-
                 let cleanHtml = cleanCvHtml(cvBuffer);
 
                 if (roomImages[roomId]) {
@@ -500,20 +532,26 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
                     const photoUrl = `${host}${roomImages[roomId]}`;
                     cleanHtml = cleanHtml.replace(/\{\{PROFILE_PHOTO_URL\}\}/g, photoUrl);
                 }
+
+                cleanCvResult = cleanHtml;
+
                 const pdfBuffer = await generatePdfFromHtml(cleanHtml);
                 const savedFile = await savePdfLocally(pdfBuffer);
-                const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
-                const downloadUrl = `${host}${savedFile.relativePath}`;
 
                 await onToken({ type: 'content', content: `<!-- CV_START -->${cleanHtml}<!-- CV_END -->` });
+                await onToken({ type: 'content', content: `\n\nYour CV has been generated successfully!` });
 
-                const downloadMsg = `\n\nYour CV has been generated successfully!`;
-                fullResponse += downloadMsg;
-                await onToken({ type: 'content', content: downloadMsg });
+                cvDone = true;
             } catch (pdfError) {
                 console.error("PDF Generation Failsafe error:", pdfError);
                 await onToken({ type: 'content', content: "\n\n(Error generating PDF file.)" });
             }
+        }
+
+        if (cleanCvResult) {
+            fullResponse = beforeCvText + `<!-- CV_START -->${cleanCvResult}<!-- CV_END -->`;
+        } else {
+            fullResponse = beforeCvText + contentBuffer;
         }
 
         if (roomImages[roomId]) {
