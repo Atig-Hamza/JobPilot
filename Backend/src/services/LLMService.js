@@ -13,6 +13,28 @@ const LLM_Model = 'moonshotai/kimi-k2-instruct-0905'
 
 const roomContexts = {};
 
+// Track rooms that are actively generating responses
+const generatingRooms = new Map();
+
+export function setRoomGenerating(roomId, status = true) {
+    if (status) {
+        generatingRooms.set(roomId, { startedAt: Date.now(), status: 'generating' });
+    } else {
+        generatingRooms.delete(roomId);
+    }
+}
+
+export function isRoomGenerating(roomId) {
+    const entry = generatingRooms.get(roomId);
+    if (!entry) return false;
+    // Auto-expire after 5 minutes to handle stuck generations
+    if (Date.now() - entry.startedAt > 5 * 60 * 1000) {
+        generatingRooms.delete(roomId);
+        return false;
+    }
+    return true;
+}
+
 function buildPersonalizedPrompt(basePrompt, aiSettings) {
     if (!aiSettings) return basePrompt;
 
@@ -75,20 +97,33 @@ function buildPersonalizedPrompt(basePrompt, aiSettings) {
 
 const CV_TEMPLATE = `
 Generate a professional, modern Single-Page CV in HTML/CSS with a strict A4 aspect ratio (210mm x 297mm).
-Design Requirements:
-1. **Layout**: Use a clean two-column grid (Sidebar + Main Content). Ensure vertical balance so the page looks filled and professional.
-2. **Styling**: use raw, semantic CSS (No Bootstrap/Tailwind). Use a sophisticated, modern color palette (e.g., Slate Blue/Charcoal/White or Navy/Cream/Gold).
-3. **Typography**: Use clean sans-serif fonts (Inter, Roboto, or Open Sans) loaded via Google Fonts.
-4. **Icons**: Use Phosphor Icons or FontAwesome (CDN) for contact details and section headers.
-5. **Print-Ready**: Include a @media print block that forces -webkit-print-color-adjust: exact, sets zero margins, and hides non-CV elements.
-6. **Single Page Constraint**: STRICTLY prioritize fitting everything on ONE A4 page. 
-    - Adjust font-sizes (e.g., smaller body text 9pt-10pt) and reduce margins/padding if content is long.
-    - Compact section spacing.
-    - Only extend to a second page if absolutely unavoidable.
-7. **Restrictions**: Max width 210mm. Min-height 297mm. No scrolling.
+
+**CRITICAL Design Requirements:**
+1. **Layout**: Use a clean two-column grid layout. Left sidebar (~30-35% width) with a colored/dark background for contact info, skills, languages. Main content area (~65-70% width) for summary, experience, education, certifications.
+2. **Styling**: Use ONLY raw inline CSS or a <style> block. NEVER use Tailwind, Bootstrap, or any external CSS framework. Use a sophisticated color palette (e.g., dark navy sidebar #1a1a2e or #2d3748 with white text, white main area with dark text).
+3. **Typography**: Load Google Fonts via @import in the <style> block: Inter or Roboto. Use font-weight variations (300, 400, 600, 700) for hierarchy.
+4. **Icons**: Use Font Awesome 6 CDN (<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">) for contact details and section headers. Use <i class="fa-solid fa-envelope"></i> style icons.
+5. **Colors for Print**: All background colors MUST use inline style or CSS with -webkit-print-color-adjust: exact. This is critical for PDF rendering.
+6. **Single Page Constraint**: STRICTLY fit everything on ONE A4 page (210mm x 297mm, max-height: 297mm).
+    - Use font-size 9pt-10pt for body text, 11-12pt for section headers, 14-16pt for the name.
+    - Use compact padding (8-12px) and margins (4-8px between sections).
+    - Use line-height: 1.3-1.5 for body text.
+7. **Structure**:
+    - The entire CV must be wrapped in a single container div with width: 210mm; min-height: 297mm; display: flex;
+    - Sidebar: position: relative, fixed height matching the container.
+    - Each section should have a clear heading with an icon, a subtle bottom border or separator.
+    - Experience items: Job Title (bold), Company + Date (lighter), bullet points for responsibilities.
+    - Skills: Use progress bars, tags/pills, or star ratings for visual appeal.
+8. **Restrictions**: 
+    - NEVER use JavaScript.
+    - NEVER add any interactive elements.
+    - The HTML must be self-contained, render perfectly without any build step.
+    - DO NOT wrap the HTML in markdown code fences.
+    - Output only the raw HTML between <!-- CV_START --> and <!-- CV_END --> markers.
 `;
 
 async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSettings = null) {
+    setRoomGenerating(roomId, true);
     try {
         if (!roomContexts[roomId]) {
             roomContexts[roomId] = [];
@@ -98,11 +133,14 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
             baseSystemPrompt = buildPersonalizedPrompt(baseSystemPrompt, aiSettings);
 
             const enhancedSystemPrompt = baseSystemPrompt +
-                "\n\nCOMMAND: When the user asks for a CV, Resume, or Cover Letter, you must respond as follows:\n" +
-                "1. **Conversational Part**: Briefly tell the user you are generating their professional PDF document. Do NOT mention HTML, code, or technical details.\n" +
-                "2. **Generation Part**: Immediately after the text, output the full HTML code inside <!-- CV_START --> and <!-- CV_END --> tags.\n" +
-                "3. **Content**: Fill the CV with the user's data (inferred or provided) or realistic placeholders if missing.\n\n" +
-                "TEMPLATE INSTRUCTIONS:\n" + CV_TEMPLATE;
+                "\n\nCV GENERATION COMMAND:\n" +
+                "When the user asks for a CV, Resume, or Cover Letter:\n" +
+                "- DO NOT generate the HTML immediately. Follow the interactive CV Creator flow defined in Section 6.3 of your system prompt.\n" +
+                "- Guide the user through style, language, color, and content steps ONE AT A TIME.\n" +
+                "- ONLY after the user explicitly confirms at the final step, output the full HTML inside <!-- CV_START --> and <!-- CV_END --> tags.\n" +
+                "- Do NOT mention HTML, code blocks, or technical details to the user. Present it as 'generating your PDF'.\n" +
+                "- Fill the CV with the user's actual profile data. Use realistic placeholders ONLY for missing fields.\n\n" +
+                "TEMPLATE INSTRUCTIONS (used only at generation step):\n" + CV_TEMPLATE;
 
             roomContexts[roomId].push({ "role": "system", "content": enhancedSystemPrompt });
         }
@@ -247,8 +285,10 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
 
         roomContexts[roomId].push({ "role": "assistant", "content": fullResponse });
 
+        setRoomGenerating(roomId, false);
         return fullResponse;
     } catch (error) {
+        setRoomGenerating(roomId, false);
         console.error("Error generating text:", error);
         throw error;
     }
