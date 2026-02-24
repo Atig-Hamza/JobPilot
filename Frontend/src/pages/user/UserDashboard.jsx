@@ -330,6 +330,24 @@ const JobPilotDashboard = () => {
                                 }
                                 return newMessages;
                             });
+                        } else if (data.type === 'media') {
+                            setMessages(prev => {
+                                const newMessages = [...prev];
+                                if (newMessages.length > 0) {
+                                    const lastMsgIndex = newMessages.length - 1;
+                                    const lastMsg = newMessages[lastMsgIndex];
+                                    const currentMedia = lastMsg.media || [];
+                                    newMessages[lastMsgIndex] = {
+                                        ...lastMsg,
+                                        media: [...currentMedia, {
+                                            mediaType: data.mediaType,
+                                            query: data.query,
+                                            data: data.data,
+                                        }]
+                                    };
+                                }
+                                return newMessages;
+                            });
                         }
                     } catch (e) {
                         console.error('Error parsing SSE:', e);
