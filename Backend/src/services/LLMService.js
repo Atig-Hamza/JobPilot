@@ -3,6 +3,8 @@ import OpenAi from 'openai';
 import fs from 'fs';
 import path from 'path';
 import { generatePdfFromHtml, savePdfLocally } from './pdfService.js';
+import { searchYouTube } from './youtubeService.js';
+import { searchImages } from './imageService.js';
 
 const nvidiaClient = new OpenAi({
     apiKey: process.env.OPENAI_API_KEY,
@@ -252,6 +254,93 @@ function cleanCvHtml(rawBuffer) {
     return html.trim();
 }
 
+
+async function resolveMediaMarkers(text, onToken) {
+    const youtubeRegex = /<!--\s*YOUTUBE:\s*(.*?)\s*-->/g;
+    const imageRegex = /<!--\s*IMAGE:\s*(.*?)\s*-->/g;
+
+    const promises = [];
+
+    let match;
+    while ((match = youtubeRegex.exec(text)) !== null) {
+        const query = match[1].trim();
+        if (query) {
+            promises.push(
+                searchYouTube(query, 1).then(videos => ({
+                    type: 'youtube',
+                    query,
+                    marker: match[0],
+                    results: videos,
+                }))
+            );
+        }
+    }
+
+    while ((match = imageRegex.exec(text)) !== null) {
+        const query = match[1].trim();
+        if (query) {
+            promises.push(
+                searchImages(query, 4).then(images => ({
+                    type: 'image',
+                    query,
+                    marker: match[0],
+                    results: images,
+                }))
+            );
+        }
+    }
+
+    if (promises.length === 0) return;
+
+    try {
+        const results = await Promise.allSettled(promises);
+
+        for (const result of results) {
+            if (result.status !== 'fulfilled') continue;
+            const { type, query, results: mediaResults } = result.value;
+
+            if (!mediaResults || mediaResults.length === 0) continue;
+
+            if (type === 'youtube') {
+                const video = mediaResults[0];
+                await onToken({
+                    type: 'media',
+                    mediaType: 'youtube',
+                    query,
+                    data: {
+                        id: video.id,
+                        title: video.title,
+                        url: video.url,
+                        thumbnail: video.thumbnail,
+                        duration: video.duration,
+                        author: video.author,
+                        views: video.views,
+                    },
+                });
+            } else if (type === 'image') {
+                const images = mediaResults.slice(0, 4).map(img => ({
+                    url: img.url,
+                    fullUrl: img.fullUrl,
+                    title: img.title,
+                    width: img.width,
+                    height: img.height,
+                    source: img.source,
+                    license: img.license,
+                    description: img.description,
+                }));
+                await onToken({
+                    type: 'media',
+                    mediaType: 'image',
+                    query,
+                    data: images,
+                });
+            }
+        }
+    } catch (error) {
+        console.error('[MediaResolve] Error resolving media markers:', error.message);
+    }
+}
+
 const CV_TEMPLATE = `
 Generate a polished, premium Single-Page CV/Resume in raw HTML + CSS. The result MUST look like a professionally designed document — not a basic template.
 
@@ -427,6 +516,48 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
         ];
         let lastUpdateLength = 0;
         const CV_MARKER = '<!-- CV_START -->';
+        const resolvedMarkers = new Set();
+
+        const resolveEagerMedia = async (text) => {
+            const mediaRegex = /<!--\s*(YOUTUBE|IMAGE):\s*(.*?)\s*-->/g;
+            let m;
+            const mediaPromises = [];
+            while ((m = mediaRegex.exec(text)) !== null) {
+                const markerStr = m[0];
+                if (resolvedMarkers.has(markerStr)) continue;
+                resolvedMarkers.add(markerStr);
+                const mType = m[1];
+                const query = m[2].trim();
+                if (!query) continue;
+                if (mType === 'YOUTUBE') {
+                    mediaPromises.push(
+                        searchYouTube(query, 1).then(async videos => {
+                            if (videos?.[0]) {
+                                const video = videos[0];
+                                await onToken({
+                                    type: 'media', mediaType: 'youtube', query,
+                                    data: { id: video.id, title: video.title, url: video.url, thumbnail: video.thumbnail, duration: video.duration, author: video.author, views: video.views },
+                                });
+                            }
+                        }).catch(() => {})
+                    );
+                } else if (mType === 'IMAGE') {
+                    mediaPromises.push(
+                        searchImages(query, 4).then(async images => {
+                            if (images?.length > 0) {
+                                await onToken({
+                                    type: 'media', mediaType: 'image', query,
+                                    data: images.slice(0, 4).map(img => ({ url: img.url, fullUrl: img.fullUrl, title: img.title, width: img.width, height: img.height, source: img.source, license: img.license, description: img.description })),
+                                });
+                            }
+                        }).catch(() => {})
+                    );
+                }
+            }
+            if (mediaPromises.length > 0) {
+                await Promise.allSettled(mediaPromises);
+            }
+        };
 
         try {
             for await (const chunk of stream) {
@@ -493,11 +624,24 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
                     continue;
                 }
 
+                const completeMediaRegex = /<!--\s*(YOUTUBE|IMAGE):\s*(.*?)\s*-->/;
+                if (completeMediaRegex.test(contentBuffer)) {
+                    const flushText = contentBuffer;
+                    beforeCvText += flushText;
+                    await onToken({ type: 'content', content: flushText });
+                    contentBuffer = '';
+                    resolveEagerMedia(flushText);
+                    continue;
+                }
+
                 let safeFlushEnd = contentBuffer.length;
-                for (let i = 1; i <= Math.min(CV_MARKER.length, contentBuffer.length); i++) {
-                    if (CV_MARKER.startsWith(contentBuffer.slice(-i))) {
-                        safeFlushEnd = contentBuffer.length - i;
-                        break;
+                const partialPatterns = [CV_MARKER, '<!--'];
+                for (const pattern of partialPatterns) {
+                    for (let i = 1; i <= Math.min(pattern.length, contentBuffer.length); i++) {
+                        if (pattern.startsWith(contentBuffer.slice(-i))) {
+                            safeFlushEnd = Math.min(safeFlushEnd, contentBuffer.length - i);
+                            break;
+                        }
                     }
                 }
 
@@ -559,6 +703,20 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
             const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
             const photoUrl = `${host}${roomImages[roomId]}`;
             fullResponse = fullResponse.replace(/\{\{PROFILE_PHOTO_URL\}\}/g, photoUrl);
+        }
+
+        if (fullResponse.includes('<!-- YOUTUBE:') || fullResponse.includes('<!-- IMAGE:')) {
+            try {
+                const unresolvedText = fullResponse.replace(
+                    /<!--\s*(YOUTUBE|IMAGE):\s*(.*?)\s*-->/g,
+                    (match) => resolvedMarkers.has(match) ? '' : match
+                );
+                if (unresolvedText.includes('<!-- YOUTUBE:') || unresolvedText.includes('<!-- IMAGE:')) {
+                    await resolveMediaMarkers(unresolvedText, onToken);
+                }
+            } catch (mediaErr) {
+                console.error('[LLM] Media resolution error:', mediaErr.message);
+            }
         }
 
         roomContexts[roomId].push({ "role": "assistant", "content": fullResponse });
