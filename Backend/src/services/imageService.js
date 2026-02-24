@@ -5,15 +5,11 @@ import http from 'http';
 const REQUEST_TIMEOUT_MS = 8000; // 8s per source
 const USER_AGENT = 'JobPilot/2.0 (Career Assistant; contact@jobpilot.app)';
 
-/**
- * Fetch JSON from a URL with timeout, redirect handling, and error resilience.
- */
 function fetchJSON(url, timeoutMs = REQUEST_TIMEOUT_MS) {
     return new Promise((resolve, reject) => {
         const client = url.startsWith('https') ? https : http;
 
         const req = client.get(url, { headers: { 'User-Agent': USER_AGENT } }, (res) => {
-            // Follow redirects (3xx)
             if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
                 fetchJSON(res.headers.location, timeoutMs).then(resolve).catch(reject);
                 return;
@@ -43,16 +39,12 @@ function fetchJSON(url, timeoutMs = REQUEST_TIMEOUT_MS) {
 }
 
 // ── Query Optimizer ───────────────────────────────────────────────
-/**
- * Optimizes search queries for better contextual image results.
- * Keeps the meaningful parts, strips noise, and adds context hints.
- */
+
 function optimizeQuery(rawQuery) {
     if (!rawQuery || typeof rawQuery !== 'string') return '';
 
     let q = rawQuery.trim();
 
-    // Remove filler words that don't help image search
     const fillers = [
         /\b(how to|what is|why do|when to|where to|who is|which|example of|examples of)\b/gi,
         /\b(please|help|show me|find me|search for|get me|give me|i need|i want)\b/gi,
@@ -62,30 +54,19 @@ function optimizeQuery(rawQuery) {
         q = q.replace(filler, '');
     }
 
-    // Collapse whitespace
     q = q.replace(/\s+/g, ' ').trim();
 
-    // If cleaned query is too short, fall back to original
     if (q.length < 3) return rawQuery.trim();
 
-    // Cap at 80 chars for API efficiency
     if (q.length > 80) q = q.substring(0, 80).trim();
 
     return q;
 }
 
 // ══════════════════════════════════════════════════════════════════
-// ── SOURCE 1: Openverse API (FREE, NO KEY, BEST CONTEXTUAL) ─────
+// ── SOURCE 1: Openverse API ───────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════
-/**
- * Openverse (by WordPress/Automattic) aggregates CC-licensed images
- * from Flickr, Wikimedia, and dozens of other sources. It has
- * excellent search relevance and returns contextually matched images.
- * 
- * ✅ No API key required
- * ✅ Great search relevance (title, tags, description matching)
- * ✅ High-quality photos from real sources
- */
+
 async function searchOpenverse(query, limit = 4) {
     const encoded = encodeURIComponent(query);
 
@@ -101,7 +82,6 @@ async function searchOpenverse(query, limit = 4) {
 
     return data.results
         .filter(item => {
-            // Only photos with reasonable dimensions
             if (!item.url) return false;
             if (item.height && item.width && (item.height < 100 || item.width < 100)) return false;
             return true;
@@ -122,7 +102,7 @@ async function searchOpenverse(query, limit = 4) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// ── SOURCE 2: Wikimedia Commons (FREE, NO KEY, CONTEXTUAL) ──────
+// ── SOURCE 2: Wikimedia Commons  ──────────────────────────────────
 // ══════════════════════════════════════════════════════════════════
 async function searchWikimediaCommons(query, limit = 4) {
     const encoded = encodeURIComponent(query);
@@ -145,7 +125,6 @@ async function searchWikimediaCommons(query, limit = 4) {
             const info = page.imageinfo?.[0];
             if (!info) return false;
             const mime = info.mime || '';
-            // Only real photos — jpeg, png, webp
             return (
                 (mime === 'image/jpeg' || mime === 'image/png' || mime === 'image/webp') &&
                 (info.width || 0) >= 200 &&
@@ -172,7 +151,7 @@ async function searchWikimediaCommons(query, limit = 4) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// ── SOURCE 3: Pexels API (OPTIONAL — needs API key) ─────────────
+// ── SOURCE 3: Pexels API ──────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════
 async function searchPexels(query, limit = 4) {
     const apiKey = process.env.PEXELS_API_KEY;
@@ -216,7 +195,7 @@ async function searchPexels(query, limit = 4) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// ── SOURCE 4: Pixabay API (OPTIONAL — needs API key) ────────────
+// ── SOURCE 4: Pixabay API ─────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════
 async function searchPixabay(query, limit = 4) {
     const apiKey = process.env.PIXABAY_API_KEY;
@@ -242,17 +221,11 @@ async function searchPixabay(query, limit = 4) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// ── SOURCE 5: Wikipedia Article Images (FREE, CONTEXTUAL) ───────
+// ── SOURCE 5: Wikipedia Article Images ────────────────────────────
 // ══════════════════════════════════════════════════════════════════
-/**
- * Searches Wikipedia for articles matching the query and extracts
- * their main images. These are highly contextual because Wikipedia
- * curates relevant images for each topic.
- */
 async function searchWikipediaImages(query, limit = 3) {
     const encoded = encodeURIComponent(query);
 
-    // Step 1: Search for related articles
     const searchUrl =
         `https://en.wikipedia.org/w/api.php?action=query` +
         `&list=search&srsearch=${encoded}&srlimit=${limit + 2}` +
@@ -262,7 +235,6 @@ async function searchWikipediaImages(query, limit = 3) {
     const articles = searchData?.query?.search;
     if (!articles?.length) return [];
 
-    // Step 2: Get page images for found articles
     const titles = articles.slice(0, limit + 2).map(a => a.title).join('|');
     const imageUrl =
         `https://en.wikipedia.org/w/api.php?action=query` +
@@ -291,8 +263,6 @@ async function searchWikipediaImages(query, limit = 3) {
 // ══════════════════════════════════════════════════════════════════
 // ── UTILITIES ────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════
-
-/** Clean image titles — remove file extensions, "File:" prefix, HTML */
 function cleanTitle(raw) {
     if (!raw) return '';
     return raw
@@ -302,13 +272,11 @@ function cleanTitle(raw) {
         .trim();
 }
 
-/** Capitalize source names like "flickr" → "Flickr" */
 function capitalizeSource(src) {
     if (!src) return 'Unknown';
     return src.charAt(0).toUpperCase() + src.slice(1);
 }
 
-/** Deduplicate images by normalized URL */
 function deduplicateImages(images) {
     const seen = new Set();
     return images.filter(img => {
@@ -345,7 +313,6 @@ export async function searchImages(query, limit = 4) {
         const optimized = optimizeQuery(query);
         console.log(`[ImageService] Query: "${optimized}" (from: "${query.substring(0, 60)}")`);
 
-        // ── Phase 1: Primary search — Openverse (best results) ─────
         let primaryImages = [];
         try {
             primaryImages = await searchOpenverse(optimized, limit + 2);
@@ -354,12 +321,10 @@ export async function searchImages(query, limit = 4) {
             console.warn(`[ImageService] Openverse failed: ${err.message}`);
         }
 
-        // If Openverse gives enough results, return early (fastest path)
         if (primaryImages.length >= limit) {
             return deduplicateImages(primaryImages).slice(0, limit);
         }
 
-        // ── Phase 2: Parallel fallbacks to fill remaining slots ────
         const needed = limit - primaryImages.length;
         const [pexels, pixabay, wikimedia, wikipedia] = await Promise.allSettled([
             searchPexels(optimized, needed).catch(() => []),
@@ -375,13 +340,12 @@ export async function searchImages(query, limit = 4) {
 
         console.log(`[ImageService] Fallbacks: Pexels=${pexelsImgs.length}, Pixabay=${pixabayImgs.length}, Wikimedia=${wikiImgs.length}, Wikipedia=${wpImgs.length}`);
 
-        // Merge everything — prioritize by quality/relevance
         let allImages = [
-            ...primaryImages,    // Openverse first (best relevance)
-            ...pexelsImgs,       // Pexels (high quality stock)
-            ...pixabayImgs,      // Pixabay (high quality stock)
-            ...wikiImgs,         // Wikimedia (mixed quality but relevant)
-            ...wpImgs,           // Wikipedia (always contextual)
+            ...primaryImages,
+            ...pexelsImgs,
+            ...pixabayImgs,
+            ...wikiImgs,
+            ...wpImgs,
         ];
 
         allImages = deduplicateImages(allImages);
@@ -392,10 +356,8 @@ export async function searchImages(query, limit = 4) {
             return result;
         }
 
-        // ── Phase 3: Last resort — broader Openverse search ────────
         console.log(`[ImageService] No results found, trying broader search...`);
         try {
-            // Try with simpler query (first 2-3 words)
             const words = optimized.split(' ').slice(0, 3).join(' ');
             const broaderResults = await searchOpenverse(words, limit);
             if (broaderResults.length > 0) {
