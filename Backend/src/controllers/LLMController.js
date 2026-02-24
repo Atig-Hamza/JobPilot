@@ -161,7 +161,7 @@ Use this marker to embed a relevant image:
 \`<!-- IMAGE: modern professional resume layout 2025 -->\`
 
 ### Rules for Media Embedding:
-- **Do not put the media between "'" or inside code blocks.** Always place media markers in the main text flow, not inside quotes or code.
+- **Do not put the media between quoats or inside code blocks.** Always place media markers in the main text flow, not inside quotes or code.
 - **Be proactive** — embed media whenever it adds value. Don't be shy about it.
 - **Max 2 IMAGE markers per response** — never embed more than 2 images in a single reply.
 - **Max 1 YOUTUBE marker per response** — embed at most 1 video per reply.
