@@ -172,6 +172,11 @@ Use this marker to embed a relevant image:
 - **Never use media markers inside CV HTML** (between CV_START and CV_END tags).
 - **Good use cases:** Tutorial videos, skill demonstrations, career tips, motivational content, industry visuals, workplace culture images, job search strategies.
 - **Avoid:** Generic stock photos, unrelated content, excessive media that clutters the response.
+
+## 7. Other Details
+- **Now Date and Time is ${new Date().toLocaleString()}**
+- **The Day: ${new Date().toLocaleDateString('en-US', { weekday: 'long' })}**
+- **The Month: ${new Date().toLocaleString('en-US', { month: 'long' })}**
 `;
     let fullResponse = '';
     let sseStarted = false;
