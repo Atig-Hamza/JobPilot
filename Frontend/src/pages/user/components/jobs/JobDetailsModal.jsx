@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Briefcase, MapPin, DollarSign, Clock, Check, Bot, BrainCircuit, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const AIInterviewModal = ({ isOpen, onClose, onConfirm }) => {
     if (!isOpen) return null;
@@ -23,7 +24,7 @@ const AIInterviewModal = ({ isOpen, onClose, onConfirm }) => {
                 <div className="p-6 space-y-6">
                     <div className="relative">
                         <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-100 dark:bg-gray-800" />
-                        
+
                         <div className="relative z-10 flex gap-4">
                             <div className="w-8 h-8 rounded-full bg-black dark:bg-white text-black dark:text-black flex items-center justify-center text-sm font-bold shrink-0">1</div>
                             <div>
@@ -80,6 +81,7 @@ const JobDetailsModal = ({ isOpen, onClose, job, onApply, userId }) => {
     const isApplied = job.applicants && job.applicants.includes(userId);
     const [isApplying, setIsApplying] = useState(false);
     const [showAIModal, setShowAIModal] = useState(false);
+    const navigate = useNavigate();
 
     const handleApplyClick = () => {
         if (isApplied) return;
@@ -89,7 +91,7 @@ const JobDetailsModal = ({ isOpen, onClose, job, onApply, userId }) => {
     const confirmApply = async () => {
         setShowAIModal(false);
         setIsApplying(true);
-        await onApply(job._id);
+        navigate(`/user/meet?jobId=${encodeURIComponent(job._id || job.id)}`);
         setIsApplying(false);
     };
 
@@ -97,10 +99,10 @@ const JobDetailsModal = ({ isOpen, onClose, job, onApply, userId }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
             <AnimatePresence>
                 {showAIModal && (
-                    <AIInterviewModal 
-                        isOpen={showAIModal} 
-                        onClose={() => setShowAIModal(false)} 
-                        onConfirm={confirmApply} 
+                    <AIInterviewModal
+                        isOpen={showAIModal}
+                        onClose={() => setShowAIModal(false)}
+                        onConfirm={confirmApply}
                     />
                 )}
             </AnimatePresence>
