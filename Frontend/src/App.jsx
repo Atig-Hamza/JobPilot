@@ -26,6 +26,7 @@ const WaitlistRequests = lazy(() => import('./pages/admin/WaitlistRequests'));
 const AccessManagement = lazy(() => import('./pages/admin/AccessManagement'));
 const InterviewCoach = lazy(() => import('./pages/user/InterviewCoach'));
 const Onboarding = lazy(() => import('./pages/user/Onboarding'));
+const Meet = lazy(() => import('./pages/user/Meet'));
 
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
@@ -86,6 +87,7 @@ function App() {
               <Route path="/user/dashboard" element={<Page title="Dashboard - JobPilot"><UserDashboard /></Page>} />
               <Route path="/user/autopilot" element={<Page title="AutoPilot - JobPilot"><AutoPilotAgent /></Page>} />
               <Route path="/user/interview-coach" element={<Page title="Interview Coach - JobPilot"><InterviewCoach /></Page>} />
+              <Route path="/user/meet" element={<Page title="Meet - JobPilot"><Meet /></Page>} />
             </Route>
 
             <Route element={<Authenticate allowedRoles={['admin']} />}>
