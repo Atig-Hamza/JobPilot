@@ -11,6 +11,7 @@ import cvRoutes from './cvRoutes.js';
 import jobRoutes from './jobRoutes.js';
 import announcementRoutes from './announcementRoutes.js';
 import mediaRoutes from './mediaRoutes.js';
+import meetRoutes from './meetRoutes.js';
 
 const router = express.Router();
 
@@ -26,6 +27,7 @@ router.use('/history', historyRoutes);
 router.use('/jobs', jobRoutes);
 router.use('/announcements', announcementRoutes);
 router.use('/media', mediaRoutes);
+router.use('/meet', meetRoutes);
 
 export default router;
 
