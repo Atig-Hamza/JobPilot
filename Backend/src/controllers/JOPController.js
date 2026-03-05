@@ -5,7 +5,7 @@ import { AppError } from '../utils/AppError.js';
 import catchAsync from '../utils/catchAsync.js';
 
 export const crawlCompanies = catchAsync(async (req, res) => {
-    const { keywords, country, limit, roomId } = req.body;
+    const { keywords, country, limit, roomId, includeRecruiterEmails } = req.body;
 
     if (!req.user || !req.user.id) {
         return res.status(400).send({ error: "User information is required." });
@@ -30,7 +30,8 @@ export const crawlCompanies = catchAsync(async (req, res) => {
         const stream = JOPService.processSearchWithAI({
             keywords,
             country: country || 'Global',
-            limit: limit || 12
+            limit: limit || 12,
+            includeRecruiterEmails: !!includeRecruiterEmails
         });
 
         for await (const chunk of stream) {
