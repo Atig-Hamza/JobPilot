@@ -23,7 +23,7 @@ function getClientForModel(model) {
 
 // ── Smart Model Pool (Round-Robin: NVIDIA ↔ Mistral) ─────────────
 const NVIDIA_POOL = [
-    'moonshotai/kimi-k2-instruct-0905',
+    'moonshotai/kimi-k2-instruct',
     'nvidia/nemotron-3-nano-30b-a3b',
 ];
 
