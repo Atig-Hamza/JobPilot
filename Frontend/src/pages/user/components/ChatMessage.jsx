@@ -413,6 +413,18 @@ const ChatMessage = ({ msg, isStreaming }) => {
     const [showProcess, setShowProcess] = useState(false);
     const [showMore, setShowMore] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
+    const moreMenuRef = React.useRef(null);
+
+    useEffect(() => {
+        if (!showMore) return;
+        const handleOutsideClick = (e) => {
+            if (moreMenuRef.current && !moreMenuRef.current.contains(e.target)) {
+                setShowMore(false);
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => document.removeEventListener('mousedown', handleOutsideClick);
+    }, [showMore]);
     const [resolvedMedia, setResolvedMedia] = useState(null);
     const [mediaLoading, setMediaLoading] = useState(false);
 
@@ -972,7 +984,7 @@ const ChatMessage = ({ msg, isStreaming }) => {
                                 <ThumbsDown size={16} />
                             </button>
 
-                            <div className="relative">
+                            <div className="relative" ref={moreMenuRef}>
                                 <button
                                     onClick={() => setShowMore(!showMore)}
                                     className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
