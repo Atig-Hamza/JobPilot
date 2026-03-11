@@ -21,13 +21,17 @@ const INTERVIEWERS = {
     },
 };
 
-// ── Chrome Web Speech API STT Hook ─────────────────────────────────
+// ── Chrome Web Speech API STT Hook (Enhanced) ─────────────────────
+const STT_MIN_CONFIDENCE = 0.55;
+const STT_RESTART_DELAY = 80;
+
 function useSpeechRecognition() {
     const recognitionRef = useRef(null);
     const [transcript, setTranscript] = useState('');
     const [listening, setListening] = useState(false);
     const [supported, setSupported] = useState(false);
     const onResultRef = useRef(null);
+    const restartTimerRef = useRef(null);
 
     useEffect(() => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -37,39 +41,74 @@ function useSpeechRecognition() {
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = 'en-US';
+        recognition.maxAlternatives = 3;
 
         recognition.onresult = (event) => {
             let interim = '';
             let final = '';
             for (let i = event.resultIndex; i < event.results.length; i++) {
-                const t = event.results[i][0].transcript;
-                if (event.results[i].isFinal) final += t;
-                else interim += t;
+                const result = event.results[i];
+                if (result.isFinal) {
+                    // Pick the best alternative above confidence threshold
+                    let bestText = result[0].transcript;
+                    let bestConf = result[0].confidence;
+                    for (let a = 1; a < result.length; a++) {
+                        if (result[a].confidence > bestConf) {
+                            bestConf = result[a].confidence;
+                            bestText = result[a].transcript;
+                        }
+                    }
+                    if (bestConf >= STT_MIN_CONFIDENCE) final += bestText;
+                    else if (bestConf > 0.3) final += bestText; // still accept low-confidence over silence
+                } else {
+                    interim += result[0].transcript;
+                }
             }
             setTranscript(interim || final);
             if (final && onResultRef.current) onResultRef.current(final.trim());
         };
+
         recognition.onerror = (e) => {
             console.warn('[STT] Error:', e.error);
-            if (e.error !== 'no-speech') setListening(false);
+            // Auto-restart on transient errors while mic should be on
+            if (['no-speech', 'audio-capture', 'network'].includes(e.error)) {
+                if (recognitionRef.current?._shouldListen) {
+                    clearTimeout(restartTimerRef.current);
+                    restartTimerRef.current = setTimeout(() => {
+                        try { recognitionRef.current?.start(); } catch (_) {}
+                    }, e.error === 'no-speech' ? 150 : 500);
+                }
+            } else if (e.error === 'aborted') {
+                // Intentional abort, do nothing
+            } else {
+                setListening(false);
+            }
         };
+
         recognition.onend = () => {
             if (recognitionRef.current?._shouldListen) {
-                try { recognitionRef.current.start(); } catch (_) {}
+                // Fast seamless restart for continuous listening
+                clearTimeout(restartTimerRef.current);
+                restartTimerRef.current = setTimeout(() => {
+                    try { recognitionRef.current?.start(); } catch (_) {}
+                }, STT_RESTART_DELAY);
             } else {
                 setListening(false);
             }
         };
 
         recognitionRef.current = recognition;
-        return () => { try { recognition.abort(); } catch (_) {} };
+        return () => {
+            clearTimeout(restartTimerRef.current);
+            try { recognition.abort(); } catch (_) {}
+        };
     }, []);
 
     const start = useCallback(() => {
         if (recognitionRef.current && !listening) {
             setTranscript('');
             recognitionRef.current._shouldListen = true;
-            recognitionRef.current.start();
+            try { recognitionRef.current.start(); } catch (_) {}
             setListening(true);
         }
     }, [listening]);
@@ -77,7 +116,8 @@ function useSpeechRecognition() {
     const stop = useCallback(() => {
         if (recognitionRef.current) {
             recognitionRef.current._shouldListen = false;
-            recognitionRef.current.stop();
+            clearTimeout(restartTimerRef.current);
+            try { recognitionRef.current.stop(); } catch (_) {}
             setListening(false);
         }
     }, []);
@@ -201,7 +241,7 @@ const Meet = () => {
         setAiSpeaking(true);
 
         try {
-            const res = await axios.post(`${API}/meet/tts`, { text: text.slice(0, 2000), speaker }, {
+            const res = await axios.post(`${API}/meet/tts`, { text: text.slice(0, 3000), speaker }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (res.data.status === 'success' && res.data.data.audio) {
@@ -219,13 +259,20 @@ const Meet = () => {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'en-US';
-            utterance.rate = 0.95;
+            utterance.rate = 0.92;
+            utterance.pitch = speaker === 'alex' ? 0.95 : 1.05;
+            utterance.volume = 1.0;
             const voices = window.speechSynthesis.getVoices();
             const isAlex = speaker === 'alex';
+            // Prefer high-quality neural / natural voices
             const preferred = voices.find(v => {
                 const n = v.name.toLowerCase();
-                return v.lang.startsWith('en') && (isAlex ? /guy|david|male|james/.test(n) : /aria|zira|samantha|jenny|female/.test(n));
-            }) || voices.find(v => v.lang.startsWith('en'));
+                return v.lang.startsWith('en') && /natural|neural|online/.test(n) && (isAlex ? /guy|david|james|mark|chris/.test(n) : /aria|jenny|samantha|zira|sarah/.test(n));
+            }) || voices.find(v => {
+                const n = v.name.toLowerCase();
+                return v.lang.startsWith('en') && (isAlex ? /guy|david|male|james|mark|chris/.test(n) : /aria|zira|samantha|jenny|sarah|female/.test(n));
+            }) || voices.find(v => v.lang.startsWith('en-US'))
+              || voices.find(v => v.lang.startsWith('en'));
             if (preferred) utterance.voice = preferred;
             utterance.onend = () => { setAiSpeaking(false); setSubtitle(''); };
             utterance.onerror = () => { setAiSpeaking(false); setSubtitle(''); };
@@ -454,7 +501,15 @@ const Meet = () => {
     useEffect(() => {
         const startCam = async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' }, audio: false });
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        frameRate: { ideal: 30 },
+                        facingMode: 'user',
+                    },
+                    audio: false,
+                });
                 if (videoRef.current) videoRef.current.srcObject = stream;
                 streamRef.current = stream;
                 setCameraState('ready');
