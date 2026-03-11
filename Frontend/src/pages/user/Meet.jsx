@@ -127,6 +127,131 @@ function useSpeechRecognition() {
     return { transcript, listening, supported, start, stop, onFinalResult };
 }
 
+// ── Neural Wave Canvas Animation ──────────────────────────────────
+const NeuralWaveCanvas = React.memo(({ type = 'hr', animState = 'Idle' }) => {
+    const canvasRef = useRef(null);
+    const containerRef = useRef(null);
+    const stateRef = useRef({ current: animState, previous: animState, progress: 1 });
+
+    useEffect(() => {
+        if (stateRef.current.current !== animState) {
+            stateRef.current.previous = stateRef.current.current;
+            stateRef.current.current = animState;
+            stateRef.current.progress = 0;
+        }
+    }, [animState]);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const container = containerRef.current;
+        if (!canvas || !container) return;
+        const ctx = canvas.getContext('2d', { alpha: false });
+
+        const HR_HUES = { Idle: 270, Listening: 300, Processing: 340, Speaking: 320 };
+        const TECH_HUES = { Idle: 190, Listening: 160, Processing: 220, Speaking: 200 };
+        const hues = type === 'hr' ? HR_HUES : TECH_HUES;
+
+        const DOT_SPACING = 9;
+        const DOT_BASE_SIZE = 1.2;
+        let dots = [], cols = 0, rows = 0, time = 0, animId;
+
+        function resize() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = container.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            cols = Math.ceil(rect.width / DOT_SPACING) + 1;
+            rows = Math.ceil(rect.height / DOT_SPACING) + 1;
+            dots = [];
+            for (let r = 0; r < rows; r++)
+                for (let c = 0; c < cols; c++)
+                    dots.push({ baseX: c * DOT_SPACING, baseY: r * DOT_SPACING, nx: (c / cols) * 2 - 1, ny: (r / rows) * 2 - 1 });
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, rect.width, rect.height);
+        }
+
+        const getIdle = (d, t) =>
+            Math.sin(d.nx * 3 + d.ny * 2 + t) * 0.5 +
+            Math.cos(d.nx * 2 - d.ny * 3 + t * 0.8) * 0.3 +
+            Math.sin((d.nx + d.ny) * 4 + t * 0.5) * 0.2;
+
+        const getListening = (d, t) => {
+            const dist = Math.sqrt(d.nx * d.nx + d.ny * d.ny);
+            return Math.sin(dist * 15 - t * 3) * Math.max(0, 1 - dist * 0.8);
+        };
+
+        const getProcessing = (d, t) =>
+            (Math.sin(d.nx * 10 + t * 5) * Math.cos(d.ny * 12 - t * 4) +
+             Math.cos(d.nx * 20 - t * 3) * Math.sin(d.ny * 8 + t * 6) * 0.5 +
+             Math.sin(d.nx * 5 + d.ny * 30 - t * 10) * 0.3) * 0.8;
+
+        const getSpeaking = (d, t) => {
+            const yMask = Math.exp(-Math.pow(d.ny * 4, 2));
+            return (Math.sin(d.nx * 8 - t * 4) * 0.5 +
+                    Math.cos(d.nx * 14 + t * 6) * 0.3 +
+                    Math.sin(d.nx * 4 + t * 2) * 0.2) * yMask * 1.5;
+        };
+
+        const getValue = (state, d, t) => {
+            switch (state) {
+                case 'Listening': return getListening(d, t);
+                case 'Processing': return getProcessing(d, t);
+                case 'Speaking': return getSpeaking(d, t);
+                default: return getIdle(d, t);
+            }
+        };
+
+        const ease = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+        function render() {
+            const rect = container.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) { animId = requestAnimationFrame(render); return; }
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(0, 0, rect.width, rect.height);
+            time += 0.015;
+            const st = stateRef.current;
+            if (st.progress < 1) st.progress = Math.min(1, st.progress + 0.015);
+            const eased = ease(st.progress);
+            const prevHue = hues[st.previous] ?? hues.Idle;
+            const currHue = hues[st.current] ?? hues.Idle;
+            const globalHue = prevHue + (currHue - prevHue) * eased;
+            for (let i = 0; i < dots.length; i++) {
+                const dot = dots[i];
+                let value;
+                if (st.progress < 1) {
+                    value = getValue(st.previous, dot, time) * (1 - eased) + getValue(st.current, dot, time) * eased;
+                } else {
+                    value = getValue(st.current, dot, time);
+                }
+                const norm = (Math.max(-1, Math.min(1, value)) + 1) / 2;
+                const size = DOT_BASE_SIZE * (0.2 + norm * 2.5);
+                const alpha = 0.1 + norm * 0.9;
+                const finalHue = (globalHue + dot.nx * 30 + norm * 40) % 360;
+                ctx.fillStyle = `hsla(${finalHue}, ${80 + norm * 20}%, ${20 + norm * 60}%, ${alpha})`;
+                ctx.fillRect(dot.baseX - size / 2, dot.baseY - size / 2, size, size);
+            }
+            animId = requestAnimationFrame(render);
+        }
+
+        resize();
+        window.addEventListener('resize', resize);
+        render();
+        return () => { window.removeEventListener('resize', resize); cancelAnimationFrame(animId); };
+    }, [type]);
+
+    return (
+        <div ref={containerRef} className="absolute inset-0 overflow-hidden" style={{
+            background: 'radial-gradient(circle at 50% 50%, #0a0a0a 0%, #000 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 75% 70% at 50% 50%, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%)',
+            maskImage: 'radial-gradient(ellipse 75% 70% at 50% 50%, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%)',
+        }}>
+            <canvas ref={canvasRef} className="block w-full h-full" style={{ mixBlendMode: 'screen' }} />
+        </div>
+    );
+});
+
 // ═══════════════════════════════════════════════════════════════════
 // MEET COMPONENT
 // ═══════════════════════════════════════════════════════════════════
@@ -212,6 +337,8 @@ const Meet = () => {
     const currentInterviewer = (meetPhase.startsWith('tech') || meetPhase === 'generating')
         ? INTERVIEWERS.alex
         : INTERVIEWERS.sarah;
+
+    const waveState = aiSpeaking ? 'Speaking' : aiTyping ? 'Processing' : sttActive ? 'Listening' : 'Idle';
 
     // ── Helpers ──
     const nowTime = () => new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -931,11 +1058,16 @@ const Meet = () => {
                     <div ref={videoGridRef} className="flex-1 flex flex-col h-full justify-center relative w-full overflow-hidden">
 
                         {/* Main Video Area */}
-                        <div className={`h-[80vh] w-full max-w-5xl mx-auto meet-surface rounded-xl overflow-hidden relative shadow-lg group border-2 transition-colors duration-500 ${
+                        <div className={`h-[80vh] w-full max-w-5xl mx-auto bg-black rounded-xl overflow-hidden relative shadow-lg group border-2 transition-colors duration-500 ${
                             aiSpeaking ? 'speaking-ring' : 'border-gray-600/30'
                         }`}>
 
-                            {/* ── WAITING STATE ── */}
+                            {/* ── Neural Wave Background ── */}
+                            <NeuralWaveCanvas
+                                type={meetPhase.startsWith('tech') || meetPhase === 'generating' ? 'technical' : 'hr'}
+                                animState={(meetPhase === 'hr' || meetPhase === 'technical') ? waveState : meetPhase === 'generating' ? 'Processing' : 'Idle'}
+                            />
+
                             <AnimatePresence mode="wait">
                                 {meetPhase === 'waiting' && (
                                     <motion.div
@@ -943,9 +1075,9 @@ const Meet = () => {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
-                                        className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-10"
+                                        className="absolute inset-0 flex flex-col items-center justify-center z-10"
                                     >
-                                        <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center mb-6">
+                                        <div className="w-20 h-20 rounded-full bg-gray-700/80 backdrop-blur-sm flex items-center justify-center mb-6">
                                             <i className="ph ph-users-three text-3xl text-gray-400"></i>
                                         </div>
                                         <p className="text-xl text-gray-300 mb-2">Waiting for interviewer to join...</p>
@@ -966,7 +1098,7 @@ const Meet = () => {
                                         animate={{ opacity: 1, scale: 1 }}
                                         exit={{ opacity: 0, scale: 1.05 }}
                                         transition={{ duration: 0.5 }}
-                                        className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-10"
+                                        className="absolute inset-0 flex flex-col items-center justify-center z-10"
                                     >
                                         <motion.img
                                             src={currentInterviewer.avatar}
@@ -992,7 +1124,7 @@ const Meet = () => {
                                         initial={{ opacity: 1 }}
                                         animate={{ opacity: 0.3 }}
                                         transition={{ duration: 2 }}
-                                        className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-10"
+                                        className="absolute inset-0 flex flex-col items-center justify-center z-10"
                                     >
                                         <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gray-600 mb-4 opacity-50">
                                             <img src={currentInterviewer.avatar} alt="" className="w-full h-full object-cover grayscale" />
@@ -1007,7 +1139,7 @@ const Meet = () => {
                                         key="generating"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
-                                        className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-10"
+                                        className="absolute inset-0 flex flex-col items-center justify-center z-10"
                                     >
                                         <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-6"></div>
                                         <p className="text-xl text-white mb-2">Generating your interview report...</p>
@@ -1015,7 +1147,7 @@ const Meet = () => {
                                     </motion.div>
                                 )}
 
-                                {/* ── ACTIVE INTERVIEW: Show interviewer ── */}
+                                {/* ── ACTIVE INTERVIEW: Wave animation visible ── */}
                                 {(meetPhase === 'hr' || meetPhase === 'technical') && (
                                     <motion.div
                                         key={`active-${meetPhase}`}
@@ -1023,13 +1155,7 @@ const Meet = () => {
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 0.6 }}
                                         className="absolute inset-0"
-                                    >
-                                        <img
-                                            src={currentInterviewer.avatar}
-                                            alt={currentInterviewer.name}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </motion.div>
+                                    />
                                 )}
                             </AnimatePresence>
 
