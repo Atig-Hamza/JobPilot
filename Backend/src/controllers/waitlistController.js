@@ -23,3 +23,13 @@ export const getWaitlist = catchAsync(async (req, res, next) => {
     }
   });
 });
+
+export const approveUser = catchAsync(async (req, res, next) => {
+  const user = await waitlistService.approveWaitlistUser(req.params.id);
+
+  res.status(200).json({
+    status: 'success',
+    message: 'User approved and moved to users table successfully.',
+    data: { user }
+  });
+});
