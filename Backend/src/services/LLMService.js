@@ -353,6 +353,7 @@ Generate a polished, premium Single-Page CV/Resume in raw HTML + CSS. The result
 - Use a <style> block for all styling.
 - CORRECT format example: <!-- CV_START --><!DOCTYPE html><html>...</html><!-- CV_END -->
 - WRONG format (NEVER DO THIS): <!-- CV_START -->\`\`\`html<html>...</html>\`\`\`<!-- CV_END -->
+- PROFILE PHOTO RULE: ONLY include an <img> tag if PROFILE_PHOTO_URL appears in the system context. If it is NOT there, do NOT add any img tag, circle, or placeholder in the sidebar. Silence is correct.
 
 ## PAGE FORMAT
 - A4 page: width: 210mm; height: 297mm; overflow: hidden;
@@ -382,9 +383,9 @@ Generate a polished, premium Single-Page CV/Resume in raw HTML + CSS. The result
 - Sidebar contact items: icon + text, spaced evenly, font-size 8.5-9pt.
 
 ## PROFILE PHOTO
-- If PROFILE_PHOTO_URL is available: include <img src="{{PROFILE_PHOTO_URL}}"> at the TOP of the sidebar.
+- If PROFILE_PHOTO_URL is available in the system context: include <img src="{{PROFILE_PHOTO_URL}}"> at the TOP of the sidebar.
 - Style: width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,0.8); display: block; margin: 0 auto 16px auto;
-- If NO photo URL is provided: do NOT include any placeholder, avatar icon, or empty circle.
+- CRITICAL: If NO photo URL is provided: ABSOLUTELY DO NOT include any img tag, circular placeholder, avatar icon, empty div, or any visual element where a photo would be. Omit the photo area entirely.
 
 ## CONTENT RULES
 - Pull ALL data from the user's profile context. Do NOT invent fake data.
@@ -415,7 +416,7 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
             if (roomImages[roomId]) {
                 const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
                 const fullPhotoUrl = `${host}${roomImages[roomId]}`;
-                photoContext = `\n\nPROFILE_PHOTO_URL: ${fullPhotoUrl}\nThe user has uploaded a profile photo for their CV. You MUST include an <img> tag with src="${fullPhotoUrl}" in the CV sidebar.\n`;
+                photoContext = `\n\nPROFILE_PHOTO_URL: ${fullPhotoUrl}\nThe user has uploaded a profile photo. When generating a CV, you MUST include <img src="{{PROFILE_PHOTO_URL}}" ...> in the sidebar. Use ONLY {{PROFILE_PHOTO_URL}} as the src — never a placeholder or empty element.\n`;
             }
 
             const enhancedSystemPrompt = baseSystemPrompt +
@@ -460,7 +461,7 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
                 const host = baseUrl || process.env.API_URL || 'http://localhost:5000';
                 const fullPhotoUrl = `${host}${imagePath}`;
                 if (!systemMsg.content.includes('PROFILE_PHOTO_URL')) {
-                    systemMsg.content += `\n\nPROFILE_PHOTO_URL: ${fullPhotoUrl}\nThe user has uploaded a profile photo for their CV. You MUST include an <img> tag with src="${fullPhotoUrl}" in the CV sidebar. Also accept {{PROFILE_PHOTO_URL}} as valid — it will be replaced with the real URL.\nAcknowledge that you received and will use their photo.\n`;
+                    systemMsg.content += `\n\nPROFILE_PHOTO_URL: ${fullPhotoUrl}\nThe user has uploaded a profile photo. When generating a CV, you MUST include <img src="{{PROFILE_PHOTO_URL}}" ...> in the sidebar. Use ONLY {{PROFILE_PHOTO_URL}} as the src — never a placeholder or empty element.\n`;
                 } else {
                     systemMsg.content = systemMsg.content.replace(
                         /PROFILE_PHOTO_URL: \{\{PROFILE_PHOTO_URL\}\}/,
@@ -489,7 +490,7 @@ async function generateText(prompt, roomId, onToken, systemPrompt, baseUrl, aiSe
             });
         };
 
-        const isCvRequest = typeof prompt === 'string' && /\b(cv|resume|cover\s*letter)\b/i.test(prompt);
+        const isCvRequest = (typeof prompt === 'string' && /\b(cv|resume|cover\s*letter)\b/i.test(prompt)) || !!roomImages[roomId];
         const streamPool = isCvRequest ? CV_MODEL_POOL : MODEL_POOL;
 
         const { result: stream, model: usedModel } = await withModelFallback(

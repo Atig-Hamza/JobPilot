@@ -1,6 +1,7 @@
 import Waitlist from '../models/Waitlist.js';
+import User from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
-import { sendNewJoinWaitlistToAdmins, sendApprovedInviteCodeNotification, sendRejectedInviteCodeNotification, sendWaitlistEmail } from './mailService.js';
+import { sendNewJoinWaitlistToAdmins, sendApprovedInviteCodeNotification, sendRejectedInviteCodeNotification, sendWaitlistEmail, sendApprovalNotification } from './mailService.js';
 import InviteCode from '../models/inviteCode.js';
 import { hasCorrectInviteCode } from './authService.js';
 
@@ -41,6 +42,41 @@ export const addToWaitlist = async (data) => {
 export const getAllWaitlist = async () => {
     const list = await Waitlist.find().sort({ createdAt: -1 });
     return list;
+};
+
+export const approveWaitlistUser = async (waitlistId) => {
+    const waitlistEntry = await Waitlist.findById(waitlistId);
+    if (!waitlistEntry) {
+        throw new AppError('Waitlist entry not found', 404);
+    }
+
+    const existingUser = await User.findOne({ email: waitlistEntry.email });
+    if (existingUser) {
+        throw new AppError('A user with this email already exists', 400);
+    }
+
+    const fullName = `${waitlistEntry.firstName} ${waitlistEntry.lastName || ''}`.trim();
+
+    const userData = {
+        fullName,
+        email: waitlistEntry.email,
+        password: waitlistEntry.password,
+        authProvider: waitlistEntry.authProvider || 'local',
+        isVerified: true,
+        role: 'user',
+        credits: 500,
+    };
+
+    if (waitlistEntry.googleId) userData.googleId = waitlistEntry.googleId;
+    if (waitlistEntry.avatar) userData.avatar = waitlistEntry.avatar;
+
+    const newUser = await User.create(userData);
+
+    await sendApprovalNotification(waitlistEntry.email, fullName);
+
+    await Waitlist.findByIdAndDelete(waitlistId);
+
+    return newUser;
 };
 
 export const hasInviteCode = async (userEmail, code, fullName, userId) => {
