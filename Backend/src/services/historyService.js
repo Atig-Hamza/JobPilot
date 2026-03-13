@@ -1,4 +1,5 @@
 import History from "../models/history.js";
+import User from "../models/User.js";
 import { generateChatTitle } from "./LLMService.js";
 
 export const getHistoryTitleByUserId = async (userId, page = 1, limit = 20) => {
@@ -46,6 +47,10 @@ export const updateHistoryEntry = async (historyId, userId, updatedContent) => {
 }
 
 export const getHistoryByRoomId = async (userId, roomId) => {
+    const user = await User.findOne({ _id: userId });
+    if (user && user.role === 'admin') {
+        return await History.findOne({ roomId });
+    }
     return await History.findOne({ userId, roomId });
 }
 
