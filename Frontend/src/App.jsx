@@ -1,7 +1,7 @@
 import { useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import './App.css';
-import Authenticate from './middleware/authenticate';
+import Authenticate from './middleware/Authenticate';
 import { Toaster } from 'react-hot-toast';
 import { useTheme } from './context/ThemeContext';
 import { PageSkeleton } from './components/Skeleton';
