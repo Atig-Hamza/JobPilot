@@ -28,6 +28,8 @@ jobs:
         run: npm ci
 
       - name: Run tests
+        env:
+          OPENAI_API_KEY: ci-dummy-key
         run: npm test
 
   frontend-build:
