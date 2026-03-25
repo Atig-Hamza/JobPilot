@@ -89,6 +89,41 @@ Receive instant, unbiased feedback after every simulation.
 
 ---
 
+## 🐳 Docker (Backend + Frontend)
+
+Run the full stack with Docker Compose (backend, frontend, MongoDB):
+
+1. Copy Docker env template:
+	```bash
+	cp .env.docker.example .env
+	```
+	On Windows PowerShell:
+	```powershell
+	Copy-Item .env.docker.example .env
+	```
+
+2. Fill required variables in `.env` (at least `JWT_SECRET`, plus your API keys if needed).
+
+3. Build and start containers:
+	```bash
+	docker compose up --build -d
+	```
+
+4. Access apps:
+	- Frontend: `http://localhost:8080`
+	- Backend API: `http://localhost:5000/api`
+
+5. Stop containers:
+	```bash
+	docker compose down
+	```
+
+Notes:
+- Backend media uploads are persisted via `./Backend/media` volume mapping.
+- MongoDB data is persisted in the `mongo-data` Docker volume.
+
+---
+
 ## 🔮 Roadmap
 
 *   **Multi-Modal Interviews**: Voice-enabled real-time verbal conversations for a more realistic experience.
